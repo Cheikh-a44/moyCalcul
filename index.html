@@ -592,7 +592,7 @@
             'PHY': 'Physique',
             'CHIM': 'Chimie',
             'BIO': 'Biologie',
-            'MICRO': 'Microbiologie <br>et Génétique'
+            'MICRO': 'Microbiologie et Génétique'
         };
 
         const MODULES_S1 = {
@@ -717,7 +717,7 @@
                 </div>
                 
                 <div class="subject-row">
-                    <div class="subject-name">Microbiologie <br>et Génétique</div>
+                    <div class="subject-name">Microbiologie et Génétique</div>
                     <div class="subject-input" data-label="TP"><input type="number" id="MICRO-tp-s1" step="0.01" min="0" max="20" placeholder="TP" required></div>
                     <div class="subject-input" data-label="Devoir"><input type="number" id="MICRO-devoir-s1" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
                     <div class="subject-input" data-label="Examen"><input type="number" id="MICRO-exam-s1" step="0.01" min="0" max="20" placeholder="Examen" required></div>
@@ -1261,7 +1261,7 @@
                                 const subjectCredit = subject.status === "C" ? "3.0" : "0.0";
                                 
                                 doc.text('', 22, y+5);
-                                doc.text(subjectsConfig[subjectCode], 40, y+5);
+                                const subjectName = subjectsConfig[subjectCode]; const lines = doc.splitTextToSize(subjectName, 30); // 30 هو العرض الأقصى doc.text(lines, 40, y+5);
                                 doc.text(subject.tp !== undefined ? subject.tp.toFixed(2) : '', 85, y+5);
                                 doc.text(subject.devoir.toFixed(2), 100, y+5);
                                 doc.text(subject.exam.toFixed(2), 115, y+5);
