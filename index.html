@@ -1235,7 +1235,7 @@
                 doc.setFillColor(240, 248, 255);
                 doc.rect(20, y, 170, 8, 'F');
                 doc.text(student.id, 22, y+5);
-                doc.text(student.name, 40, y+5);
+                doc.text("  "+student.name, 50, y+5);
                 doc.text('Moy Sem: ' + student.moyenneGenerale.toFixed(2), 135, y+5);
                 doc.text(student.statusSemestre, 170, y+5);
                 y += 8;
