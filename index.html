@@ -477,7 +477,7 @@
                 </div>
                 
                 <h4><i class="fas fa-chart-bar"></i> Notes des matières S1:</h4>
-                <p class="help-text">TP est optionnel. Devoir et Examen sont obligatoires.</p>
+                <p class="help-text">TP est optionnel pour Anglais, Français et Math. TP est obligatoire pour les autres matières.</p>
                 <div class="subjects-grid" id="s1-subjects">
                     <!-- سيتم إضافة مواد S1 هنا -->
                 </div>
@@ -523,7 +523,7 @@
                 </div>
                 
                 <h4><i class="fas fa-chart-bar"></i> Notes des matières S2:</h4>
-                <p class="help-text">TP est optionnel. Devoir et Examen sont obligatoires.</p>
+                <p class="help-text">TP est optionnel pour Anglais et Français. TP est obligatoire pour les autres matières.</p>
                 <div class="subjects-grid" id="s2-subjects">
                     <!-- سيتم إضافة مواد S2 هنا -->
                 </div>
@@ -660,65 +660,65 @@
             btnPDF.addEventListener('click', () => generatePDF('s1'));
             btnClear.addEventListener('click', () => clearAllStudents('s1'));
 
-            // إضافة مواد S1
+            // إضافة مواد S1 مع إزالة TP من المواد المحددة
             document.getElementById('s1-subjects').innerHTML = `
                 <div class="grid-header">Matière</div>
-                <div class="grid-header">TP (opt)</div>
+                <div class="grid-header">TP</div>
                 <div class="grid-header">Devoir (×2)</div>
                 <div class="grid-header">Examen (×3)</div>
                 
                 <div class="subject-row">
                     <div class="subject-name">ANG1 - Anglais 1</div>
-                    <div class="subject-input" data-label="TP"><input type="number" id="ANG1-tp-s1" step="0.01" min="0" max="20" placeholder="TP"></div>
+                    <div class="subject-input" data-label="TP"><input type="number" id="ANG1-tp-s1" step="0.01" min="0" max="20" placeholder="TP (opt)"></div>
                     <div class="subject-input" data-label="Devoir"><input type="number" id="ANG1-devoir-s1" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
                     <div class="subject-input" data-label="Examen"><input type="number" id="ANG1-exam-s1" step="0.01" min="0" max="20" placeholder="Examen" required></div>
                 </div>
                 
                 <div class="subject-row">
                     <div class="subject-name">FRA1 - Français 1</div>
-                    <div class="subject-input" data-label="TP"><input type="number" id="FRA1-tp-s1" step="0.01" min="0" max="20" placeholder="TP"></div>
+                    <div class="subject-input" data-label="TP"><input type="number" id="FRA1-tp-s1" step="0.01" min="0" max="20" placeholder="TP (opt)"></div>
                     <div class="subject-input" data-label="Devoir"><input type="number" id="FRA1-devoir-s1" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
                     <div class="subject-input" data-label="Examen"><input type="number" id="FRA1-exam-s1" step="0.01" min="0" max="20" placeholder="Examen" required></div>
                 </div>
                 
                 <div class="subject-row">
                     <div class="subject-name">INFO - Informatique</div>
-                    <div class="subject-input" data-label="TP"><input type="number" id="INFO-tp-s1" step="0.01" min="0" max="20" placeholder="TP"></div>
+                    <div class="subject-input" data-label="TP"><input type="number" id="INFO-tp-s1" step="0.01" min="0" max="20" placeholder="TP" required></div>
                     <div class="subject-input" data-label="Devoir"><input type="number" id="INFO-devoir-s1" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
                     <div class="subject-input" data-label="Examen"><input type="number" id="INFO-exam-s1" step="0.01" min="0" max="20" placeholder="Examen" required></div>
                 </div>
                 
                 <div class="subject-row">
                     <div class="subject-name">MATH - Math et Statistique</div>
-                    <div class="subject-input" data-label="TP"><input type="number" id="MATH-tp-s1" step="0.01" min="0" max="20" placeholder="TP"></div>
+                    <div class="subject-input" data-label="TP"><input type="number" id="MATH-tp-s1" step="0.01" min="0" max="20" placeholder="TP (opt)"></div>
                     <div class="subject-input" data-label="Devoir"><input type="number" id="MATH-devoir-s1" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
                     <div class="subject-input" data-label="Examen"><input type="number" id="MATH-exam-s1" step="0.01" min="0" max="20" placeholder="Examen" required></div>
                 </div>
                 
                 <div class="subject-row">
                     <div class="subject-name">PHY - Physique</div>
-                    <div class="subject-input" data-label="TP"><input type="number" id="PHY-tp-s1" step="0.01" min="0" max="20" placeholder="TP"></div>
+                    <div class="subject-input" data-label="TP"><input type="number" id="PHY-tp-s1" step="0.01" min="0" max="20" placeholder="TP" required></div>
                     <div class="subject-input" data-label="Devoir"><input type="number" id="PHY-devoir-s1" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
                     <div class="subject-input" data-label="Examen"><input type="number" id="PHY-exam-s1" step="0.01" min="0" max="20" placeholder="Examen" required></div>
                 </div>
                 
                 <div class="subject-row">
                     <div class="subject-name">CHIM - Chimie</div>
-                    <div class="subject-input" data-label="TP"><input type="number" id="CHIM-tp-s1" step="0.01" min="0" max="20" placeholder="TP"></div>
+                    <div class="subject-input" data-label="TP"><input type="number" id="CHIM-tp-s1" step="0.01" min="0" max="20" placeholder="TP" required></div>
                     <div class="subject-input" data-label="Devoir"><input type="number" id="CHIM-devoir-s1" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
                     <div class="subject-input" data-label="Examen"><input type="number" id="CHIM-exam-s1" step="0.01" min="0" max="20" placeholder="Examen" required></div>
                 </div>
                 
                 <div class="subject-row">
                     <div class="subject-name">BIO - Biologie</div>
-                    <div class="subject-input" data-label="TP"><input type="number" id="BIO-tp-s1" step="0.01" min="0" max="20" placeholder="TP"></div>
+                    <div class="subject-input" data-label="TP"><input type="number" id="BIO-tp-s1" step="0.01" min="0" max="20" placeholder="TP" required></div>
                     <div class="subject-input" data-label="Devoir"><input type="number" id="BIO-devoir-s1" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
                     <div class="subject-input" data-label="Examen"><input type="number" id="BIO-exam-s1" step="0.01" min="0" max="20" placeholder="Examen" required></div>
                 </div>
                 
                 <div class="subject-row">
                     <div class="subject-name">MICRO - Microbiologie et Génétique</div>
-                    <div class="subject-input" data-label="TP"><input type="number" id="MICRO-tp-s1" step="0.01" min="0" max="20" placeholder="TP"></div>
+                    <div class="subject-input" data-label="TP"><input type="number" id="MICRO-tp-s1" step="0.01" min="0" max="20" placeholder="TP" required></div>
                     <div class="subject-input" data-label="Devoir"><input type="number" id="MICRO-devoir-s1" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
                     <div class="subject-input" data-label="Examen"><input type="number" id="MICRO-exam-s1" step="0.01" min="0" max="20" placeholder="Examen" required></div>
                 </div>
@@ -736,65 +736,65 @@
             btnPDF.addEventListener('click', () => generatePDF('s2'));
             btnClear.addEventListener('click', () => clearAllStudents('s2'));
 
-            // إضافة مواد S2 (باستخدام الاختصارات فقط)
+            // إضافة مواد S2 مع إزالة TP من المواد المحددة
             document.getElementById('s2-subjects').innerHTML = `
                 <div class="grid-header">Matière</div>
-                <div class="grid-header">TP (opt)</div>
+                <div class="grid-header">TP</div>
                 <div class="grid-header">Devoir (×2)</div>
                 <div class="grid-header">Examen (×3)</div>
                 
                 <div class="subject-row">
                     <div class="subject-name">GEM</div>
-                    <div class="subject-input" data-label="TP"><input type="number" id="GEM-tp-s2" step="0.01" min="0" max="20" placeholder="TP"></div>
+                    <div class="subject-input" data-label="TP"><input type="number" id="GEM-tp-s2" step="0.01" min="0" max="20" placeholder="TP" required></div>
                     <div class="subject-input" data-label="Devoir"><input type="number" id="GEM-devoir-s2" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
                     <div class="subject-input" data-label="Examen"><input type="number" id="GEM-exam-s2" step="0.01" min="0" max="20" placeholder="Examen" required></div>
                 </div>
                 
                 <div class="subject-row">
                     <div class="subject-name">GAB</div>
-                    <div class="subject-input" data-label="TP"><input type="number" id="GAB-tp-s2" step="0.01" min="0" max="20" placeholder="TP"></div>
+                    <div class="subject-input" data-label="TP"><input type="number" id="GAB-tp-s2" step="0.01" min="0" max="20" placeholder="TP" required></div>
                     <div class="subject-input" data-label="Devoir"><input type="number" id="GAB-devoir-s2" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
                     <div class="subject-input" data-label="Examen"><input type="number" id="GAB-exam-s2" step="0.01" min="0" max="20" placeholder="Examen" required></div>
                 </div>
                 
                 <div class="subject-row">
                     <div class="subject-name">TIC</div>
-                    <div class="subject-input" data-label="TP"><input type="number" id="TIC-tp-s2" step="0.01" min="0" max="20" placeholder="TP"></div>
+                    <div class="subject-input" data-label="TP"><input type="number" id="TIC-tp-s2" step="0.01" min="0" max="20" placeholder="TP" required></div>
                     <div class="subject-input" data-label="Devoir"><input type="number" id="TIC-devoir-s2" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
                     <div class="subject-input" data-label="Examen"><input type="number" id="TIC-exam-s2" step="0.01" min="0" max="20" placeholder="Examen" required></div>
                 </div>
                 
                 <div class="subject-row">
                     <div class="subject-name">PPV</div>
-                    <div class="subject-input" data-label="TP"><input type="number" id="PPV-tp-s2" step="0.01" min="0" max="20" placeholder="TP"></div>
+                    <div class="subject-input" data-label="TP"><input type="number" id="PPV-tp-s2" step="0.01" min="0" max="20" placeholder="TP" required></div>
                     <div class="subject-input" data-label="Devoir"><input type="number" id="PPV-devoir-s2" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
                     <div class="subject-input" data-label="Examen"><input type="number" id="PPV-exam-s2" step="0.01" min="0" max="20" placeholder="Examen" required></div>
                 </div>
                 
                 <div class="subject-row">
                     <div class="subject-name">PSA</div>
-                    <div class="subject-input" data-label="TP"><input type="number" id="PSA-tp-s2" step="0.01" min="0" max="20" placeholder="TP"></div>
+                    <div class="subject-input" data-label="TP"><input type="number" id="PSA-tp-s2" step="0.01" min="0" max="20" placeholder="TP" required></div>
                     <div class="subject-input" data-label="Devoir"><input type="number" id="PSA-devoir-s2" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
                     <div class="subject-input" data-label="Examen"><input type="number" id="PSA-exam-s2" step="0.01" min="0" max="20" placeholder="Examen" required></div>
                 </div>
                 
                 <div class="subject-row">
                     <div class="subject-name">STA</div>
-                    <div class="subject-input" data-label="TP"><input type="number" id="STA-tp-s2" step="0.01" min="0" max="20" placeholder="TP"></div>
+                    <div class="subject-input" data-label="TP"><input type="number" id="STA-tp-s2" step="0.01" min="0" max="20" placeholder="TP" required></div>
                     <div class="subject-input" data-label="Devoir"><input type="number" id="STA-devoir-s2" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
                     <div class="subject-input" data-label="Examen"><input type="number" id="STA-exam-s2" step="0.01" min="0" max="20" placeholder="Examen" required></div>
                 </div>
                 
                 <div class="subject-row">
                     <div class="subject-name">ANG</div>
-                    <div class="subject-input" data-label="TP"><input type="number" id="ANG-tp-s2" step="0.01" min="0" max="20" placeholder="TP"></div>
+                    <div class="subject-input" data-label="TP"><input type="number" id="ANG-tp-s2" step="0.01" min="0" max="20" placeholder="TP (opt)"></div>
                     <div class="subject-input" data-label="Devoir"><input type="number" id="ANG-devoir-s2" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
                     <div class="subject-input" data-label="Examen"><input type="number" id="ANG-exam-s2" step="0.01" min="0" max="20" placeholder="Examen" required></div>
                 </div>
                 
                 <div class="subject-row">
                     <div class="subject-name">FRA</div>
-                    <div class="subject-input" data-label="TP"><input type="number" id="FRA-tp-s2" step="0.01" min="0" max="20" placeholder="TP"></div>
+                    <div class="subject-input" data-label="TP"><input type="number" id="FRA-tp-s2" step="0.01" min="0" max="20" placeholder="TP (opt)"></div>
                     <div class="subject-input" data-label="Devoir"><input type="number" id="FRA-devoir-s2" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
                     <div class="subject-input" data-label="Examen"><input type="number" id="FRA-exam-s2" step="0.01" min="0" max="20" placeholder="Examen" required></div>
                 </div>
@@ -819,7 +819,18 @@
                 const devoir = document.getElementById(`${subjectCode}-devoir-${semester}`)?.value;
                 const exam = document.getElementById(`${subjectCode}-exam-${semester}`)?.value;
 
+                // تحديد ما إذا كان TP إلزاميًا أم اختياريًا
+                const isTpOptional = 
+                    (semester === 's1' && ['ANG1', 'FRA1', 'MATH'].includes(subjectCode)) ||
+                    (semester === 's2' && ['ANG', 'FRA'].includes(subjectCode));
+
                 if (devoir && exam) {
+                    // التحقق من TP إذا كان إلزاميًا
+                    if (!isTpOptional && !tp) {
+                        showNotification(`TP est obligatoire pour ${subjectsConfig[subjectCode]}`, 'error');
+                        return;
+                    }
+
                     subjects[subjectCode] = {
                         tp: tp ? parseFloat(tp) : undefined,
                         devoir: parseFloat(devoir),
