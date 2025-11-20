@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Système de Calcul des Moyennes - ISET</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             box-sizing: border-box;
@@ -39,6 +40,7 @@
             justify-content: center;
             gap: 20px;
             margin-bottom: 30px;
+            flex-wrap: wrap;
         }
         .semester-btn {
             padding: 15px 30px;
@@ -51,6 +53,10 @@
             transition: all 0.3s ease;
             background: #3498db;
             color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
         .semester-btn.active {
             background: #e67e22;
@@ -63,8 +69,15 @@
             margin-bottom: 30px;
             border: 2px solid #3498db;
         }
+        .form-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
         .form-group {
             margin-bottom: 20px;
+            flex: 1;
+            min-width: 250px;
         }
         label {
             display: block;
@@ -78,6 +91,11 @@
             border: 2px solid #bdc3c7;
             border-radius: 6px;
             font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus, input[type="number"]:focus {
+            border-color: #3498db;
+            outline: none;
         }
         .subjects-grid {
             display: grid;
@@ -136,16 +154,20 @@
             font-size: 16px;
             min-width: 180px;
             transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
-        #btn-add {
+        #btn-add-s1, #btn-add-s2 {
             background: #27ae60;
             color: white;
         }
-        #btn-calculate {
+        #btn-calculate-s1, #btn-calculate-s2 {
             background: #e67e22;
             color: white;
         }
-        #btn-pdf {
+        #btn-pdf-s1, #btn-pdf-s2 {
             background: #2980b9;
             color: white;
             display: none;
@@ -160,6 +182,11 @@
             padding: 20px;
             margin-bottom: 20px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .student-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
         .student-header {
             display: flex;
@@ -168,6 +195,8 @@
             margin-bottom: 15px;
             padding-bottom: 10px;
             border-bottom: 2px solid #ecf0f1;
+            flex-wrap: wrap;
+            gap: 10px;
         }
         .student-name {
             font-size: 1.4em;
@@ -232,10 +261,13 @@
             background: #e74c3c;
             color: white;
             border: none;
-            padding: 5px 10px;
+            padding: 8px 12px;
             border-radius: 4px;
             cursor: pointer;
             font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
         .no-students {
             text-align: center;
@@ -270,6 +302,74 @@
         .semester-content.active {
             display: block;
         }
+        .stats-container {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .stat-box {
+            flex: 1;
+            min-width: 200px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        .stat-valid {
+            color: #27ae60;
+        }
+        .stat-non-valid {
+            color: #e74c3c;
+        }
+        .stat-average {
+            color: #2980b9;
+        }
+        .clear-all-btn {
+            background: #e74c3c;
+            color: white;
+            margin-top: 10px;
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+        .notification.success {
+            background: #27ae60;
+            opacity: 1;
+        }
+        .notification.error {
+            background: #e74c3c;
+            opacity: 1;
+        }
+        .notification.info {
+            background: #3498db;
+            opacity: 1;
+        }
+        .help-text {
+            font-size: 0.85em;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
         /* تحديد عرض الأعمدة لمنع التداخل */
         .results-table th:nth-child(1), .results-table td:nth-child(1) { width: 10%; }
         .results-table th:nth-child(2), .results-table td:nth-child(2) { width: 20%; }
@@ -279,45 +379,123 @@
         .results-table th:nth-child(6), .results-table td:nth-child(6) { width: 12%; }
         .results-table th:nth-child(7), .results-table td:nth-child(7) { width: 8%; }
         .results-table th:nth-child(8), .results-table td:nth-child(8) { width: 12%; }
+        
+        /* تحسينات للهواتف المحمولة */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            .form-row {
+                flex-direction: column;
+            }
+            .form-group {
+                min-width: 100%;
+            }
+            .buttons {
+                flex-direction: column;
+            }
+            button {
+                width: 100%;
+            }
+            .student-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .semester-btn {
+                min-width: 120px;
+                padding: 12px 20px;
+            }
+            .subjects-grid {
+                grid-template-columns: 1fr;
+            }
+            .grid-header {
+                display: none;
+            }
+            .subject-row {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 10px;
+                margin-bottom: 15px;
+                padding: 10px;
+                background: white;
+                border-radius: 8px;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            }
+            .subject-name {
+                grid-column: 1 / -1;
+                font-weight: bold;
+                border-bottom: 1px solid #eee;
+                padding-bottom: 8px;
+            }
+            .subject-input {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .subject-input::before {
+                content: attr(data-label);
+                font-weight: 500;
+                color: #7f8c8d;
+            }
+            .subject-input input {
+                width: 70px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🎓 Système de Calcul des Moyennes - ISET</h1>
+        <h1><i class="fas fa-graduation-cap"></i> Système de Calcul des Moyennes - ISET</h1>
         <div class="subtitle">Saisie manuelle des notes - Génération automatique des résultats</div>
         
         <!-- محدد الفصل الدراسي -->
         <div class="semester-selector">
-            <button class="semester-btn active" data-semester="s1">Semestre 1</button>
-            <button class="semester-btn" data-semester="s2">Semestre 2</button>
+            <button class="semester-btn active" data-semester="s1">
+                <i class="fas fa-book"></i> Semestre 1
+            </button>
+            <button class="semester-btn" data-semester="s2">
+                <i class="fas fa-book-open"></i> Semestre 2
+            </button>
         </div>
 
         <!-- محتوى الفصل الدراسي 1 -->
         <div id="s1-content" class="semester-content active">
             <!-- نموذج إدخال الطالب لـ S1 -->
             <div class="student-form">
-                <h3>📝 Saisie des données de l'étudiant - Semestre 1</h3>
+                <h3><i class="fas fa-edit"></i> Saisie des données de l'étudiant - Semestre 1</h3>
                 
-                <div class="form-group">
-                    <label for="student-name-s1">Nom complet de l'étudiant:</label>
-                    <input type="text" id="student-name-s1" placeholder="">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="student-name-s1"><i class="fas fa-user"></i> Nom complet de l'étudiant:</label>
+                        <input type="text" id="student-name-s1" placeholder="Saisir le nom complet">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="student-id-s1"><i class="fas fa-id-card"></i> Matricule:</label>
+                        <input type="text" id="student-id-s1" placeholder="Saisir le matricule">
+                    </div>
                 </div>
                 
-                <div class="form-group">
-                    <label for="student-id-s1"> Matricule:</label>
-                    <input type="text" id="student-id-s1" placeholder="">
-                </div>
-                
-                <h4>📊 Notes des matières S1:</h4>
+                <h4><i class="fas fa-chart-bar"></i> Notes des matières S1:</h4>
+                <p class="help-text">TP est optionnel. Devoir et Examen sont obligatoires.</p>
                 <div class="subjects-grid" id="s1-subjects">
                     <!-- سيتم إضافة مواد S1 هنا -->
                 </div>
                 
                 <div class="buttons">
-                    <button id="btn-add-s1">➕ Ajouter l'étudiant</button>
-                    <button id="btn-calculate-s1">🧮 Calculer toutes les moyennes</button>
-                    <button id="btn-pdf-s1">📥 Générer PDF</button>
+                    <button id="btn-add-s1"><i class="fas fa-plus"></i> Ajouter l'étudiant</button>
+                    <button id="btn-calculate-s1"><i class="fas fa-calculator"></i> Calculer toutes les moyennes</button>
+                    <button id="btn-pdf-s1"><i class="fas fa-file-pdf"></i> Générer PDF</button>
                 </div>
+                
+                <div class="buttons">
+                    <button id="btn-clear-s1" class="clear-all-btn"><i class="fas fa-trash-alt"></i> Effacer tous les étudiants S1</button>
+                </div>
+            </div>
+            
+            <!-- إحصائيات S1 -->
+            <div id="stats-s1" class="stats-container" style="display: none;">
+                <!-- سيتم عرض الإحصائيات هنا -->
             </div>
             
             <!-- قائمة الطلاب والنتائج لـ S1 -->
@@ -330,88 +508,40 @@
         <div id="s2-content" class="semester-content">
             <!-- نموذج إدخال الطالب لـ S2 -->
             <div class="student-form">
-                <h3>📝 Saisie des données de l'étudiant - Semestre 2</h3>
+                <h3><i class="fas fa-edit"></i> Saisie des données de l'étudiant - Semestre 2</h3>
                 
-                <div class="form-group">
-                    <label for="student-name-s2">Nom complet de l'étudiant:</label>
-                    <input type="text" id="student-name-s2" placeholder="">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="student-name-s2"><i class="fas fa-user"></i> Nom complet de l'étudiant:</label>
+                        <input type="text" id="student-name-s2" placeholder="Saisir le nom complet">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="student-id-s2"><i class="fas fa-id-card"></i> Matricule:</label>
+                        <input type="text" id="student-id-s2" placeholder="Saisir le matricule">
+                    </div>
                 </div>
                 
-                <div class="form-group">
-                    <label for="student-id-s2"> Matricule:</label>
-                    <input type="text" id="student-id-s2" placeholder="">
-                </div>
-                
-                <h4>📊 Notes des matières S2:</h4>
+                <h4><i class="fas fa-chart-bar"></i> Notes des matières S2:</h4>
+                <p class="help-text">TP est optionnel. Devoir et Examen sont obligatoires.</p>
                 <div class="subjects-grid" id="s2-subjects">
-                    <!-- المواد الحالية لـ S2 -->
-                    <div class="grid-header">Element</div>
-                    <div class="grid-header">TP (opt)</div>
-                    <div class="grid-header">Devoir (×2)</div>
-                    <div class="grid-header">Examen (×3)</div>
-                    
-                    <div class="subject-row">
-                        <div class="subject-name">GEM - Électricité et Mécanique</div>
-                        <div class="subject-input"><input type="number" id="GEM-tp-s2" step="0.01" min="0" max="20" placeholder="TP"></div>
-                        <div class="subject-input"><input type="number" id="GEM-devoir-s2" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
-                        <div class="subject-input"><input type="number" id="GEM-exam-s2" step="0.01" min="0" max="20" placeholder="Examen" required></div>
-                    </div>
-                    
-                    <div class="subject-row">
-                        <div class="subject-name">GAB - Génie de l'agriculture</div>
-                        <div class="subject-input"><input type="number" id="GAB-tp-s2" step="0.01" min="0" max="20" placeholder="TP"></div>
-                        <div class="subject-input"><input type="number" id="GAB-devoir-s2" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
-                        <div class="subject-input"><input type="number" id="GAB-exam-s2" step="0.01" min="0" max="20" placeholder="Examen" required></div>
-                    </div>
-                    
-                    <div class="subject-row">
-                        <div class="subject-name">TIC - Informatique</div>
-                        <div class="subject-input"><input type="number" id="TIC-tp-s2" step="0.01" min="0" max="20" placeholder="TP"></div>
-                        <div class="subject-input"><input type="number" id="TIC-devoir-s2" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
-                        <div class="subject-input"><input type="number" id="TIC-exam-s2" step="0.01" min="0" max="20" placeholder="Examen" required></div>
-                    </div>
-                    
-                    <div class="subject-row">
-                        <div class="subject-name">PPV - Bases de Production Végétale</div>
-                        <div class="subject-input"><input type="number" id="PPV-tp-s2" step="0.01" min="0" max="20" placeholder="TP"></div>
-                        <div class="subject-input"><input type="number" id="PPV-devoir-s2" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
-                        <div class="subject-input"><input type="number" id="PPV-exam-s2" step="0.01" min="0" max="20" placeholder="Examen" required></div>
-                    </div>
-                    
-                    <div class="subject-row">
-                        <div class="subject-name">PSA - Éléments de Production animale</div>
-                        <div class="subject-input"><input type="number" id="PSA-tp-s2" step="0.01" min="0" max="20" placeholder="TP"></div>
-                        <div class="subject-input"><input type="number" id="PSA-devoir-s2" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
-                        <div class="subject-input"><input type="number" id="PSA-exam-s2" step="0.01" min="0" max="20" placeholder="Examen" required></div>
-                    </div>
-                    
-                    <div class="subject-row">
-                        <div class="subject-name">STA - Introduction Agro-alimentaire</div>
-                        <div class="subject-input"><input type="number" id="STA-tp-s2" step="0.01" min="0" max="20" placeholder="TP"></div>
-                        <div class="subject-input"><input type="number" id="STA-devoir-s2" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
-                        <div class="subject-input"><input type="number" id="STA-exam-s2" step="0.01" min="0" max="20" placeholder="Examen" required></div>
-                    </div>
-                    
-                    <div class="subject-row">
-                        <div class="subject-name">ANG - Anglais 2</div>
-                        <div class="subject-input"><input type="number" id="ANG-tp-s2" step="0.01" min="0" max="20" placeholder="TP"></div>
-                        <div class="subject-input"><input type="number" id="ANG-devoir-s2" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
-                        <div class="subject-input"><input type="number" id="ANG-exam-s2" step="0.01" min="0" max="20" placeholder="Examen" required></div>
-                    </div>
-                    
-                    <div class="subject-row">
-                        <div class="subject-name">FRA - Français 2</div>
-                        <div class="subject-input"><input type="number" id="FRA-tp-s2" step="0.01" min="0" max="20" placeholder="TP"></div>
-                        <div class="subject-input"><input type="number" id="FRA-devoir-s2" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
-                        <div class="subject-input"><input type="number" id="FRA-exam-s2" step="0.01" min="0" max="20" placeholder="Examen" required></div>
-                    </div>
+                    <!-- سيتم إضافة مواد S2 هنا -->
                 </div>
                 
                 <div class="buttons">
-                    <button id="btn-add-s2">➕ Ajouter l'étudiant</button>
-                    <button id="btn-calculate-s2">🧮 Calculer toutes les moyennes</button>
-                    <button id="btn-pdf-s2">📥 Générer PDF</button>
+                    <button id="btn-add-s2"><i class="fas fa-plus"></i> Ajouter l'étudiant</button>
+                    <button id="btn-calculate-s2"><i class="fas fa-calculator"></i> Calculer toutes les moyennes</button>
+                    <button id="btn-pdf-s2"><i class="fas fa-file-pdf"></i> Générer PDF</button>
                 </div>
+                
+                <div class="buttons">
+                    <button id="btn-clear-s2" class="clear-all-btn"><i class="fas fa-trash-alt"></i> Effacer tous les étudiants S2</button>
+                </div>
+            </div>
+            
+            <!-- إحصائيات S2 -->
+            <div id="stats-s2" class="stats-container" style="display: none;">
+                <!-- سيتم عرض الإحصائيات هنا -->
             </div>
             
             <!-- قائمة الطلاب والنتائج لـ S2 -->
@@ -421,19 +551,22 @@
         </div>
     </div>
 
+    <!-- منطقة الإشعارات -->
+    <div id="notification-area"></div>
+
     <script>
         const { jsPDF } = window.jspdf;
         
-        // تعريف المواد والوحدات لـ S2
+        // تعريف المواد والوحدات لـ S2 (باستخدام الاختصارات فقط)
         const SUBJECTS_S2 = {
-            'GEM': 'Électricité et Mécanique',
-            'GAB': 'Génie de l\'agriculture', 
+            'GEM': 'GEM',
+            'GAB': 'GAB', 
             'TIC': 'TIC',
-            'PPV': 'Bases de Production Végétale',
-            'PSA': 'Éléments de Production animale',
-            'STA': 'Introduction Agro-alimentaire',
-            'ANG': 'Anglais 2',
-            'FRA': 'Français 2'
+            'PPV': 'PPV',
+            'PSA': 'PSA',
+            'STA': 'STA',
+            'ANG': 'ANG',
+            'FRA': 'FRA'
         };
 
         const MODULES_S2 = {
@@ -450,7 +583,7 @@
             'M24': 'Module 24'
         };
 
-        // تعريف المواد والوحدات لـ S1 (باستخدام الأسماء الكاملة فقط)
+        // تعريف المواد والوحدات لـ S1
         const SUBJECTS_S1 = {
             'ANG1': 'Anglais 1',
             'FRA1': 'Français 1',
@@ -484,11 +617,14 @@
             // تهيئة محدد الفصول الدراسية
             initializeSemesterSelector();
             
-            // تهيئة S2 (موجود حالياً)
+            // تهيئة S2
             initializeS2();
             
-            // تهيئة S1 (تم تحديثها)
+            // تهيئة S1
             initializeS1();
+            
+            // تحميل البيانات المحفوظة إن وجدت
+            loadFromLocalStorage();
         });
 
         function initializeSemesterSelector() {
@@ -517,13 +653,14 @@
             const btnAdd = document.getElementById('btn-add-s1');
             const btnCalculate = document.getElementById('btn-calculate-s1');
             const btnPDF = document.getElementById('btn-pdf-s1');
-            const studentsList = document.getElementById('students-list-s1');
+            const btnClear = document.getElementById('btn-clear-s1');
 
             btnAdd.addEventListener('click', () => addStudent('s1'));
             btnCalculate.addEventListener('click', () => calculateAll('s1'));
             btnPDF.addEventListener('click', () => generatePDF('s1'));
+            btnClear.addEventListener('click', () => clearAllStudents('s1'));
 
-            // إضافة مواد S1 باستخدام الأسماء الكاملة فقط (بدون اختصارات)
+            // إضافة مواد S1
             document.getElementById('s1-subjects').innerHTML = `
                 <div class="grid-header">Matière</div>
                 <div class="grid-header">TP (opt)</div>
@@ -531,59 +668,59 @@
                 <div class="grid-header">Examen (×3)</div>
                 
                 <div class="subject-row">
-                    <div class="subject-name">Anglais 1</div>
-                    <div class="subject-input"><input type="number" id="ANG1-tp-s1" step="0.01" min="0" max="20" placeholder="TP"></div>
-                    <div class="subject-input"><input type="number" id="ANG1-devoir-s1" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
-                    <div class="subject-input"><input type="number" id="ANG1-exam-s1" step="0.01" min="0" max="20" placeholder="Examen" required></div>
+                    <div class="subject-name">ANG1 - Anglais 1</div>
+                    <div class="subject-input" data-label="TP"><input type="number" id="ANG1-tp-s1" step="0.01" min="0" max="20" placeholder="TP"></div>
+                    <div class="subject-input" data-label="Devoir"><input type="number" id="ANG1-devoir-s1" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
+                    <div class="subject-input" data-label="Examen"><input type="number" id="ANG1-exam-s1" step="0.01" min="0" max="20" placeholder="Examen" required></div>
                 </div>
                 
                 <div class="subject-row">
-                    <div class="subject-name">Français 1</div>
-                    <div class="subject-input"><input type="number" id="FRA1-tp-s1" step="0.01" min="0" max="20" placeholder="TP"></div>
-                    <div class="subject-input"><input type="number" id="FRA1-devoir-s1" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
-                    <div class="subject-input"><input type="number" id="FRA1-exam-s1" step="0.01" min="0" max="20" placeholder="Examen" required></div>
+                    <div class="subject-name">FRA1 - Français 1</div>
+                    <div class="subject-input" data-label="TP"><input type="number" id="FRA1-tp-s1" step="0.01" min="0" max="20" placeholder="TP"></div>
+                    <div class="subject-input" data-label="Devoir"><input type="number" id="FRA1-devoir-s1" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
+                    <div class="subject-input" data-label="Examen"><input type="number" id="FRA1-exam-s1" step="0.01" min="0" max="20" placeholder="Examen" required></div>
                 </div>
                 
                 <div class="subject-row">
-                    <div class="subject-name">Informatique</div>
-                    <div class="subject-input"><input type="number" id="INFO-tp-s1" step="0.01" min="0" max="20" placeholder="TP"></div>
-                    <div class="subject-input"><input type="number" id="INFO-devoir-s1" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
-                    <div class="subject-input"><input type="number" id="INFO-exam-s1" step="0.01" min="0" max="20" placeholder="Examen" required></div>
+                    <div class="subject-name">INFO - Informatique</div>
+                    <div class="subject-input" data-label="TP"><input type="number" id="INFO-tp-s1" step="0.01" min="0" max="20" placeholder="TP"></div>
+                    <div class="subject-input" data-label="Devoir"><input type="number" id="INFO-devoir-s1" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
+                    <div class="subject-input" data-label="Examen"><input type="number" id="INFO-exam-s1" step="0.01" min="0" max="20" placeholder="Examen" required></div>
                 </div>
                 
                 <div class="subject-row">
-                    <div class="subject-name">Math et Statistique</div>
-                    <div class="subject-input"><input type="number" id="MATH-tp-s1" step="0.01" min="0" max="20" placeholder="TP"></div>
-                    <div class="subject-input"><input type="number" id="MATH-devoir-s1" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
-                    <div class="subject-input"><input type="number" id="MATH-exam-s1" step="0.01" min="0" max="20" placeholder="Examen" required></div>
+                    <div class="subject-name">MATH - Math et Statistique</div>
+                    <div class="subject-input" data-label="TP"><input type="number" id="MATH-tp-s1" step="0.01" min="0" max="20" placeholder="TP"></div>
+                    <div class="subject-input" data-label="Devoir"><input type="number" id="MATH-devoir-s1" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
+                    <div class="subject-input" data-label="Examen"><input type="number" id="MATH-exam-s1" step="0.01" min="0" max="20" placeholder="Examen" required></div>
                 </div>
                 
                 <div class="subject-row">
-                    <div class="subject-name">Physique</div>
-                    <div class="subject-input"><input type="number" id="PHY-tp-s1" step="0.01" min="0" max="20" placeholder="TP"></div>
-                    <div class="subject-input"><input type="number" id="PHY-devoir-s1" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
-                    <div class="subject-input"><input type="number" id="PHY-exam-s1" step="0.01" min="0" max="20" placeholder="Examen" required></div>
+                    <div class="subject-name">PHY - Physique</div>
+                    <div class="subject-input" data-label="TP"><input type="number" id="PHY-tp-s1" step="0.01" min="0" max="20" placeholder="TP"></div>
+                    <div class="subject-input" data-label="Devoir"><input type="number" id="PHY-devoir-s1" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
+                    <div class="subject-input" data-label="Examen"><input type="number" id="PHY-exam-s1" step="0.01" min="0" max="20" placeholder="Examen" required></div>
                 </div>
                 
                 <div class="subject-row">
-                    <div class="subject-name">Chimie</div>
-                    <div class="subject-input"><input type="number" id="CHIM-tp-s1" step="0.01" min="0" max="20" placeholder="TP"></div>
-                    <div class="subject-input"><input type="number" id="CHIM-devoir-s1" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
-                    <div class="subject-input"><input type="number" id="CHIM-exam-s1" step="0.01" min="0" max="20" placeholder="Examen" required></div>
+                    <div class="subject-name">CHIM - Chimie</div>
+                    <div class="subject-input" data-label="TP"><input type="number" id="CHIM-tp-s1" step="0.01" min="0" max="20" placeholder="TP"></div>
+                    <div class="subject-input" data-label="Devoir"><input type="number" id="CHIM-devoir-s1" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
+                    <div class="subject-input" data-label="Examen"><input type="number" id="CHIM-exam-s1" step="0.01" min="0" max="20" placeholder="Examen" required></div>
                 </div>
                 
                 <div class="subject-row">
-                    <div class="subject-name">Biologie</div>
-                    <div class="subject-input"><input type="number" id="BIO-tp-s1" step="0.01" min="0" max="20" placeholder="TP"></div>
-                    <div class="subject-input"><input type="number" id="BIO-devoir-s1" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
-                    <div class="subject-input"><input type="number" id="BIO-exam-s1" step="0.01" min="0" max="20" placeholder="Examen" required></div>
+                    <div class="subject-name">BIO - Biologie</div>
+                    <div class="subject-input" data-label="TP"><input type="number" id="BIO-tp-s1" step="0.01" min="0" max="20" placeholder="TP"></div>
+                    <div class="subject-input" data-label="Devoir"><input type="number" id="BIO-devoir-s1" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
+                    <div class="subject-input" data-label="Examen"><input type="number" id="BIO-exam-s1" step="0.01" min="0" max="20" placeholder="Examen" required></div>
                 </div>
                 
                 <div class="subject-row">
-                    <div class="subject-name">Microbiologie et Génétique</div>
-                    <div class="subject-input"><input type="number" id="MICRO-tp-s1" step="0.01" min="0" max="20" placeholder="TP"></div>
-                    <div class="subject-input"><input type="number" id="MICRO-devoir-s1" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
-                    <div class="subject-input"><input type="number" id="MICRO-exam-s1" step="0.01" min="0" max="20" placeholder="Examen" required></div>
+                    <div class="subject-name">MICRO - Microbiologie et Génétique</div>
+                    <div class="subject-input" data-label="TP"><input type="number" id="MICRO-tp-s1" step="0.01" min="0" max="20" placeholder="TP"></div>
+                    <div class="subject-input" data-label="Devoir"><input type="number" id="MICRO-devoir-s1" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
+                    <div class="subject-input" data-label="Examen"><input type="number" id="MICRO-exam-s1" step="0.01" min="0" max="20" placeholder="Examen" required></div>
                 </div>
             `;
         }
@@ -592,10 +729,76 @@
             const btnAdd = document.getElementById('btn-add-s2');
             const btnCalculate = document.getElementById('btn-calculate-s2');
             const btnPDF = document.getElementById('btn-pdf-s2');
+            const btnClear = document.getElementById('btn-clear-s2');
 
             btnAdd.addEventListener('click', () => addStudent('s2'));
             btnCalculate.addEventListener('click', () => calculateAll('s2'));
             btnPDF.addEventListener('click', () => generatePDF('s2'));
+            btnClear.addEventListener('click', () => clearAllStudents('s2'));
+
+            // إضافة مواد S2 (باستخدام الاختصارات فقط)
+            document.getElementById('s2-subjects').innerHTML = `
+                <div class="grid-header">Matière</div>
+                <div class="grid-header">TP (opt)</div>
+                <div class="grid-header">Devoir (×2)</div>
+                <div class="grid-header">Examen (×3)</div>
+                
+                <div class="subject-row">
+                    <div class="subject-name">GEM</div>
+                    <div class="subject-input" data-label="TP"><input type="number" id="GEM-tp-s2" step="0.01" min="0" max="20" placeholder="TP"></div>
+                    <div class="subject-input" data-label="Devoir"><input type="number" id="GEM-devoir-s2" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
+                    <div class="subject-input" data-label="Examen"><input type="number" id="GEM-exam-s2" step="0.01" min="0" max="20" placeholder="Examen" required></div>
+                </div>
+                
+                <div class="subject-row">
+                    <div class="subject-name">GAB</div>
+                    <div class="subject-input" data-label="TP"><input type="number" id="GAB-tp-s2" step="0.01" min="0" max="20" placeholder="TP"></div>
+                    <div class="subject-input" data-label="Devoir"><input type="number" id="GAB-devoir-s2" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
+                    <div class="subject-input" data-label="Examen"><input type="number" id="GAB-exam-s2" step="0.01" min="0" max="20" placeholder="Examen" required></div>
+                </div>
+                
+                <div class="subject-row">
+                    <div class="subject-name">TIC</div>
+                    <div class="subject-input" data-label="TP"><input type="number" id="TIC-tp-s2" step="0.01" min="0" max="20" placeholder="TP"></div>
+                    <div class="subject-input" data-label="Devoir"><input type="number" id="TIC-devoir-s2" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
+                    <div class="subject-input" data-label="Examen"><input type="number" id="TIC-exam-s2" step="0.01" min="0" max="20" placeholder="Examen" required></div>
+                </div>
+                
+                <div class="subject-row">
+                    <div class="subject-name">PPV</div>
+                    <div class="subject-input" data-label="TP"><input type="number" id="PPV-tp-s2" step="0.01" min="0" max="20" placeholder="TP"></div>
+                    <div class="subject-input" data-label="Devoir"><input type="number" id="PPV-devoir-s2" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
+                    <div class="subject-input" data-label="Examen"><input type="number" id="PPV-exam-s2" step="0.01" min="0" max="20" placeholder="Examen" required></div>
+                </div>
+                
+                <div class="subject-row">
+                    <div class="subject-name">PSA</div>
+                    <div class="subject-input" data-label="TP"><input type="number" id="PSA-tp-s2" step="0.01" min="0" max="20" placeholder="TP"></div>
+                    <div class="subject-input" data-label="Devoir"><input type="number" id="PSA-devoir-s2" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
+                    <div class="subject-input" data-label="Examen"><input type="number" id="PSA-exam-s2" step="0.01" min="0" max="20" placeholder="Examen" required></div>
+                </div>
+                
+                <div class="subject-row">
+                    <div class="subject-name">STA</div>
+                    <div class="subject-input" data-label="TP"><input type="number" id="STA-tp-s2" step="0.01" min="0" max="20" placeholder="TP"></div>
+                    <div class="subject-input" data-label="Devoir"><input type="number" id="STA-devoir-s2" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
+                    <div class="subject-input" data-label="Examen"><input type="number" id="STA-exam-s2" step="0.01" min="0" max="20" placeholder="Examen" required></div>
+                </div>
+                
+                <div class="subject-row">
+                    <div class="subject-name">ANG</div>
+                    <div class="subject-input" data-label="TP"><input type="number" id="ANG-tp-s2" step="0.01" min="0" max="20" placeholder="TP"></div>
+                    <div class="subject-input" data-label="Devoir"><input type="number" id="ANG-devoir-s2" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
+                    <div class="subject-input" data-label="Examen"><input type="number" id="ANG-exam-s2" step="0.01" min="0" max="20" placeholder="Examen" required></div>
+                </div>
+                
+                <div class="subject-row">
+                    <div class="subject-name">FRA</div>
+                    <div class="subject-input" data-label="TP"><input type="number" id="FRA-tp-s2" step="0.01" min="0" max="20" placeholder="TP"></div>
+                    <div class="subject-input" data-label="Devoir"><input type="number" id="FRA-devoir-s2" step="0.01" min="0" max="20" placeholder="Devoir" required></div>
+                    <div class="subject-input" data-label="Examen"><input type="number" id="FRA-exam-s2" step="0.01" min="0" max="20" placeholder="Examen" required></div>
+                </div>
+            `;
         }
 
         function addStudent(semester) {
@@ -603,7 +806,7 @@
             const id = document.getElementById(`student-id-${semester}`).value.trim();
             
             if (!name || !id) {
-                alert('Veuillez remplir le nom et le matricule de l\'étudiant');
+                showNotification('Veuillez remplir le nom et le matricule de l\'étudiant', 'error');
                 return;
             }
 
@@ -627,7 +830,7 @@
             });
 
             if (!hasData) {
-                alert('Veuillez saisir au moins les notes de devoir et examen pour une matière');
+                showNotification('Veuillez saisir au moins les notes de devoir et examen pour une matière', 'error');
                 return;
             }
 
@@ -646,11 +849,18 @@
             
             displayStudents(semester);
             clearForm(semester);
+            showNotification('Étudiant ajouté avec succès', 'success');
+            saveToLocalStorage();
         }
 
         function calculateAll(semester) {
             const students = semester === 's1' ? studentsS1 : studentsS2;
             const modulesConfig = semester === 's1' ? MODULES_S1 : MODULES_S2;
+            
+            if (students.length === 0) {
+                showNotification('Aucun étudiant à calculer', 'error');
+                return;
+            }
             
             students.forEach(student => {
                 if (!student.calculated) {
@@ -660,6 +870,8 @@
             
             displayStudents(semester);
             document.getElementById(`btn-pdf-${semester}`).style.display = 'inline-block';
+            showNotification('Calcul des moyennes terminé', 'success');
+            saveToLocalStorage();
         }
 
         function calculateStudentResults(student, modulesConfig) {
@@ -781,8 +993,12 @@
 
             if (students.length === 0) {
                 studentsList.innerHTML = '<p class="no-students">Aucun étudiant ajouté</p>';
+                document.getElementById(`stats-${semester}`).style.display = 'none';
                 return;
             }
+
+            // عرض الإحصائيات
+            displayStats(semester);
 
             students.forEach((student, index) => {
                 const studentCard = document.createElement('div');
@@ -801,7 +1017,7 @@
                                 </span>` : 
                                 '<span style="color: #f39c12;">⏳ Non calculé</span>'
                             }
-                            <button class="delete-btn" onclick="deleteStudent('${semester}', ${index})">🗑️</button>
+                            <button class="delete-btn" onclick="deleteStudent('${semester}', ${index})"><i class="fas fa-trash"></i> Supprimer</button>
                         </div>
                     </div>
                 `;
@@ -857,8 +1073,8 @@
                                     <td class="subject-name-cell">${moduleNames[moduleCode]}</td>
                                     <td></td>
                                     <td></td>
-                                    <td>${module.moyenne.toFixed(2)}</td>
                                     <td></td>
+                                    <td>${module.moyenne.toFixed(2)}</td>
                                     <td>${module.credit.toFixed(1)}</td>
                                     <td class="${module.status === 'V' ? 'status-valid' : 'status-non-valid'}">${module.status}</td>
                                 </tr>
@@ -896,6 +1112,42 @@
             });
         }
 
+        function displayStats(semester) {
+            const students = semester === 's1' ? studentsS1 : studentsS2;
+            const statsContainer = document.getElementById(`stats-${semester}`);
+            
+            if (students.length === 0) {
+                statsContainer.style.display = 'none';
+                return;
+            }
+            
+            const calculatedStudents = students.filter(s => s.calculated);
+            const validStudents = calculatedStudents.filter(s => s.statusSemestre === 'Validé');
+            const average = calculatedStudents.length > 0 ? 
+                calculatedStudents.reduce((sum, s) => sum + s.moyenneGenerale, 0) / calculatedStudents.length : 0;
+            
+            statsContainer.innerHTML = `
+                <div class="stat-box">
+                    <div class="stat-label">Total Étudiants</div>
+                    <div class="stat-value">${students.length}</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Étudiants Calculés</div>
+                    <div class="stat-value">${calculatedStudents.length}</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Semestres Validés</div>
+                    <div class="stat-value stat-valid">${validStudents.length}</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Moyenne Générale</div>
+                    <div class="stat-value stat-average">${average.toFixed(2)}</div>
+                </div>
+            `;
+            
+            statsContainer.style.display = 'flex';
+        }
+
         function clearForm(semester) {
             document.getElementById(`student-name-${semester}`).value = '';
             document.getElementById(`student-id-${semester}`).value = '';
@@ -912,6 +1164,19 @@
             });
         }
 
+        function clearAllStudents(semester) {
+            if (confirm(`Voulez-vous vraiment supprimer tous les étudiants du semestre ${semester === 's1' ? '1' : '2'}?`)) {
+                if (semester === 's1') {
+                    studentsS1 = [];
+                } else {
+                    studentsS2 = [];
+                }
+                displayStudents(semester);
+                showNotification('Tous les étudiants ont été supprimés', 'info');
+                saveToLocalStorage();
+            }
+        }
+
         function generatePDF(semester) {
             const students = semester === 's1' ? studentsS1 : studentsS2;
             const moduleNames = semester === 's1' ? MODULE_NAMES_S1 : MODULE_NAMES_S2;
@@ -919,7 +1184,7 @@
             const calculatedStudents = students.filter(s => s.calculated);
 
             if (calculatedStudents.length === 0) {
-                alert('Aucun étudiant calculé. Veuillez d\'abord calculer les moyennes.');
+                showNotification('Aucun étudiant calculé. Veuillez d\'abord calculer les moyennes.', 'error');
                 return;
             }
 
@@ -935,22 +1200,22 @@
                 doc.setFontSize(12);
                 doc.text('Filière : L1TC-L1 Licence TC', 20, 30);
 
-                // جدول النتائج - أبعاد معدلة لمنع التداخل
+                // جدول النتائج
                 const headers = ['Numéro', 'Nom et Prénom', 'TP', 'CC', 'Examen', 'NFe', 'Crédit', 'Observations'];
                 let y = 45;
                 
-                // En-têtes du tableau - أعمدة أوسع
+                // En-têtes du tableau
                 doc.setFillColor(52, 73, 94);
                 doc.setTextColor(255, 255, 255);
                 doc.rect(20, y, 170, 10, 'F');
-                doc.text(headers[0], 22, y+7);        // Numéro
-                doc.text(headers[1], 40, y+7);        // Nom et Prénom (أوسع)
-                doc.text(headers[2], 85, y+7);        // TP
-                doc.text(headers[3], 100, y+7);       // CC
-                doc.text(headers[4], 115, y+7);       // Examen
-                doc.text(headers[5], 135, y+7);       // NFe (أوسع)
-                doc.text(headers[6], 155, y+7);       // Crédit
-                doc.text(headers[7], 170, y+7);       // Observations
+                doc.text(headers[0], 22, y+7);
+                doc.text(headers[1], 40, y+7);
+                doc.text(headers[2], 85, y+7);
+                doc.text(headers[3], 100, y+7);
+                doc.text(headers[4], 115, y+7);
+                doc.text(headers[5], 135, y+7);
+                doc.text(headers[6], 155, y+7);
+                doc.text(headers[7], 170, y+7);
                 
                 y += 10;
                 doc.setTextColor(0, 0, 0);
@@ -960,7 +1225,7 @@
                 doc.rect(20, y, 170, 8, 'F');
                 doc.text(student.id, 22, y+5);
                 doc.text(student.name, 40, y+5);
-                doc.text('Moy Sem: ' + student.moyenneGenerale.toFixed(2), 135, y+5); // اختصار لمنع التداخل
+                doc.text('Moy Sem: ' + student.moyenneGenerale.toFixed(2), 135, y+5);
                 doc.text(student.statusSemestre, 170, y+5);
                 y += 8;
 
@@ -974,7 +1239,7 @@
                         doc.rect(20, y, 170, 8, 'F');
                         doc.text(moduleCode, 22, y+5);
                         doc.text(moduleNames[moduleCode], 40, y+5);
-                        doc.text(module.moyenne.toFixed(2), 115, y+5);
+                        doc.text(module.moyenne.toFixed(2), 135, y+5);
                         doc.text(module.credit.toFixed(1), 155, y+5);
                         doc.text(module.status, 170, y+5);
                         y += 8;
@@ -1000,6 +1265,40 @@
             });
 
             doc.save(`rapport_moyennes_ISET_${semester.toUpperCase()}.pdf`);
+            showNotification('PDF généré avec succès', 'success');
+        }
+
+        function showNotification(message, type) {
+            const notificationArea = document.getElementById('notification-area');
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            notificationArea.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('studentsS1', JSON.stringify(studentsS1));
+            localStorage.setItem('studentsS2', JSON.stringify(studentsS2));
+        }
+
+        function loadFromLocalStorage() {
+            const savedS1 = localStorage.getItem('studentsS1');
+            const savedS2 = localStorage.getItem('studentsS2');
+            
+            if (savedS1) {
+                studentsS1 = JSON.parse(savedS1);
+                displayStudents('s1');
+            }
+            
+            if (savedS2) {
+                studentsS2 = JSON.parse(savedS2);
+                displayStudents('s2');
+            }
         }
 
         // دالة حذف الطالب
@@ -1011,6 +1310,8 @@
                     studentsS2.splice(index, 1);
                 }
                 displayStudents(semester);
+                showNotification('Étudiant supprimé', 'info');
+                saveToLocalStorage();
             }
         };
     </script>
