@@ -854,6 +854,58 @@
             
             student.moyenneGenerale = totalGeneralCredits > 0 ? totalWeightedGeneral / totalGeneralCredits : 0;
             student.statusSemestre = student.moyenneGenerale >= 10 ? 'Validé' : 'Non Validé';
+            // 5. القاعدة الجديدة: التعويض بالمتوسط العام للوحدات NV التي بين 9 و 10
+           let hasNVModules = false;
+           let canCompensateWithAverage = false;
+
+// التحقق من وجود وحدات NV
+           Object.keys(modStatus).forEach(moduleCode => {
+              if (modStatus[moduleCode] === "NV") {
+           hasNVModules = true;
+    }
+});
+
+// إذا كان هناك وحدات NV، التحقق إذا كان يمكن تعويضها
+if (hasNVModules && student.moyenneGenerale >= 10) {
+    canCompensateWithAverage = true;
+    
+    // إذا كان المعدل العام >= 10، يمكن تعويض الوحدات NV التي بين 9 و 10
+    Object.keys(modStatus).forEach(moduleCode => {
+        if (modStatus[moduleCode] === "NV") {
+            const moduleAverage = moduleAverages[moduleCode];
+            // التعويض فقط للوحدات التي بين 9 و 10
+            if (moduleAverage >= 9 && moduleAverage < 10) {
+                modStatus[moduleCode] = "V";
+                
+                // تحديث حالة المواد في هذه الوحدة إلى C
+                MODULES_S1[moduleCode].forEach(subjectCode => {
+                    if (student.subjects[subjectCode]) {
+                        student.subjects[subjectCode].status = "C";
+                    }
+                });
+            }
+        }
+    });
+}
+
+// 6. تحديث حالة السيمستر بناءً على القاعدة الجديدة
+// إذا كان هناك وحدات NV ولم يتم تعويضها، السيمستر يصبح Non Validé
+if (hasNVModules && student.moyenneGenerale < 10) {
+    student.statusSemestre = 'Non Validé';
+} else if (hasNVModules && student.moyenneGenerale >= 10) {
+    // التحقق مرة أخرى إذا كان هناك وحدات NV بعد التعويض
+    let stillHasNVModules = false;
+    Object.keys(modStatus).forEach(moduleCode => {
+        if (modStatus[moduleCode] === "NV") {
+            stillHasNVModules = true;
+        }
+    });
+    
+    // إذا كان لا يزال هناك وحدات NV (أقل من 9)، لا يمكن تعويضها
+    if (stillHasNVModules) {
+        student.statusSemestre = 'Non Validé';
+    }
+}
 
             // 5. إعادة تقييم المواد بين 7 و 10
             Object.keys(student.subjects).forEach(subjectCode => {
