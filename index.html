@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Système de Calcul des Moyennes - ISET</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -144,6 +145,14 @@
             background: #2980b9;
             color: white;
             display: none;
+        }
+        #btn-excel-s1 {
+        background: #27ae60 !important;
+        color: white;
+        }
+        #btn-excel-s1:hover {
+        background: #219653 !important;
+          
         }
         .students-list {
             margin-top: 30px;
@@ -435,6 +444,9 @@
                 <button id="btn-add-s1"><i class="fas fa-plus"></i> Ajouter l'étudiant</button>
                 <button id="btn-calculate-s1"><i class="fas fa-calculator"></i> Calculer toutes les moyennes</button>
                 <button id="btn-pdf-s1"><i class="fas fa-file-pdf"></i> Générer PDF</button>
+                <button id="btn-excel-s1" style="background: #27ae60; color: white; display: none;">
+    <i class="fas fa-file-excel"></i> Exporter Excel
+</button>
             </div>
             
             <div class="buttons">
@@ -497,6 +509,8 @@
             const btnCalculate = document.getElementById('btn-calculate-s1');
             const btnPDF = document.getElementById('btn-pdf-s1');
             const btnClear = document.getElementById('btn-clear-s1');
+            const btnExcel = document.getElementById('btn-excel-s1');
+btnExcel.addEventListener('click', () => exportToExcel('s1'));
 
             btnAdd.addEventListener('click', () => addStudent('s1'));
             btnCalculate.addEventListener('click', () => calculateAll('s1'));
@@ -643,6 +657,7 @@
             document.getElementById(`btn-pdf-${semester}`).style.display = 'inline-block';
             showNotification('Calcul des moyennes terminé', 'success');
             saveToLocalStorage();
+            document.getElementById(`btn-excel-${semester}`).style.display = 'inline-block';
         }
 
         function calculateStudentResults(student, modulesConfig) {
@@ -908,8 +923,8 @@
                 <table class="results-table">
                     <thead>
                         <tr>
-                            <th style="width: 10%">Numéro</th>
-                            <th style="width: 25%">Nom et Prénom</th>
+                            <th style="width: 15%">Numéro</th>
+                            <th style="width: 20%">Nom et Prénom</th>
                             <th style="width: 8%">TP</th>
                             <th style="width: 8%">CC</th>
                             <th style="width: 10%">Examen</th>
@@ -1091,7 +1106,7 @@
         
         // جدول النتائج
         const headers = ['Numéro', 'Nom et Prénom', 'TP', 'CC', 'Examen', 'NFe', 'Crédit', 'Observations'];
-        const colWidths = [tableWidth * 0.1, tableWidth * 0.25, tableWidth * 0.08, tableWidth * 0.08, 
+        const colWidths = [tableWidth * 0.15, tableWidth * 0.20, tableWidth * 0.08, tableWidth * 0.08, 
                           tableWidth * 0.1, tableWidth * 0.12, tableWidth * 0.1, tableWidth * 0.17];
         
         // En-têtes du tableau
@@ -1207,6 +1222,148 @@
                 saveToLocalStorage();
             }
         };
+        function exportToExcel(semester) {
+    const students = studentsS1.filter(s => s.calculated);
+    
+    if (students.length === 0) {
+        showNotification('Aucun étudiant calculé. Veuillez d\'abord calculer les moyennes.', 'error');
+        return;
+    }
+
+    // تحضير البيانات
+    const data = [];
+    
+    // عنوان التقرير
+    data.push(["RAPPORT DES MOYENNES - ISET", "", "", "", "", "", "", ""]);
+    data.push(["Filière : L1TC-L1 Licence TC", "", "", "", "", "", "", ""]);
+    data.push([""]); // سطر فارغ
+    
+    // رؤوس الأعمدة
+    data.push(["Numéro", "Nom et Prénom", "Moyenne Semestre", "Statut", 
+               "Module", "Moyenne Module", "Crédit Module", "Statut Module",
+               "Matière", "TP", "CC", "Examen", "Moyenne Matière", "Crédit Matière", "Statut Matière"]);
+    
+    // بيانات الطلاب
+    students.forEach(student => {
+        // معلومات الطالب الأساسية
+        const studentRow = [
+            student.id,
+            student.name,
+            student.moyenneGenerale.toFixed(2),
+            student.statusSemestre,
+            "", "", "", "", "", "", "", "", "", "", ""
+        ];
+        data.push(studentRow);
+        
+        // الوحدات والمواد
+        Object.keys(MODULES_S1).forEach(moduleCode => {
+            const module = student.modules[moduleCode];
+            if (module) {
+                // صف الوحدة
+                const moduleRow = [
+                    "", "", "", "",
+                    MODULE_NAMES_S1[moduleCode],
+                    module.moyenne.toFixed(2),
+                    module.credit.toFixed(1),
+                    module.status,
+                    "", "", "", "", "", "", ""
+                ];
+                data.push(moduleRow);
+                
+                // مواد الوحدة
+                MODULES_S1[moduleCode].forEach(subjectCode => {
+                    const subject = student.subjects[subjectCode];
+                    if (subject) {
+                        const subjectCredit = SUBJECTS_S1[subjectCode].credit;
+                        const subjectCreditEarned = subject.status === "C" ? subjectCredit.toFixed(1) : "0.0";
+                        
+                        const subjectRow = [
+                            "", "", "", "", "",
+                            "", "", "",
+                            SUBJECTS_S1[subjectCode].name,
+                            subject.tp !== undefined ? subject.tp.toFixed(2) : "",
+                            subject.devoir.toFixed(2),
+                            subject.exam.toFixed(2),
+                            subject.moyenne.toFixed(2),
+                            subjectCreditEarned,
+                            subject.status
+                        ];
+                        data.push(subjectRow);
+                    }
+                });
+                
+                data.push([""]); // سطر فارغ بين الوحدات
+            }
+        });
+        
+        data.push([""]); // سطر فارغ بين الطلاب
+    });
+    
+    // إنشاء ورقة عمل
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    
+    // ضبط عرض الأعمدة
+    const wscols = [
+        {wch: 12},  // Numéro
+        {wch: 25},  // Nom et Prénom
+        {wch: 15},  // Moyenne Semestre
+        {wch: 12},  // Statut
+        {wch: 20},  // Module
+        {wch: 15},  // Moyenne Module
+        {wch: 12},  // Crédit Module
+        {wch: 12},  // Statut Module
+        {wch: 25},  // Matière
+        {wch: 8},   // TP
+        {wch: 8},   // CC
+        {wch: 10},  // Examen
+        {wch: 15},  // Moyenne Matière
+        {wch: 12},  // Crédit Matière
+        {wch: 12}   // Statut Matière
+    ];
+    ws['!cols'] = wscols;
+    
+    // تنسيق الخلايا
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+            const cell_address = {c: C, r: R};
+            const cell_ref = XLSX.utils.encode_cell(cell_address);
+            
+            if (!ws[cell_ref]) continue;
+            
+            // عنوان التقرير
+            if (R === 0) {
+                ws[cell_ref].s = {font: {bold: true, sz: 16}, alignment: {horizontal: 'center'}};
+            }
+            // رؤوس الأعمدة
+            else if (R === 3) {
+                ws[cell_ref].s = {
+                    font: {bold: true, color: {rgb: "FFFFFF"}},
+                    fill: {fgColor: {rgb: "34495E"}},
+                    alignment: {horizontal: 'center'}
+                };
+            }
+            // معلومات الطالب
+            else if (R > 3 && C === 0 && ws[cell_ref].v) {
+                ws[cell_ref].s = {font: {bold: true}};
+            }
+            // الوحدات
+            else if (R > 3 && C === 4 && ws[cell_ref].v) {
+                ws[cell_ref].s = {font: {bold: true}, fill: {fgColor: {rgb: "E8F4FC"}}};
+            }
+        }
+    }
+    
+    // إنشاء ملف Excel
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Rapport S1");
+    
+    // حفظ الملف
+    const fileName = `rapport_moyennes_S1_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+    
+    showNotification('Fichier Excel généré avec succès', 'success');
+}
     </script>
 </body>
 </html>
