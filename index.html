@@ -860,134 +860,133 @@
         }
 
         function displayStudents(semester) {
-            const students = studentsS1;
-            const studentsList = document.getElementById(`students-list-${semester}`);
-            const moduleNames = MODULE_NAMES_S1;
+    const students = studentsS1;
+    const studentsList = document.getElementById(`students-list-${semester}`);
+    const moduleNames = MODULE_NAMES_S1;
 
-            studentsList.innerHTML = '';
+    studentsList.innerHTML = '';
 
-            if (students.length === 0) {
-                studentsList.innerHTML = '<p class="no-students">Aucun étudiant ajouté</p>';
-                document.getElementById(`stats-${semester}`).style.display = 'none';
-                return;
-            }
+    if (students.length === 0) {
+        studentsList.innerHTML = '<p class="no-students">Aucun étudiant ajouté</p>';
+        document.getElementById(`stats-${semester}`).style.display = 'none';
+        return;
+    }
 
-            // عرض الإحصائيات
-            displayStats(semester);
+    // عرض الإحصائيات
+    displayStats(semester);
 
-            students.forEach((student, index) => {
-                const studentCard = document.createElement('div');
-                studentCard.className = 'student-card';
+    students.forEach((student, index) => {
+        const studentCard = document.createElement('div');
+        studentCard.className = 'student-card';
+        
+        let html = `
+            <div class="student-header">
+                <div>
+                    <!-- ترك هذا فارغاً كما طلبت -->
+                </div>
+                <div>
+                    ${student.calculated ? 
+                        `<span class="${student.statusSemestre === 'Validé' ? 'status-valid' : 'status-non-valid'}">
+                            ${student.statusSemestre}
+                        </span>` : 
+                        '<span style="color: #f39c12;">⏳ Non calculé</span>'
+                    }
+                    <button class="delete-btn" onclick="deleteStudent(${index})"><i class="fas fa-trash"></i> Supprimer</button>
+                </div>
+            </div>
+        `;
+
+        if (student.calculated) {
+            html += `
+                <div class="student-info-header">
+                    <div class="student-info-title">Résultats du Semestre 1</div>
+                    <div class="student-info-subtitle">Filière : L1TC-L1 Licence TC</div>
+                </div>
+            `;
+
+            html += `
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 10%">Numéro</th>
+                            <th style="width: 25%">Nom et Prénom</th>
+                            <th style="width: 8%">TP</th>
+                            <th style="width: 8%">CC</th>
+                            <th style="width: 10%">Examen</th>
+                            <th style="width: 12%">NFe</th>
+                            <th style="width: 10%">Crédit</th>
+                            <th style="width: 17%">Observations</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            // صف معلومات الطالب (الاسم والرقم داخل الجدول فقط)
+            html += `
+                <tr class="student-info-row">
+                    <td>${student.id}</td>
+                    <td class="subject-name-cell">${student.name}</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td style="font-weight: bold; color: #2c3e50;">Moyenne Semestre : ${student.moyenneGenerale.toFixed(2)}</td>
+                    <td></td>
+                    <td class="${student.statusSemestre === 'Validé' ? 'status-valid' : 'status-non-valid'}">${student.statusSemestre}</td>
+                </tr>
+            `;
+
+            // عرض الوحدات والمواد
+            Object.keys(MODULES_S1).forEach(moduleCode => {
+                const module = student.modules[moduleCode];
                 
-                let html = `
-                    <div class="student-header">
-                        <div>
-                            <span class="student-name">${student.name}</span>
-                            <span class="student-id"> (Matricule: ${student.id})</span>
-                        </div>
-                        <div>
-                            ${student.calculated ? 
-                                `<span class="${student.statusSemestre === 'Validé' ? 'status-valid' : 'status-non-valid'}">
-                                    ${student.statusSemestre}
-                                </span>` : 
-                                '<span style="color: #f39c12;">⏳ Non calculé</span>'
-                            }
-                            <button class="delete-btn" onclick="deleteStudent(${index})"><i class="fas fa-trash"></i> Supprimer</button>
-                        </div>
-                    </div>
-                `;
-
-                if (student.calculated) {
+                if (module) {
+                    // صف الموديل مع نتائجه (كما في الصورة)
                     html += `
-                        <div class="student-info-header">
-                            <div class="student-info-title">Résultats du Semestre 1</div>
-                            <div class="student-info-subtitle">Filière : L1TC-L1 Licence TC</div>
-                        </div>
-                    `;
-
-                    html += `
-                        <table class="results-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 10%">Numéro</th>
-                                    <th style="width: 25%">Nom et Prénom</th>
-                                    <th style="width: 8%">TP</th>
-                                    <th style="width: 8%">CC</th>
-                                    <th style="width: 10%">Examen</th>
-                                    <th style="width: 12%">NFe</th>
-                                    <th style="width: 10%">Crédit</th>
-                                    <th style="width: 17%">Observations</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                    `;
-
-                    // صف معلومات الطالب
-                    html += `
-                        <tr class="student-info-row">
-                            <td>${student.id}</td>
-                            <td class="subject-name-cell">${student.name}</td>
+                        <tr class="module-row">
+                            <td>${moduleCode}</td>
+                            <td class="module-name-cell">${moduleNames[moduleCode]}</td>
                             <td></td>
                             <td></td>
                             <td></td>
-                            <td style="font-weight: bold; color: #2c3e50;">Moyenne Semestre : ${student.moyenneGenerale.toFixed(2)}</td>
-                            <td></td>
-                            <td class="${student.statusSemestre === 'Validé' ? 'status-valid' : 'status-non-valid'}">${student.statusSemestre}</td>
+                            <td style="font-weight: bold; color: #000000;">${module.moyenne.toFixed(2)}</td>
+                            <td style="font-weight: bold; color: #000000;">${module.credit.toFixed(1)}</td>
+                            <td class="${module.status === 'V' ? 'status-valid' : 'status-non-valid'}" style="font-weight: bold;">${module.status}</td>
                         </tr>
                     `;
 
-                    // عرض الوحدات والمواد
-                    Object.keys(MODULES_S1).forEach(moduleCode => {
-                        const module = student.modules[moduleCode];
-                        
-                        if (module) {
-                            // صف الموديل مع نتائجه (كما في الصورة)
+                    // عرض مواد الموديل
+                    MODULES_S1[moduleCode].forEach(subjectCode => {
+                        const subject = student.subjects[subjectCode];
+                        if (subject) {
+                            const subjectCredit = SUBJECTS_S1[subjectCode].credit;
+                            const subjectCreditEarned = subject.status === "C" ? subjectCredit.toFixed(1) : "0.0";
+                            
                             html += `
-                                <tr class="module-row">
-                                    <td>${moduleCode}</td>
-                                    <td class="module-name-cell">${moduleNames[moduleCode]}</td>
+                                <tr>
                                     <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td style="font-weight: bold; color: #000000;">${module.moyenne.toFixed(2)}</td>
-                                    <td style="font-weight: bold; color: #000000;">${module.credit.toFixed(1)}</td>
-                                    <td class="${module.status === 'V' ? 'status-valid' : 'status-non-valid'}" style="font-weight: bold;">${module.status}</td>
+                                    <td class="subject-name-cell" style="padding-left: 40px;">${SUBJECTS_S1[subjectCode].name}</td>
+                                    <td>${subject.tp !== undefined ? subject.tp.toFixed(2) : ''}</td>
+                                    <td>${subject.devoir.toFixed(2)}</td>
+                                    <td>${subject.exam.toFixed(2)}</td>
+                                    <td style="font-weight: bold; color: #000000;">${subject.moyenne.toFixed(2)}</td>
+                                    <td>${subjectCreditEarned}</td>
+                                    <td class="${subject.status === 'C' ? 'status-C' : 'status-NC'}" style="font-weight: bold;">${subject.status}</td>
                                 </tr>
                             `;
-
-                            // عرض مواد الموديل
-                            MODULES_S1[moduleCode].forEach(subjectCode => {
-                                const subject = student.subjects[subjectCode];
-                                if (subject) {
-                                    const subjectCredit = SUBJECTS_S1[subjectCode].credit;
-                                    const subjectCreditEarned = subject.status === "C" ? subjectCredit.toFixed(1) : "0.0";
-                                    
-                                    html += `
-                                        <tr>
-                                            <td></td>
-                                            <td class="subject-name-cell" style="padding-left: 40px;">${SUBJECTS_S1[subjectCode].name}</td>
-                                            <td>${subject.tp !== undefined ? subject.tp.toFixed(2) : ''}</td>
-                                            <td>${subject.devoir.toFixed(2)}</td>
-                                            <td>${subject.exam.toFixed(2)}</td>
-                                            <td style="font-weight: bold; color: #000000;">${subject.moyenne.toFixed(2)}</td>
-                                            <td>${subjectCreditEarned}</td>
-                                            <td class="${subject.status === 'C' ? 'status-C' : 'status-NC'}" style="font-weight: bold;">${subject.status}</td>
-                                        </tr>
-                                    `;
-                                }
-                            });
                         }
                     });
-
-                    html += `</tbody></table>`;
-                } else {
-                    html += `<p class="no-students">Cliquez sur "Calculer toutes les moyennes" pour voir les résultats</p>`;
                 }
-
-                studentCard.innerHTML = html;
-                studentsList.appendChild(studentCard);
             });
+
+            html += `</tbody></table>`;
+        } else {
+            html += `<p class="no-students">Cliquez sur "Calculer toutes les moyennes" pour voir les résultats</p>`;
         }
+
+        studentCard.innerHTML = html;
+        studentsList.appendChild(studentCard);
+    });
+}
 
         function displayStats(semester) {
             const students = studentsS1;
@@ -1050,120 +1049,128 @@
         }
 
         function generatePDF(semester) {
-            const students = studentsS1;
-            const moduleNames = MODULE_NAMES_S1;
-            const calculatedStudents = students.filter(s => s.calculated);
+    const students = studentsS1;
+    const moduleNames = MODULE_NAMES_S1;
+    const calculatedStudents = students.filter(s => s.calculated);
 
-            if (calculatedStudents.length === 0) {
-                showNotification('Aucun étudiant calculé. Veuillez d\'abord calculer les moyennes.', 'error');
-                return;
-            }
+    if (calculatedStudents.length === 0) {
+        showNotification('Aucun étudiant calculé. Veuillez d\'abord calculer les moyennes.', 'error');
+        return;
+    }
 
-            const doc = new jsPDF('p', 'mm', 'a4');
-            const pageWidth = doc.internal.pageSize.width;
-            const pageHeight = doc.internal.pageSize.height;
-            const margin = 15;
-            const tableWidth = pageWidth - (margin * 2);
+    const doc = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
+    const margin = 15;
+    const tableWidth = pageWidth - (margin * 2);
+    
+    // إضافة العنوان مرة واحدة فقط في بداية PDF
+    doc.setFontSize(16);
+    doc.text(`Résultats du Semestre 1`, margin, margin);
+    doc.setFontSize(12);
+    doc.text(`Filière : L1TC-L1 Licence TC`, margin, margin + 8);
+    
+    let currentY = margin + 20;
+    let studentsOnPage = 0;
+    let pageNumber = 1;
+    
+    calculatedStudents.forEach((student, studentIndex) => {
+        // إذا كان هناك بالفعل طالبين في الصفحة أو أن الطالب الجديد لا يتسع
+        if (studentsOnPage >= 2 || currentY > pageHeight - 100) {
+            doc.addPage();
+            pageNumber++;
+            currentY = margin;
+            studentsOnPage = 0;
+        }
+        
+        // عنوان الطالب فقط (بدون تكرار العنوان الرئيسي)
+        doc.setFontSize(12);
+        doc.text(`Étudiant: ${student.name} (Matricule: ${student.id})`, margin, currentY);
+        
+        currentY += 10;
+        
+        // جدول النتائج
+        const headers = ['Numéro', 'Nom et Prénom', 'TP', 'CC', 'Examen', 'NFe', 'Crédit', 'Observations'];
+        const colWidths = [tableWidth * 0.1, tableWidth * 0.25, tableWidth * 0.08, tableWidth * 0.08, 
+                          tableWidth * 0.1, tableWidth * 0.12, tableWidth * 0.1, tableWidth * 0.17];
+        
+        // En-têtes du tableau
+        doc.setFillColor(52, 73, 94);
+        doc.setTextColor(255, 255, 255);
+        doc.rect(margin, currentY, tableWidth, 10, 'F');
+        
+        let xPos = margin;
+        headers.forEach((header, i) => {
+            doc.text(header, xPos + 2, currentY + 7);
+            xPos += colWidths[i];
+        });
+        
+        currentY += 10;
+        doc.setTextColor(0, 0, 0);
+        
+        // معلومات الطالب داخل الجدول
+        doc.setFillColor(240, 248, 255);
+        doc.rect(margin, currentY, tableWidth, 8, 'F');
+        doc.text(student.id, margin + 2, currentY + 5);
+        doc.text(student.name, margin + colWidths[0] + 2, currentY + 5);
+        doc.text('Moy Sem: ' + student.moyenneGenerale.toFixed(2), margin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + 2, currentY + 5);
+        doc.text(student.statusSemestre, margin + tableWidth - colWidths[7] + 2, currentY + 5);
+        currentY += 8;
+        
+        // الوحدات والمواد
+        Object.keys(MODULES_S1).forEach(moduleCode => {
+            const module = student.modules[moduleCode];
             
-            // حساب ارتفاع كل طالب
-            let currentY = margin;
-            let studentsOnPage = 0;
-            
-            calculatedStudents.forEach((student, studentIndex) => {
-                // إذا كان هناك بالفعل طالبين في الصفحة أو أن الطالب الجديد لا يتسع
-                if (studentsOnPage >= 2 || currentY > pageHeight - 100) {
-                    doc.addPage();
-                    currentY = margin;
-                    studentsOnPage = 0;
-                }
-                
-                // En-tête pour chaque étudiant
-                doc.setFontSize(16);
-                doc.text(`Résultats du Semestre 1`, margin, currentY);
-                doc.setFontSize(12);
-                doc.text(`Filière : L1TC-L1 Licence TC`, margin, currentY + 8);
-                doc.text(`Étudiant: ${student.name} (Matricule: ${student.id})`, margin, currentY + 16);
-                
-                currentY += 30;
-                
-                // جدول النتائج
-                const headers = ['Numéro', 'Nom et Prénom', 'TP', 'CC', 'Examen', 'NFe', 'Crédit', 'Observations'];
-                const colWidths = [tableWidth * 0.1, tableWidth * 0.25, tableWidth * 0.08, tableWidth * 0.08, 
-                                  tableWidth * 0.1, tableWidth * 0.12, tableWidth * 0.1, tableWidth * 0.17];
-                
-                // En-têtes du tableau
-                doc.setFillColor(52, 73, 94);
-                doc.setTextColor(255, 255, 255);
-                doc.rect(margin, currentY, tableWidth, 10, 'F');
-                
-                let xPos = margin;
-                headers.forEach((header, i) => {
-                    doc.text(header, xPos + 2, currentY + 7);
-                    xPos += colWidths[i];
-                });
-                
-                currentY += 10;
-                doc.setTextColor(0, 0, 0);
-                
-                // معلومات الطالب
-                doc.setFillColor(240, 248, 255);
+            if (module) {
+                // صف الموديل
+                doc.setFillColor(232, 244, 252);
                 doc.rect(margin, currentY, tableWidth, 8, 'F');
-                doc.text(student.id, margin + 2, currentY + 5);
-                doc.text(student.name, margin + colWidths[0] + 2, currentY + 5);
-                doc.text('Moy Sem: ' + student.moyenneGenerale.toFixed(2), margin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + 2, currentY + 5);
-                doc.text(student.statusSemestre, margin + tableWidth - colWidths[7] + 2, currentY + 5);
+                doc.text(moduleCode, margin + 2, currentY + 5);
+                doc.text(moduleNames[moduleCode], margin + colWidths[0] + 2, currentY + 5);
+                doc.text(module.moyenne.toFixed(2), margin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + 2, currentY + 5);
+                doc.text(module.credit.toFixed(1), margin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + colWidths[5] + 2, currentY + 5);
+                doc.text(module.status, margin + tableWidth - colWidths[7] + 2, currentY + 5);
                 currentY += 8;
                 
-                // الوحدات والمواد
-                Object.keys(MODULES_S1).forEach(moduleCode => {
-                    const module = student.modules[moduleCode];
-                    
-                    if (module) {
-                        // صف الموديل
-                        doc.setFillColor(232, 244, 252);
-                        doc.rect(margin, currentY, tableWidth, 8, 'F');
-                        doc.text(moduleCode, margin + 2, currentY + 5);
-                        doc.text(moduleNames[moduleCode], margin + colWidths[0] + 2, currentY + 5);
-                        doc.text(module.moyenne.toFixed(2), margin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + 2, currentY + 5);
-                        doc.text(module.credit.toFixed(1), margin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + colWidths[5] + 2, currentY + 5);
-                        doc.text(module.status, margin + tableWidth - colWidths[7] + 2, currentY + 5);
-                        currentY += 8;
+                // مواد الموديل
+                MODULES_S1[moduleCode].forEach(subjectCode => {
+                    const subject = student.subjects[subjectCode];
+                    if (subject) {
+                        const subjectCredit = SUBJECTS_S1[subjectCode].credit;
+                        const subjectCreditEarned = subject.status === "C" ? subjectCredit.toFixed(1) : "0.0";
                         
-                        // مواد الموديل
-                        MODULES_S1[moduleCode].forEach(subjectCode => {
-                            const subject = student.subjects[subjectCode];
-                            if (subject) {
-                                const subjectCredit = SUBJECTS_S1[subjectCode].credit;
-                                const subjectCreditEarned = subject.status === "C" ? subjectCredit.toFixed(1) : "0.0";
-                                
-                                doc.text('', margin + 2, currentY + 5);
-                                doc.text(SUBJECTS_S1[subjectCode].name, margin + colWidths[0] + 2, currentY + 5);
-                                doc.text(subject.tp !== undefined ? subject.tp.toFixed(2) : '', margin + colWidths[0] + colWidths[1] + 2, currentY + 5);
-                                doc.text(subject.devoir.toFixed(2), margin + colWidths[0] + colWidths[1] + colWidths[2] + 2, currentY + 5);
-                                doc.text(subject.exam.toFixed(2), margin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + 2, currentY + 5);
-                                doc.text(subject.moyenne.toFixed(2), margin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + 2, currentY + 5);
-                                doc.text(subjectCreditEarned, margin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + colWidths[5] + 2, currentY + 5);
-                                doc.text(subject.status, margin + tableWidth - colWidths[7] + 2, currentY + 5);
-                                currentY += 6;
-                            }
-                        });
+                        doc.text('', margin + 2, currentY + 5);
+                        doc.text(SUBJECTS_S1[subjectCode].name, margin + colWidths[0] + 2, currentY + 5);
+                        doc.text(subject.tp !== undefined ? subject.tp.toFixed(2) : '', margin + colWidths[0] + colWidths[1] + 2, currentY + 5);
+                        doc.text(subject.devoir.toFixed(2), margin + colWidths[0] + colWidths[1] + colWidths[2] + 2, currentY + 5);
+                        doc.text(subject.exam.toFixed(2), margin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + 2, currentY + 5);
+                        doc.text(subject.moyenne.toFixed(2), margin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + 2, currentY + 5);
+                        doc.text(subjectCreditEarned, margin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + colWidths[5] + 2, currentY + 5);
+                        doc.text(subject.status, margin + tableWidth - colWidths[7] + 2, currentY + 5);
+                        currentY += 6;
                     }
                 });
-                
-                studentsOnPage++;
-                currentY += 10; // مسافة بين الطلاب
-                
-                // خط فاصل بين الطلاب إذا لم يكن الأخير
-                if (studentIndex < calculatedStudents.length - 1 && studentsOnPage < 2) {
-                    doc.setDrawColor(200, 200, 200);
-                    doc.line(margin, currentY, pageWidth - margin, currentY);
-                    currentY += 5;
-                }
-            });
-
-            doc.save(`rapport_moyennes_ISET_S1.pdf`);
-            showNotification('PDF généré avec succès', 'success');
+            }
+        });
+        
+        studentsOnPage++;
+        currentY += 10; // مسافة بين الطلاب
+        
+        // خط فاصل بين الطلاب إذا لم يكن الأخير
+        if (studentIndex < calculatedStudents.length - 1 && studentsOnPage < 2) {
+            doc.setDrawColor(200, 200, 200);
+            doc.line(margin, currentY, pageWidth - margin, currentY);
+            currentY += 5;
         }
+        
+        // إضافة رقم الصفحة
+        doc.setFontSize(10);
+        doc.text(`Page ${pageNumber}`, pageWidth - margin - 20, pageHeight - margin);
+    });
+
+    doc.save(`rapport_moyennes_ISET_S1.pdf`);
+    showNotification('PDF généré avec succès', 'success');
+}
 
         function showNotification(message, type) {
             const notificationArea = document.getElementById('notification-area');
