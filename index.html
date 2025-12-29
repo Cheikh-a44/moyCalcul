@@ -202,28 +202,39 @@
             margin: 15px 0;
             font-size: 14px;
             border: 1px solid #ddd;
-            table-layout: fixed;
         }
         .results-table th {
             background: #34495e;
             color: white;
-            padding: 12px;
+            padding: 12px 8px;
             text-align: center;
             font-weight: 600;
             border: 1px solid #ddd;
-            word-wrap: break-word;
         }
         .results-table td {
-            padding: 10px;
+            padding: 8px;
             border: 1px solid #ddd;
             text-align: center;
-            word-wrap: break-word;
         }
         .results-table tr:nth-child(even) {
             background-color: #f9f9f9;
         }
         .module-row {
             background-color: #e8f4fc !important;
+            font-weight: bold;
+        }
+        .module-info {
+            background-color: #e8f4fc;
+            font-weight: bold;
+            text-align: left !important;
+        }
+        .subject-name-cell {
+            text-align: left;
+            padding-left: 15px;
+        }
+        .module-name-cell {
+            text-align: left;
+            padding-left: 30px;
             font-weight: bold;
         }
         .student-info-row {
@@ -247,10 +258,6 @@
             color: #7f8c8d;
             padding: 20px;
             font-style: italic;
-        }
-        .subject-name-cell {
-            text-align: left;
-            padding-left: 15px;
         }
         .student-info-header {
             background: #f8f9fa;
@@ -337,15 +344,6 @@
             color: #7f8c8d;
             margin-top: 5px;
         }
-        /* تحديد عرض الأعمدة لمنع التداخل */
-        .results-table th:nth-child(1), .results-table td:nth-child(1) { width: 10%; }
-        .results-table th:nth-child(2), .results-table td:nth-child(2) { width: 20%; }
-        .results-table th:nth-child(3), .results-table td:nth-child(3) { width: 8%; }
-        .results-table th:nth-child(4), .results-table td:nth-child(4) { width: 8%; }
-        .results-table th:nth-child(5), .results-table td:nth-child(5) { width: 10%; }
-        .results-table th:nth-child(6), .results-table td:nth-child(6) { width: 12%; }
-        .results-table th:nth-child(7), .results-table td:nth-child(7) { width: 8%; }
-        .results-table th:nth-child(8), .results-table td:nth-child(8) { width: 12%; }
         
         /* تحسينات للهواتف المحمولة */
         @media (max-width: 768px) {
@@ -403,48 +401,6 @@
             .subject-input input {
                 width: 70px;
             }
-        }
-        
-        /* ============================================
-           نتائج المادة والموديل بالخط الغامق 
-           ============================================ */
-        
-        /* هذه الفئة للنتائج العددية (المعدلات) */
-        .moyenne-bold {
-            font-weight: bold !important;
-            color: #000000 !important;
-            font-size: 14px !important;
-            text-align: center !important;
-        }
-        
-        /* هذه الفئة لحالة الموديل (V/NV) */
-        .module-bold {
-            font-weight: bold !important;
-            color: #000000 !important;
-            font-size: 15px !important;
-        }
-        
-        /* خلفية خاصة لخلية نتيجة الموديل */
-        .module-result-cell {
-            background-color: #e8f4fc !important;
-            font-weight: bold !important;
-            color: #000000 !important;
-            border: 1px solid #3498db !important;
-        }
-        
-        /* خلفية خاصة لخلية نتيجة المادة */
-        .subject-result-cell {
-            background-color: #f8f9fa !important;
-            font-weight: bold !important;
-            color: #000000 !important;
-            border: 1px solid #ddd !important;
-        }
-        
-        /* لون داكن للمعدل العام */
-        .general-average {
-            font-weight: bold !important;
-            color: #2c3e50 !important;
-            font-size: 15px !important;
         }
     </style>
 </head>
@@ -953,14 +909,14 @@
                         <table class="results-table">
                             <thead>
                                 <tr>
-                                    <th>Numéro</th>
-                                    <th>Nom et Prénom</th>
-                                    <th>TP</th>
-                                    <th>CC</th>
-                                    <th>Examen</th>
-                                    <th>NFe</th>
-                                    <th>Crédit</th>
-                                    <th>Observations</th>
+                                    <th style="width: 10%">Numéro</th>
+                                    <th style="width: 25%">Nom et Prénom</th>
+                                    <th style="width: 8%">TP</th>
+                                    <th style="width: 8%">CC</th>
+                                    <th style="width: 10%">Examen</th>
+                                    <th style="width: 12%">NFe</th>
+                                    <th style="width: 10%">Crédit</th>
+                                    <th style="width: 17%">Observations</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -974,7 +930,7 @@
                             <td></td>
                             <td></td>
                             <td></td>
-                            <td class="general-average">Moyenne Semestre : ${student.moyenneGenerale.toFixed(2)}</td>
+                            <td style="font-weight: bold; color: #2c3e50;">Moyenne Semestre : ${student.moyenneGenerale.toFixed(2)}</td>
                             <td></td>
                             <td class="${student.statusSemestre === 'Validé' ? 'status-valid' : 'status-non-valid'}">${student.statusSemestre}</td>
                         </tr>
@@ -985,20 +941,21 @@
                         const module = student.modules[moduleCode];
                         
                         if (module) {
-                            // صف نتيجة الموديل
+                            // صف الموديل مع نتائجه (كما في الصورة)
                             html += `
                                 <tr class="module-row">
                                     <td>${moduleCode}</td>
-                                    <td class="subject-name-cell">${moduleNames[moduleCode]}</td>
+                                    <td class="module-name-cell">${moduleNames[moduleCode]}</td>
                                     <td></td>
                                     <td></td>
                                     <td></td>
-                                    <td class="module-result-cell moyenne-bold">${module.moyenne.toFixed(2)}</td>
-                                    <td class="module-result-cell">${module.credit.toFixed(1)}</td>
-                                    <td class="${module.status === 'V' ? 'status-valid' : 'status-non-valid'} module-bold">${module.status}</td>
+                                    <td style="font-weight: bold; color: #000000;">${module.moyenne.toFixed(2)}</td>
+                                    <td style="font-weight: bold; color: #000000;">${module.credit.toFixed(1)}</td>
+                                    <td class="${module.status === 'V' ? 'status-valid' : 'status-non-valid'}" style="font-weight: bold;">${module.status}</td>
                                 </tr>
                             `;
 
+                            // عرض مواد الموديل
                             MODULES_S1[moduleCode].forEach(subjectCode => {
                                 const subject = student.subjects[subjectCode];
                                 if (subject) {
@@ -1008,13 +965,13 @@
                                     html += `
                                         <tr>
                                             <td></td>
-                                            <td class="subject-name-cell">${SUBJECTS_S1[subjectCode].name}</td>
+                                            <td class="subject-name-cell" style="padding-left: 40px;">${SUBJECTS_S1[subjectCode].name}</td>
                                             <td>${subject.tp !== undefined ? subject.tp.toFixed(2) : ''}</td>
                                             <td>${subject.devoir.toFixed(2)}</td>
                                             <td>${subject.exam.toFixed(2)}</td>
-                                            <td class="subject-result-cell moyenne-bold">${subject.moyenne.toFixed(2)}</td>
+                                            <td style="font-weight: bold; color: #000000;">${subject.moyenne.toFixed(2)}</td>
                                             <td>${subjectCreditEarned}</td>
-                                            <td class="${subject.status === 'C' ? 'status-C' : 'status-NC'} moyenne-bold">${subject.status}</td>
+                                            <td class="${subject.status === 'C' ? 'status-C' : 'status-NC'}" style="font-weight: bold;">${subject.status}</td>
                                         </tr>
                                     `;
                                 }
@@ -1102,80 +1059,106 @@
                 return;
             }
 
-            const doc = new jsPDF();
-            calculatedStudents.forEach((student, index) => {
-                if (index > 0) {
+            const doc = new jsPDF('p', 'mm', 'a4');
+            const pageWidth = doc.internal.pageSize.width;
+            const pageHeight = doc.internal.pageSize.height;
+            const margin = 15;
+            const tableWidth = pageWidth - (margin * 2);
+            
+            // حساب ارتفاع كل طالب
+            let currentY = margin;
+            let studentsOnPage = 0;
+            
+            calculatedStudents.forEach((student, studentIndex) => {
+                // إذا كان هناك بالفعل طالبين في الصفحة أو أن الطالب الجديد لا يتسع
+                if (studentsOnPage >= 2 || currentY > pageHeight - 100) {
                     doc.addPage();
+                    currentY = margin;
+                    studentsOnPage = 0;
                 }
-
-                // En-tête
+                
+                // En-tête pour chaque étudiant
                 doc.setFontSize(16);
-                doc.text(`Résultats du Semestre 1`, 20, 20);
+                doc.text(`Résultats du Semestre 1`, margin, currentY);
                 doc.setFontSize(12);
-                doc.text('Filière : L1TC-L1 Licence TC', 20, 30);
-
+                doc.text(`Filière : L1TC-L1 Licence TC`, margin, currentY + 8);
+                doc.text(`Étudiant: ${student.name} (Matricule: ${student.id})`, margin, currentY + 16);
+                
+                currentY += 30;
+                
                 // جدول النتائج
                 const headers = ['Numéro', 'Nom et Prénom', 'TP', 'CC', 'Examen', 'NFe', 'Crédit', 'Observations'];
-                let y = 45;
+                const colWidths = [tableWidth * 0.1, tableWidth * 0.25, tableWidth * 0.08, tableWidth * 0.08, 
+                                  tableWidth * 0.1, tableWidth * 0.12, tableWidth * 0.1, tableWidth * 0.17];
                 
                 // En-têtes du tableau
                 doc.setFillColor(52, 73, 94);
                 doc.setTextColor(255, 255, 255);
-                doc.rect(20, y, 170, 10, 'F');
-                doc.text(headers[0], 22, y+7);
-                doc.text(headers[1], 40, y+7);
-                doc.text(headers[2], 85, y+7);
-                doc.text(headers[3], 100, y+7);
-                doc.text(headers[4], 115, y+7);
-                doc.text(headers[5], 135, y+7);
-                doc.text(headers[6], 155, y+7);
-                doc.text(headers[7], 170, y+7);
+                doc.rect(margin, currentY, tableWidth, 10, 'F');
                 
-                y += 10;
+                let xPos = margin;
+                headers.forEach((header, i) => {
+                    doc.text(header, xPos + 2, currentY + 7);
+                    xPos += colWidths[i];
+                });
+                
+                currentY += 10;
                 doc.setTextColor(0, 0, 0);
-
+                
                 // معلومات الطالب
                 doc.setFillColor(240, 248, 255);
-                doc.rect(20, y, 170, 8, 'F');
-                doc.text(student.id, 22, y+5);
-                doc.text("  "+student.name, 50, y+5);
-                doc.text('Moy Sem: ' + student.moyenneGenerale.toFixed(2), 135, y+5);
-                doc.text(student.statusSemestre, 170, y+5);
-                y += 8;
-
+                doc.rect(margin, currentY, tableWidth, 8, 'F');
+                doc.text(student.id, margin + 2, currentY + 5);
+                doc.text(student.name, margin + colWidths[0] + 2, currentY + 5);
+                doc.text('Moy Sem: ' + student.moyenneGenerale.toFixed(2), margin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + 2, currentY + 5);
+                doc.text(student.statusSemestre, margin + tableWidth - colWidths[7] + 2, currentY + 5);
+                currentY += 8;
+                
                 // الوحدات والمواد
                 Object.keys(MODULES_S1).forEach(moduleCode => {
                     const module = student.modules[moduleCode];
                     
                     if (module) {
+                        // صف الموديل
                         doc.setFillColor(232, 244, 252);
-                        doc.rect(20, y, 170, 8, 'F');
-                        doc.text(moduleCode, 22, y+5);
-                        doc.text(moduleNames[moduleCode], 40, y+5);
-                        doc.text(module.moyenne.toFixed(2), 135, y+5);
-                        doc.text(module.credit.toFixed(1), 155, y+5);
-                        doc.text(module.status, 170, y+5);
-                        y += 8;
-
+                        doc.rect(margin, currentY, tableWidth, 8, 'F');
+                        doc.text(moduleCode, margin + 2, currentY + 5);
+                        doc.text(moduleNames[moduleCode], margin + colWidths[0] + 2, currentY + 5);
+                        doc.text(module.moyenne.toFixed(2), margin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + 2, currentY + 5);
+                        doc.text(module.credit.toFixed(1), margin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + colWidths[5] + 2, currentY + 5);
+                        doc.text(module.status, margin + tableWidth - colWidths[7] + 2, currentY + 5);
+                        currentY += 8;
+                        
+                        // مواد الموديل
                         MODULES_S1[moduleCode].forEach(subjectCode => {
                             const subject = student.subjects[subjectCode];
                             if (subject) {
                                 const subjectCredit = SUBJECTS_S1[subjectCode].credit;
                                 const subjectCreditEarned = subject.status === "C" ? subjectCredit.toFixed(1) : "0.0";
                                 
-                                doc.text('', 22, y+5);
-                                doc.text(SUBJECTS_S1[subjectCode].name, 40, y+5);
-                                doc.text(subject.tp !== undefined ? subject.tp.toFixed(2) : '', 85, y+5);
-                                doc.text(subject.devoir.toFixed(2), 100, y+5);
-                                doc.text(subject.exam.toFixed(2), 115, y+5);
-                                doc.text(subject.moyenne.toFixed(2), 135, y+5);
-                                doc.text(subjectCreditEarned, 155, y+5);
-                                doc.text(subject.status, 170, y+5);
-                                y += 6;
+                                doc.text('', margin + 2, currentY + 5);
+                                doc.text(SUBJECTS_S1[subjectCode].name, margin + colWidths[0] + 2, currentY + 5);
+                                doc.text(subject.tp !== undefined ? subject.tp.toFixed(2) : '', margin + colWidths[0] + colWidths[1] + 2, currentY + 5);
+                                doc.text(subject.devoir.toFixed(2), margin + colWidths[0] + colWidths[1] + colWidths[2] + 2, currentY + 5);
+                                doc.text(subject.exam.toFixed(2), margin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + 2, currentY + 5);
+                                doc.text(subject.moyenne.toFixed(2), margin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + 2, currentY + 5);
+                                doc.text(subjectCreditEarned, margin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + colWidths[5] + 2, currentY + 5);
+                                doc.text(subject.status, margin + tableWidth - colWidths[7] + 2, currentY + 5);
+                                currentY += 6;
                             }
                         });
                     }
                 });
+                
+                studentsOnPage++;
+                currentY += 10; // مسافة بين الطلاب
+                
+                // خط فاصل بين الطلاب إذا لم يكن الأخير
+                if (studentIndex < calculatedStudents.length - 1 && studentsOnPage < 2) {
+                    doc.setDrawColor(200, 200, 200);
+                    doc.line(margin, currentY, pageWidth - margin, currentY);
+                    currentY += 5;
+                }
             });
 
             doc.save(`rapport_moyennes_ISET_S1.pdf`);
