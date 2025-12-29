@@ -404,47 +404,48 @@
                 width: 70px;
             }
         }
+        
         /* ============================================
-   نتائج المادة والموديل بالخط الغامق 
-   ============================================ */
-
-/* هذه الفئة للنتائج العددية (المعدلات) */
-.moyenne-bold {
-    font-weight: bold !important;
-    color: #000000 !important;
-    font-size: 14px !important;
-    text-align: center !important;
-}
-
-/* هذه الفئة لحالة الموديل (V/NV) */
-.module-bold {
-    font-weight: bold !important;
-    color: #000000 !important;
-    font-size: 15px !important;
-}
-
-/* خلفية خاصة لخلية نتيجة الموديل */
-.module-result-cell {
-    background-color: #e8f4fc !important;
-    font-weight: bold !important;
-    color: #000000 !important;
-    border: 1px solid #3498db !important;
-}
-
-/* خلفية خاصة لخلية نتيجة المادة */
-.subject-result-cell {
-    background-color: #f8f9fa !important;
-    font-weight: bold !important;
-    color: #000000 !important;
-    border: 1px solid #ddd !important;
-}
-
-/* لون داكن للمعدل العام */
-.general-average {
-    font-weight: bold !important;
-    color: #2c3e50 !important;
-    font-size: 15px !important;
-}
+           نتائج المادة والموديل بالخط الغامق 
+           ============================================ */
+        
+        /* هذه الفئة للنتائج العددية (المعدلات) */
+        .moyenne-bold {
+            font-weight: bold !important;
+            color: #000000 !important;
+            font-size: 14px !important;
+            text-align: center !important;
+        }
+        
+        /* هذه الفئة لحالة الموديل (V/NV) */
+        .module-bold {
+            font-weight: bold !important;
+            color: #000000 !important;
+            font-size: 15px !important;
+        }
+        
+        /* خلفية خاصة لخلية نتيجة الموديل */
+        .module-result-cell {
+            background-color: #e8f4fc !important;
+            font-weight: bold !important;
+            color: #000000 !important;
+            border: 1px solid #3498db !important;
+        }
+        
+        /* خلفية خاصة لخلية نتيجة المادة */
+        .subject-result-cell {
+            background-color: #f8f9fa !important;
+            font-weight: bold !important;
+            color: #000000 !important;
+            border: 1px solid #ddd !important;
+        }
+        
+        /* لون داكن للمعدل العام */
+        .general-average {
+            font-weight: bold !important;
+            color: #2c3e50 !important;
+            font-size: 15px !important;
+        }
     </style>
 </head>
 <body>
@@ -941,19 +942,12 @@
                 `;
 
                 if (student.calculated) {
-                    // صف معلومات الطالب
-html += `
-    <tr class="student-info-row">
-        <td>${student.id}</td>
-        <td class="subject-name-cell">${student.name}</td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td class="general-average">Moyenne Semestre : ${student.moyenneGenerale.toFixed(2)}</td>
-        <td></td>
-        <td class="${student.statusSemestre === 'Validé' ? 'status-valid' : 'status-non-valid'}">${student.statusSemestre}</td>
-    </tr>
-`;
+                    html += `
+                        <div class="student-info-header">
+                            <div class="student-info-title">Résultats du Semestre 1</div>
+                            <div class="student-info-subtitle">Filière : L1TC-L1 Licence TC</div>
+                        </div>
+                    `;
 
                     html += `
                         <table class="results-table">
@@ -980,7 +974,7 @@ html += `
                             <td></td>
                             <td></td>
                             <td></td>
-                            <td>Moyenne Semestre : ${student.moyenneGenerale.toFixed(2)}</td>
+                            <td class="general-average">Moyenne Semestre : ${student.moyenneGenerale.toFixed(2)}</td>
                             <td></td>
                             <td class="${student.statusSemestre === 'Validé' ? 'status-valid' : 'status-non-valid'}">${student.statusSemestre}</td>
                         </tr>
@@ -992,18 +986,18 @@ html += `
                         
                         if (module) {
                             // صف نتيجة الموديل
-html += `
-    <tr class="module-row">
-        <td>${moduleCode}</td>
-        <td class="subject-name-cell">${moduleNames[moduleCode]}</td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td class="module-result-cell moyenne-bold">${module.moyenne.toFixed(2)}</td>
-        <td class="module-result-cell">${module.credit.toFixed(1)}</td>
-        <td class="${module.status === 'V' ? 'status-valid' : 'status-non-valid'} module-bold">${module.status}</td>
-    </tr>
-`;
+                            html += `
+                                <tr class="module-row">
+                                    <td>${moduleCode}</td>
+                                    <td class="subject-name-cell">${moduleNames[moduleCode]}</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td class="module-result-cell moyenne-bold">${module.moyenne.toFixed(2)}</td>
+                                    <td class="module-result-cell">${module.credit.toFixed(1)}</td>
+                                    <td class="${module.status === 'V' ? 'status-valid' : 'status-non-valid'} module-bold">${module.status}</td>
+                                </tr>
+                            `;
 
                             MODULES_S1[moduleCode].forEach(subjectCode => {
                                 const subject = student.subjects[subjectCode];
@@ -1018,9 +1012,9 @@ html += `
                                             <td>${subject.tp !== undefined ? subject.tp.toFixed(2) : ''}</td>
                                             <td>${subject.devoir.toFixed(2)}</td>
                                             <td>${subject.exam.toFixed(2)}</td>
-                                            <td>${subject.moyenne.toFixed(2)}</td>
+                                            <td class="subject-result-cell moyenne-bold">${subject.moyenne.toFixed(2)}</td>
                                             <td>${subjectCreditEarned}</td>
-                                            <td class="${subject.status === 'C' ? 'status-C' : 'status-NC'}">${subject.status}</td>
+                                            <td class="${subject.status === 'C' ? 'status-C' : 'status-NC'} moyenne-bold">${subject.status}</td>
                                         </tr>
                                     `;
                                 }
@@ -1164,25 +1158,25 @@ html += `
                         y += 8;
 
                         MODULES_S1[moduleCode].forEach(subjectCode => {
-    const subject = student.subjects[subjectCode];
-    if (subject) {
-        const subjectCredit = SUBJECTS_S1[subjectCode].credit;
-        const subjectCreditEarned = subject.status === "C" ? subjectCredit.toFixed(1) : "0.0";
-        
-        html += `
-            <tr>
-                <td></td>
-                <td class="subject-name-cell">${SUBJECTS_S1[subjectCode].name}</td>
-                <td>${subject.tp !== undefined ? subject.tp.toFixed(2) : ''}</td>
-                <td>${subject.devoir.toFixed(2)}</td>
-                <td>${subject.exam.toFixed(2)}</td>
-                <td class="subject-result-cell moyenne-bold">${subject.moyenne.toFixed(2)}</td>
-                <td>${subjectCreditEarned}</td>
-                <td class="${subject.status === 'C' ? 'status-C' : 'status-NC'} moyenne-bold">${subject.status}</td>
-            </tr>
-        `;
-    }
-});
+                            const subject = student.subjects[subjectCode];
+                            if (subject) {
+                                const subjectCredit = SUBJECTS_S1[subjectCode].credit;
+                                const subjectCreditEarned = subject.status === "C" ? subjectCredit.toFixed(1) : "0.0";
+                                
+                                doc.text('', 22, y+5);
+                                doc.text(SUBJECTS_S1[subjectCode].name, 40, y+5);
+                                doc.text(subject.tp !== undefined ? subject.tp.toFixed(2) : '', 85, y+5);
+                                doc.text(subject.devoir.toFixed(2), 100, y+5);
+                                doc.text(subject.exam.toFixed(2), 115, y+5);
+                                doc.text(subject.moyenne.toFixed(2), 135, y+5);
+                                doc.text(subjectCreditEarned, 155, y+5);
+                                doc.text(subject.status, 170, y+5);
+                                y += 6;
+                            }
+                        });
+                    }
+                });
+            });
 
             doc.save(`rapport_moyennes_ISET_S1.pdf`);
             showNotification('PDF généré avec succès', 'success');
