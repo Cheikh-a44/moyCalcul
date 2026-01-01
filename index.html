@@ -557,7 +557,7 @@
                             <td class="subject-input"><input type="number" id="PEST-exam-s3" step="0.01" min="0" max="20" placeholder="Note" required></td>
                         </tr>
                         <tr>
-                            <td class="subject-name">Entomologie et Nematologie</td>
+                            <td class="subject-name">Entomologie et Nemato</td>
                             <td class="subject-input"><input type="number" id="ENTO-tp-s3" step="0.01" min="0" max="20" placeholder="Note" required></td>
                             <td class="subject-input"><input type="number" id="ENTO-devoir-s3" step="0.01" min="0" max="20" placeholder="Note" required></td>
                             <td class="subject-input"><input type="number" id="ENTO-exam-s3" step="0.01" min="0" max="20" placeholder="Note" required></td>
@@ -613,7 +613,7 @@
             'AGRO': { name: 'I.Agronomie', credit: 4.0 },
             'HORT': { name: 'I.Horticulture', credit: 4.0 },
             'PEST': { name: 'Pesticides agricoles', credit: 4.0 },
-            'ENTO': { name: 'Entomologie et Nematologie', credit: 4.0 },
+            'ENTO': { name: 'Entomologie et Nemato', credit: 4.0 },
             'SOL': { name: 'Science des sols', credit: 4.0 },
             'PLANT': { name: 'Science des plantes', credit: 4.0 }
         };
@@ -1247,7 +1247,7 @@
                             if (subject) {
                                 const subjectCredit = SUBJECTS_S3[subjectCode].credit;
                                 const subjectCreditEarned = subject.status === "C" ? subjectCredit.toFixed(1) : "0.0";
-                                doc.setFontSize(8);
+                                
                                 
                                 doc.text('', margin + 2, currentY + 5);
                                 doc.text(SUBJECTS_S3[subjectCode].name, margin + colWidths[0] + 2, currentY + 5);
