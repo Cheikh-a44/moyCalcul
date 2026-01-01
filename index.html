@@ -1247,6 +1247,7 @@
                             if (subject) {
                                 const subjectCredit = SUBJECTS_S3[subjectCode].credit;
                                 const subjectCreditEarned = subject.status === "C" ? subjectCredit.toFixed(1) : "0.0";
+                                doc.setFontSize(8);
                                 
                                 doc.text('', margin + 2, currentY + 5);
                                 doc.text(SUBJECTS_S3[subjectCode].name, margin + colWidths[0] + 2, currentY + 5);
