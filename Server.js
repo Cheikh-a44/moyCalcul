@@ -1,25 +1,34 @@
 const express = require('express');
-const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// تفعيل CORS للسماح للـ Frontend بالتواصل
-app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173'
-}));
+// هذا يسمح للـ Frontend بالتواصل مع الـ Backend
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    next();
+});
 
 app.use(express.json());
 
-// مثال على API بسيط
+// مسار تجريبي لاختبار أن الخادم يعمل
+app.get('/', (req, res) => {
+    res.json({ 
+        message: 'الخادم يعمل بنجاح على Railway!',
+        status: 'online',
+        time: new Date().toISOString()
+    });
+});
+
+// مسار API مثال للمستخدمين
 app.get('/api/users', (req, res) => {
-    res.json({ users: ['Ahmed', 'Sara', 'Mohamed'] });
+    res.json({
+        users: ['أحمد', 'سارة', 'محمد', 'فاطمة']
+    });
 });
 
-app.post('/api/login', (req, res) => {
-    const { email, password } = req.body;
-    res.json({ message: 'تم تسجيل الدخول بنجاح', email });
-});
-
-app.listen(PORT, () => {
-    console.log(`Backend يعمل على المنفذ ${PORT}`);
+// تشغيل الخادم
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`✅ الخادم يعمل على المنفذ: ${PORT}`);
+    console.log(`🌐 الرابط: http://localhost:${PORT}`);
 });
