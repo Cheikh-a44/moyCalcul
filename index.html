@@ -384,10 +384,10 @@
         <h3><i class="fas fa-sign-in-alt"></i> Connexion Coordinateur</h3>
         <div id="loginMessage" class="message error"></div>
         <div class="form-group">
-          <label>Type de coordinateur</label>
+          <label>Coordinateur</label>
           <select id="adminTypeSelect">
-            <option value="PPV">PPV</option>
-            <option value="TC">TC</option>
+            <option value="PPV">Coordinateur PPV</option>
+            <option value="TC">Coordinateur TC</option>
           </select>
         </div>
         <div class="form-group">
@@ -433,14 +433,7 @@
           
           <div class="form-group">
             <label>Semestre</label>
-            <select id="importSemester">
-              <option value="S1">S1</option>
-              <option value="S2">S2</option>
-              <option value="S3">S3</option>
-              <option value="S4">S4</option>
-              <option value="S5">S5</option>
-              <option value="S6">S6</option>
-            </select>
+            <select id="importSemester"></select>
           </div>
           
           <div class="form-group">
@@ -477,14 +470,7 @@
           
           <div class="form-group">
             <label>Semestre</label>
-            <select id="manageSemester">
-              <option value="S1">S1</option>
-              <option value="S2">S2</option>
-              <option value="S3">S3</option>
-              <option value="S4">S4</option>
-              <option value="S5">S5</option>
-              <option value="S6">S6</option>
-            </select>
+            <select id="manageSemester"></select>
           </div>
           
           <button class="admin-btn" onclick="loadSubjectsList()">
@@ -530,46 +516,15 @@
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
   
-  // Configuration Telegram - تم الإعداد
-  const TELEGRAM_CONFIG = {
-    botToken: "8693505694:AAEVqcwBXR3Jc_mYqB_wTYkRXrzRV1XrBOU",
-    chatId: "6797542444"
-  };
-
-  // Fonction pour envoyer une notification Telegram
-  async function sendTelegramNotification(message) {
-    try {
-      const url = `https://api.telegram.org/bot${TELEGRAM_CONFIG.botToken}/sendMessage`;
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: TELEGRAM_CONFIG.chatId,
-          text: message,
-          parse_mode: 'HTML'
-        })
-      });
-      
-      const data = await response.json();
-      if (!data.ok) {
-        console.error("Erreur Telegram:", data.description);
-      } else {
-        console.log("✅ Notification Telegram envoyée");
-      }
-    } catch (error) {
-      console.error("Erreur d'envoi Telegram:", error);
-    }
-  }
-
-  // Mots de passe des coordinateurs
+  // Mots de passe des coordinateurs (Hash SHA-256)
   const ADMIN_CREDENTIALS = {
     PPV: {
-      passwordHash: "8f5c5d8c9c5a5e4c1c5b7a9e8d6f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0c9d8e", // ppv123
+      passwordHash: "ea00ba89cec418315b1753b51a53cf7c6bcde2945e8bdee9a4944b01b24142ba",
       name: "PPV",
       allowedSemesters: ["S3", "S4", "S5", "S6"]
     },
     TC: {
-      passwordHash: "1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a", // tc123
+      passwordHash: "7795108f93bb653f7284a7ad3695bff6376d79f2d51c48bbe1cc977a9410d77e",
       name: "TC",
       allowedSemesters: ["S1", "S2"]
     }
@@ -687,23 +642,6 @@
     
     if (ADMIN_CREDENTIALS[type] && inputHash === ADMIN_CREDENTIALS[type].passwordHash) {
       currentAdmin = { type: type, ...ADMIN_CREDENTIALS[type] };
-      
-      // Envoi notification Telegram
-      const now = new Date();
-      const timeString = now.toLocaleString('fr-FR', { 
-        timeZone: 'Africa/Nouakchott',
-        dateStyle: 'full',
-        timeStyle: 'medium'
-      });
-      
-      const telegramMessage = 
-        `🔐 <b>Connexion Coordinateur ISET</b>\n` +
-        `━━━━━━━━━━━━━━━━━━━━\n` +
-        `👤 <b>Coordinateur:</b> ${type}\n` +
-        `🕐 <b>Date/Heure:</b> ${timeString}\n` +
-        `✅ <b>Statut:</b> Connexion réussie`;
-      
-      await sendTelegramNotification(telegramMessage);
       
       document.getElementById('adminLoginForm').style.display = 'none';
       document.getElementById('adminActions').style.display = 'block';
