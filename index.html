@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نتائج المعهد - ISET Résultats</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --primary: #0077b6;
+    --primary-dark: #005f87;
+    --primary-light: #caf0f8;
+    --secondary: #0096c7;
+    --light: #f5f7fa;
+    --white: #ffffff;
+    --text: #333333;
+    --text-light: #666666;
+    --shadow: 0 4px 12px rgba(0,0,0,0.1);
+    --radius: 10px;
+    --transition: all 0.3s ease;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { 
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    background:var(--light); 
+    color:var(--text); 
+    line-height:1.6;
+    overflow-x: hidden;
+  }
+  
+  header { 
+    background:linear-gradient(135deg,var(--primary),var(--secondary)); 
+    color:var(--white); 
+    padding:2rem 1rem; 
+    text-align:center; 
+    box-shadow:var(--shadow); 
+  }
+  header h1 { 
+    font-size:2.2rem; 
+    margin-bottom:0.5rem; 
+    display:flex; 
+    align-items:center; 
+    justify-content:center; 
+    gap:0.5rem; 
+    flex-wrap:wrap; 
+  }
+  header p { 
+    font-size:1.1rem; 
+    opacity:0.9; 
+    max-width:600px; 
+    margin:0 auto; 
+  }
+  .container { 
+    max-width:900px; 
+    margin:0 auto; 
+    padding:0 1rem; 
+  }
+  
+  .lang-switch {
+    display: inline-flex;
+    gap: 0.5rem;
+    margin-left: 1rem;
+  }
+  .lang-btn {
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.5);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: var(--transition);
+  }
+  .lang-btn:hover, .lang-btn.active {
+    background: white;
+    color: var(--primary);
+  }
+  
+  .section-title { 
+    padding:1.5rem 0 1rem; 
+    font-size:1.4rem; 
+    color:var(--primary); 
+    display:flex; 
+    align-items:center; 
+    gap:0.5rem; 
+    justify-content:center;
+  }
+  
+  .search-box { 
+    display:flex; 
+    max-width:500px; 
+    margin:0 auto; 
+  }
+  .search-box input { 
+    flex:1; 
+    padding:1rem 1.2rem; 
+    border:2px solid var(--primary-light); 
+    border-radius:var(--radius) 0 0 var(--radius); 
+    font-size:1rem; 
+    outline:none; 
+    transition:var(--transition); 
+  }
+  .search-box input:focus { 
+    border-color:var(--primary); 
+  }
+  .search-box button { 
+    background:var(--primary); 
+    color:var(--white); 
+    border:none; 
+    padding:0 2rem; 
+    border-radius:0 var(--radius) var(--radius) 0; 
+    cursor:pointer; 
+    transition:var(--transition); 
+    font-size:1rem; 
+    font-weight:600;
+  }
+  .search-box button:hover { 
+    background:var(--primary-dark); 
+  }
+  
+  .result-card {
+    background:var(--white);
+    border-radius:var(--radius);
+    padding:1.5rem;
+    margin:2rem 0;
+    box-shadow:var(--shadow);
+  }
+  
+  .student-header {
+    text-align:center;
+    margin-bottom:1.5rem;
+    padding-bottom:1rem;
+    border-bottom:2px solid var(--primary-light);
+  }
+  .student-header i {
+    font-size:3rem;
+    color:var(--primary);
+    margin-bottom:0.5rem;
+  }
+  .student-header h3 {
+    font-size:1.3rem;
+    color:var(--text);
+  }
+  .student-header p {
+    color:var(--text-light);
+    font-size:0.9rem;
+  }
+  
+  .results-table {
+    width:100%;
+    border-collapse:collapse;
+  }
+  .results-table th {
+    background:var(--primary-light);
+    padding:0.8rem;
+    text-align:left;
+    color:var(--primary-dark);
+    font-weight:600;
+  }
+  .results-table td {
+    padding:0.8rem;
+    border-bottom:1px solid #eee;
+  }
+  .results-table tr:last-child td {
+    border-bottom:none;
+  }
+  
+  .grade-badge {
+    font-weight:bold;
+    padding:0.2rem 0.8rem;
+    border-radius:20px;
+    display:inline-block;
+  }
+  .grade-success {
+    color:#2d6a4f;
+    background:#d4edda;
+  }
+  .grade-fail {
+    color:#e63946;
+    background:#f8d7da;
+  }
+  
+  .empty-state { 
+    text-align:center; 
+    padding:3rem 1rem; 
+    color:var(--text-light); 
+  }
+  .empty-state i { 
+    font-size:4rem; 
+    margin-bottom:1rem; 
+    color:var(--primary-light); 
+  }
+  
+  .loading { 
+    text-align:center; 
+    padding:3rem; 
+    color:var(--text-light); 
+  }
+  .loading i { 
+    font-size:2.5rem; 
+    animation:spin 1s linear infinite; 
+    margin-bottom:1rem; 
+  }
+  @keyframes spin { 
+    from{transform:rotate(0deg)} 
+    to{transform:rotate(360deg)} 
+  }
+  
+  .admin-section {
+    margin-top:3rem;
+    padding-top:2rem;
+    border-top:2px dashed var(--primary-light);
+  }
+  
+  .admin-btn {
+    padding:0.8rem 1.5rem;
+    background:var(--primary);
+    color:white;
+    border:none;
+    border-radius:var(--radius);
+    font-size:1rem;
+    font-weight:600;
+    cursor:pointer;
+    transition:var(--transition);
+    margin:0.3rem;
+  }
+  .admin-btn:hover {
+    background:var(--primary-dark);
+  }
+  .admin-btn.secondary {
+    background:#6c757d;
+  }
+  .admin-btn.secondary:hover {
+    background:#5a6268;
+  }
+  .admin-btn.danger {
+    background:#dc3545;
+  }
+  .admin-btn.danger:hover {
+    background:#c82333;
+  }
+  .admin-btn.success {
+    background:#28a745;
+  }
+  .admin-btn.success:hover {
+    background:#218838;
+  }
+  
+  .admin-panel {
+    background:var(--white);
+    border-radius:var(--radius);
+    padding:2rem;
+    margin:1.5rem 0;
+    box-shadow:var(--shadow);
+    display:none;
+  }
+  .admin-panel.active {
+    display:block;
+  }
+  .admin-panel h3 {
+    color:var(--primary);
+    margin-bottom:1.5rem;
+    display:flex;
+    align-items:center;
+    gap:0.5rem;
+  }
+  
+  .form-group {
+    margin-bottom:1.2rem;
+  }
+  .form-group label {
+    display:block;
+    font-weight:600;
+    margin-bottom:0.3rem;
+    color:var(--text);
+  }
+  .form-group select, .form-group input {
+    width:100%;
+    padding:0.8rem 1rem;
+    border:2px solid var(--primary-light);
+    border-radius:var(--radius);
+    font-size:1rem;
+    outline:none;
+    transition:var(--transition);
+  }
+  .form-group select:focus, .form-group input:focus {
+    border-color:var(--primary);
+  }
+  
+  .message {
+    padding:0.8rem 1rem;
+    border-radius:var(--radius);
+    margin-bottom:1rem;
+    display:none;
+  }
+  .message.success {
+    background:#d4edda;
+    color:#155724;
+  }
+  .message.error {
+    background:#f8d7da;
+    color:#721c24;
+  }
+  
+  .footer {
+    text-align:center;
+    padding:2rem;
+    color:var(--text-light);
+    font-size:0.9rem;
+  }
+  
+  @media (max-width:600px) {
+    header h1 { font-size:1.8rem; }
+    .results-table { font-size:0.9rem; }
+    .results-table th, .results-table td { padding:0.6rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <h1>
+      <i class="fas fa-graduation-cap"></i>
+      <span data-lang="title">نتائج المعهد العالي للتعليم التكنولوجي</span>
+      <span class="lang-switch">
+        <button class="lang-btn active" onclick="setLanguage('fr')">FR</button>
+        <button class="lang-btn" onclick="setLanguage('ar')">عربي</button>
+      </span>
+    </h1>
+    <p data-lang="subtitle">منصة الاستعلام عن النتائج الدراسية - المعهد العالي للتعليم التكنولوجي</p>
+  </div>
+</header>
+
+<div class="container">
+  
+  <!-- قسم البحث عن النتائج -->
+  <div class="result-card">
+    <h2 class="section-title">
+      <i class="fas fa-search"></i> 
+      <span data-lang="consultResults">استعلام عن النتيجة</span>
+    </h2>
+    
+    <div style="margin-bottom:1.5rem;">
+      <label style="display:block; margin-bottom:0.5rem; font-weight:500;" data-lang="department">القسم</label>
+      <select id="resultDepartment" style="width:100%; padding:0.8rem; border:2px solid var(--primary-light); border-radius:var(--radius); font-size:1rem;">
+        <option value="">-- <span data-lang="chooseDepartment">اختر القسم</span> --</option>
+        <option value="PPV">PPV (وقاية النبات)</option>
+        <option value="TC">TC (جذع مشترك)</option>
+      </select>
+    </div>
+    
+    <div style="margin-bottom:1.5rem;">
+      <label style="display:block; margin-bottom:0.5rem; font-weight:500;" data-lang="semester">الفصل</label>
+      <select id="semesterSelect" style="width:100%; padding:0.8rem; border:2px solid var(--primary-light); border-radius:var(--radius); font-size:1rem;">
+        <option value="">-- <span data-lang="chooseSemester">اختر الفصل</span> --</option>
+      </select>
+    </div>
+    
+    <div class="search-box">
+      <input type="text" id="studentIdInput" data-lang-placeholder="enterStudentId" placeholder="أدخل رقم الطالب...">
+      <button onclick="searchStudentResult()">
+        <i class="fas fa-search"></i> 
+        <span data-lang="search">بحث</span>
+      </button>
+    </div>
+    
+    <div id="studentResultContainer" style="display:none;"></div>
+    <div id="noResultMessage" style="display:none;" class="empty-state">
+      <i class="fas fa-user-graduate"></i>
+      <h3 data-lang="noResult">لا توجد نتيجة لهذا الرقم</h3>
+      <p data-lang="noResultDesc">تأكد من رقم الطالب والفصل الدراسي</p>
+    </div>
+  </div>
+  
+  <!-- قسم الأدمن -->
+  <div class="admin-section">
+    <div style="text-align:center;">
+      <button class="admin-btn success" onclick="showAdminLogin()">
+        <i class="fas fa-lock"></i> 
+        <span data-lang="adminAccess">دخول المشرفين</span>
+      </button>
+    </div>
+    
+    <!-- لوحة الأدمن (مخفية حتى تسجيل الدخول) -->
+    <div id="adminPanel" class="admin-panel">
+      <div id="adminLoginForm">
+        <h3><i class="fas fa-sign-in-alt"></i> <span data-lang="adminLogin">تسجيل دخول المشرف</span></h3>
+        <div id="loginMessage" class="message error"></div>
+        <div class="form-group">
+          <label data-lang="adminType">نوع المشرف</label>
+          <select id="adminTypeSelect">
+            <option value="PPV">PPV - مسؤول قسم وقاية النبات</option>
+            <option value="TC">TC - مسؤول الجذع المشترك</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label data-lang="password">كلمة المرور</label>
+          <input type="password" id="adminPassword" placeholder="••••••••" onkeyup="if(event.key==='Enter') adminLogin()">
+        </div>
+        <button class="admin-btn" onclick="adminLogin()">
+          <i class="fas fa-sign-in-alt"></i> 
+          <span data-lang="login">دخول</span>
+        </button>
+        <button class="admin-btn secondary" onclick="hideAdminPanel()">
+          <span data-lang="cancel">إلغاء</span>
+        </button>
+      </div>
+      
+      <div id="adminActions" style="display:none;">
+        <h3><i class="fas fa-user-shield"></i> <span data-lang="adminPanel">لوحة تحكم المشرف</span> - <span id="adminDeptName"></span></h3>
+        
+        <div id="adminMessage" class="message success"></div>
+        
+        <div style="display:grid; gap:1rem; margin:1.5rem 0;">
+          <button class="admin-btn success" onclick="showImportForm()">
+            <i class="fas fa-upload"></i> 
+            <span data-lang="importResults">استيراد النتائج</span>
+          </button>
+          <button class="admin-btn danger" onclick="showManageSubjects()">
+            <i class="fas fa-trash-alt"></i> 
+            <span data-lang="manageResults">إدارة المواد</span>
+          </button>
+        </div>
+        
+        <!-- نموذج استيراد النتائج -->
+        <div id="importForm" style="display:none;">
+          <h4 style="margin-bottom:1rem;"><i class="fas fa-file-excel"></i> <span data-lang="importResults">استيراد النتائج</span></h4>
+          
+          <div class="form-group">
+            <label data-lang="semester">الفصل</label>
+            <select id="importSemester">
+              <option value="S1">S1</option>
+              <option value="S2">S2</option>
+              <option value="S3">S3</option>
+              <option value="S4">S4</option>
+              <option value="S5">S5</option>
+              <option value="S6">S6</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label data-lang="evaluationType">نوع التقييم</label>
+            <select id="importType">
+              <option value="Examen">Examen / امتحان</option>
+              <option value="Contrôle continu">Contrôle continu / مراقبة مستمرة</option>
+              <option value="Rattrapage">Rattrapage / استدراك</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label data-lang="subjectName">اسم المادة</label>
+            <input type="text" id="importSubject" placeholder="مثال: Phytoprotection 1">
+          </div>
+          
+          <div class="form-group">
+            <label data-lang="excelFile">ملف Excel</label>
+            <input type="file" id="importFile" accept=".xlsx, .xls, .csv">
+          </div>
+          
+          <button class="admin-btn success" onclick="processImport()">
+            <i class="fas fa-upload"></i> 
+            <span data-lang="import">استيراد</span>
+          </button>
+          <button class="admin-btn secondary" onclick="hideImportForm()">
+            <span data-lang="cancel">إلغاء</span>
+          </button>
+        </div>
+        
+        <!-- قسم إدارة المواد -->
+        <div id="manageSubjects" style="display:none;">
+          <h4 style="margin-bottom:1rem;"><i class="fas fa-list"></i> <span data-lang="manageSubjects">إدارة المواد</span></h4>
+          
+          <div class="form-group">
+            <label data-lang="semester">الفصل</label>
+            <select id="manageSemester">
+              <option value="S1">S1</option>
+              <option value="S2">S2</option>
+              <option value="S3">S3</option>
+              <option value="S4">S4</option>
+              <option value="S5">S5</option>
+              <option value="S6">S6</option>
+            </select>
+          </div>
+          
+          <button class="admin-btn" onclick="loadSubjectsList()">
+            <i class="fas fa-search"></i> 
+            <span data-lang="showSubjects">عرض المواد</span>
+          </button>
+          
+          <div id="subjectsListContainer" style="margin-top:1.5rem;"></div>
+          
+          <button class="admin-btn secondary" onclick="hideManageSubjects()" style="margin-top:1rem;">
+            <span data-lang="back">رجوع</span>
+          </button>
+        </div>
+        
+        <button class="admin-btn secondary" onclick="adminLogout()" style="margin-top:1rem;">
+          <i class="fas fa-sign-out-alt"></i> 
+          <span data-lang="logout">تسجيل الخروج</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <p>© 2024 ISET - Institut Supérieur d'Enseignement Technologique</p>
+  <p style="margin-top:0.5rem; font-size:0.8rem;">Par Cheikh_A</p>
+</footer>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, set, remove, get, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDnrW6WnmbEFpbWzlW9IGglxAafajt2Kyo",
+    authDomain: "iset-b9974.firebaseapp.com",
+    projectId: "iset-b9974",
+    storageBucket: "iset-b9974.firebasestorage.app",
+    messagingSenderId: "1054170284751",
+    appId: "1:1054170284751:web:8f02232478430d5ae2adba",
+    databaseURL: "https://iset-b9974-default-rtdb.firebaseio.com/"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  
+  // كلمات مرور المشرفين
+  const ADMIN_CREDENTIALS = {
+    PPV: {
+      passwordHash: "9af15b336e6a9619928537df30b2e6a2376569fcf9d7e773eccede65606529a0", // results123
+      name: "PPV",
+      allowedSemesters: ["S3", "S4", "S5", "S6"]
+    },
+    TC: {
+      passwordHash: "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92", // tc123456
+      name: "TC",
+      allowedSemesters: ["S1", "S2"]
+    }
+  };
+  
+  async function hashPassword(password) {
+    const msgBuffer = new TextEncoder().encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  // ===== الترجمة =====
+  const translations = {
+    fr: {
+      title: "Résultats ISET",
+      subtitle: "Plateforme de consultation des résultats académiques - ISET",
+      consultResults: "Consulter votre résultat",
+      department: "Département",
+      semester: "Semestre",
+      chooseDepartment: "Choisir un département",
+      chooseSemester: "Choisir un semestre",
+      enterStudentId: "Entrez votre numéro d'étudiant...",
+      search: "Rechercher",
+      noResult: "Aucun résultat trouvé",
+      noResultDesc: "Vérifiez votre numéro d'étudiant et le semestre",
+      adminAccess: "Accès Administrateurs",
+      adminLogin: "Connexion Administrateur",
+      adminType: "Type d'administrateur",
+      password: "Mot de passe",
+      login: "Connexion",
+      cancel: "Annuler",
+      adminPanel: "Panneau d'administration",
+      importResults: "Importer des résultats",
+      manageResults: "Gérer les matières",
+      evaluationType: "Type d'évaluation",
+      subjectName: "Nom de la matière",
+      excelFile: "Fichier Excel",
+      import: "Importer",
+      manageSubjects: "Gérer les matières",
+      showSubjects: "Afficher les matières",
+      back: "Retour",
+      logout: "Déconnexion",
+      subject: "Matière",
+      type: "Type",
+      students: "Étudiants",
+      action: "Action",
+      delete: "Supprimer",
+      grade: "Note"
+    },
+    ar: {
+      title: "نتائج المعهد العالي للتعليم التكنولوجي",
+      subtitle: "منصة الاستعلام عن النتائج الدراسية - المعهد العالي للتعليم التكنولوجي",
+      consultResults: "استعلام عن النتيجة",
+      department: "القسم",
+      semester: "الفصل",
+      chooseDepartment: "اختر القسم",
+      chooseSemester: "اختر الفصل",
+      enterStudentId: "أدخل رقم الطالب...",
+      search: "بحث",
+      noResult: "لا توجد نتيجة لهذا الرقم",
+      noResultDesc: "تأكد من رقم الطالب والفصل الدراسي",
+      adminAccess: "دخول المشرفين",
+      adminLogin: "تسجيل دخول المشرف",
+      adminType: "نوع المشرف",
+      password: "كلمة المرور",
+      login: "دخول",
+      cancel: "إلغاء",
+      adminPanel: "لوحة تحكم المشرف",
+      importResults: "استيراد النتائج",
+      manageResults: "إدارة المواد",
+      evaluationType: "نوع التقييم",
+      subjectName: "اسم المادة",
+      excelFile: "ملف Excel",
+      import: "استيراد",
+      manageSubjects: "إدارة المواد",
+      showSubjects: "عرض المواد",
+      back: "رجوع",
+      logout: "تسجيل الخروج",
+      subject: "المادة",
+      type: "النوع",
+      students: "الطلاب",
+      action: "إجراء",
+      delete: "حذف",
+      grade: "النقطة"
+    }
+  };
+
+  let currentLang = 'fr';
+  let currentAdmin = null; // { type: 'PPV' or 'TC' }
+
+  window.setLanguage = (lang) => {
+    currentLang = lang;
+    
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.classList.remove('active');
+      if ((lang === 'fr' && btn.textContent === 'FR') || (lang === 'ar' && btn.textContent === 'عربي')) {
+        btn.classList.add('active');
+      }
+    });
+    
+    document.querySelectorAll('[data-lang]').forEach(el => {
+      const key = el.getAttribute('data-lang');
+      if (translations[lang] && translations[lang][key]) {
+        el.textContent = translations[lang][key];
+      }
+    });
+    
+    document.querySelectorAll('[data-lang-placeholder]').forEach(el => {
+      const key = el.getAttribute('data-lang-placeholder');
+      if (translations[lang] && translations[lang][key]) {
+        el.placeholder = translations[lang][key];
+      }
+    });
+    
+    if (lang === 'ar') {
+      document.documentElement.setAttribute('dir', 'rtl');
+      document.documentElement.setAttribute('lang', 'ar');
+    } else {
+      document.documentElement.setAttribute('dir', 'ltr');
+      document.documentElement.setAttribute('lang', 'fr');
+    }
+    
+    localStorage.setItem('preferredLanguage', lang);
+  };
+
+  const savedLang = localStorage.getItem('preferredLanguage') || 'fr';
+  setLanguage(savedLang);
+
+  // تحديث قائمة الفصول حسب القسم
+  document.getElementById('resultDepartment').addEventListener('change', function() {
+    const dept = this.value;
+    const semesterSelect = document.getElementById('semesterSelect');
+    semesterSelect.innerHTML = '<option value="">-- ' + translations[currentLang].chooseSemester + ' --</option>';
+    
+    if (dept === 'PPV') {
+      ['S3', 'S4', 'S5', 'S6'].forEach(s => {
+        semesterSelect.innerHTML += `<option value="${s}">${s}</option>`;
+      });
+    } else if (dept === 'TC') {
+      ['S1', 'S2'].forEach(s => {
+        semesterSelect.innerHTML += `<option value="${s}">${s}</option>`;
+      });
+    }
+  });
+
+  // ===== البحث عن نتيجة طالب (مع التحسين) =====
+  window.searchStudentResult = async () => {
+    const department = document.getElementById('resultDepartment').value;
+    const semester = document.getElementById('semesterSelect').value;
+    const studentId = document.getElementById('studentIdInput').value.trim();
+    const container = document.getElementById('studentResultContainer');
+    const noResult = document.getElementById('noResultMessage');
+    
+    if (!department || !semester || !studentId) {
+      alert(currentLang === 'ar' ? 'الرجاء ملء جميع الحقول' : 'Veuillez remplir tous les champs');
+      return;
+    }
+    
+    container.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><p>' + 
+      (currentLang === 'ar' ? 'جاري التحميل...' : 'Chargement...') + '</p></div>';
+    container.style.display = 'block';
+    noResult.style.display = 'none';
+    
+    // استخدام الهيكل الجديد: النتائج مقسمة حسب الطالب أولاً
+    const snapshot = await get(child(ref(db), `results/${department}/${semester}/${studentId}`));
+    
+    if (!snapshot.exists()) {
+      container.style.display = 'none';
+      noResult.style.display = 'block';
+      return;
+    }
+    
+    const studentData = snapshot.val();
+    const results = [];
+    let studentName = '';
+    
+    // جمع جميع نتائج هذا الطالب
+    for (let key in studentData) {
+      const data = studentData[key];
+      results.push({
+        subject: data.subject,
+        type: data.type,
+        grade: data.grade
+      });
+      if (!studentName) studentName = data.name;
+    }
+    
+    // عرض النتائج
+    let html = `
+      <div class="student-header">
+        <i class="fas fa-user-graduate"></i>
+        <h3>${studentName || (currentLang === 'ar' ? 'طالب' : 'Étudiant')}</h3>
+        <p>N° ${studentId} | ${department} | ${semester}</p>
+      </div>
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th>${currentLang === 'ar' ? 'المادة' : 'Matière'}</th>
+            <th>${currentLang === 'ar' ? 'النوع' : 'Type'}</th>
+            <th style="text-align:center;">${currentLang === 'ar' ? 'النقطة' : 'Note'}</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+    
+    results.forEach(r => {
+      const gradeClass = r.grade >= 10 ? 'grade-success' : 'grade-fail';
+      html += `<tr>
+        <td>${r.subject}</td>
+        <td>${r.type}</td>
+        <td style="text-align:center;">
+          <span class="grade-badge ${gradeClass}">${r.grade}/20</span>
+        </td>
+      </tr>`;
+    });
+    
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  };
+
+  // ===== وظائف الأدمن =====
+  window.showAdminLogin = () => {
+    document.getElementById('adminPanel').classList.add('active');
+    document.getElementById('adminLoginForm').style.display = 'block';
+    document.getElementById('adminActions').style.display = 'none';
+    document.getElementById('loginMessage').style.display = 'none';
+  };
+
+  window.hideAdminPanel = () => {
+    document.getElementById('adminPanel').classList.remove('active');
+    currentAdmin = null;
+  };
+
+  window.adminLogin = async () => {
+    const type = document.getElementById('adminTypeSelect').value;
+    const password = document.getElementById('adminPassword').value;
+    const msgDiv = document.getElementById('loginMessage');
+    
+    if (!password) {
+      msgDiv.textContent = currentLang === 'ar' ? 'الرجاء إدخال كلمة المرور' : 'Veuillez entrer le mot de passe';
+      msgDiv.style.display = 'block';
+      return;
+    }
+    
+    const inputHash = await hashPassword(password);
+    
+    if (ADMIN_CREDENTIALS[type] && inputHash === ADMIN_CREDENTIALS[type].passwordHash) {
+      currentAdmin = { 
+        type: type, 
+        ...ADMIN_CREDENTIALS[type] 
+      };
+      
+      document.getElementById('adminLoginForm').style.display = 'none';
+      document.getElementById('adminActions').style.display = 'block';
+      document.getElementById('adminDeptName').textContent = type;
+      document.getElementById('adminPassword').value = '';
+      msgDiv.style.display = 'none';
+      
+      // تحديث قوائم الفصول حسب صلاحيات المشرف
+      updateAdminSemesterSelects();
+    } else {
+      msgDiv.textContent = currentLang === 'ar' ? 'كلمة المرور غير صحيحة' : 'Mot de passe incorrect';
+      msgDiv.style.display = 'block';
+    }
+  };
+
+  function updateAdminSemesterSelects() {
+    const allowed = currentAdmin.allowedSemesters;
+    const importSelect = document.getElementById('importSemester');
+    const manageSelect = document.getElementById('manageSemester');
+    
+    [importSelect, manageSelect].forEach(select => {
+      select.innerHTML = '';
+      allowed.forEach(s => {
+        select.innerHTML += `<option value="${s}">${s}</option>`;
+      });
+    });
+  }
+
+  window.adminLogout = () => {
+    currentAdmin = null;
+    document.getElementById('adminLoginForm').style.display = 'block';
+    document.getElementById('adminActions').style.display = 'none';
+    document.getElementById('importForm').style.display = 'none';
+    document.getElementById('manageSubjects').style.display = 'none';
+  };
+
+  window.showImportForm = () => {
+    document.getElementById('importForm').style.display = 'block';
+    document.getElementById('manageSubjects').style.display = 'none';
+  };
+
+  window.hideImportForm = () => {
+    document.getElementById('importForm').style.display = 'none';
+  };
+
+  window.showManageSubjects = () => {
+    document.getElementById('manageSubjects').style.display = 'block';
+    document.getElementById('importForm').style.display = 'none';
+    document.getElementById('subjectsListContainer').innerHTML = '';
+  };
+
+  window.hideManageSubjects = () => {
+    document.getElementById('manageSubjects').style.display = 'none';
+  };
+
+  window.processImport = async () => {
+    const semester = document.getElementById('importSemester').value;
+    const type = document.getElementById('importType').value;
+    const subject = document.getElementById('importSubject').value.trim();
+    const fileInput = document.getElementById('importFile');
+    const file = fileInput.files[0];
+    const msgDiv = document.getElementById('adminMessage');
+    
+    if (!subject || !file) {
+      alert(currentLang === 'ar' ? 'الرجاء ملء جميع الحقول واختيار ملف' : 'Veuillez remplir tous les champs et choisir un fichier');
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = async function(event) {
+      const data = new Uint8Array(event.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      
+      let importCount = 0;
+      
+      for (let row of jsonData) {
+        let studentId = row.NUMERO || row.Numero || row.numero || row.ID || row.id || row.Matricule || row.matricule;
+        if (studentId) studentId = String(studentId).trim();
+        
+        const studentName = row['NOM & PRENOM'] || row['Nom et Prenom'] || row.Nom || row.nom || '';
+        
+        let grade = row['NOTE/20'] || row['Note/20'] || row.Note || row.note || row.Grade || row.grade || row.Moyenne || row.moyenne;
+        if (grade) grade = parseFloat(String(grade).replace(',', '.'));
+        
+        if (studentId && !isNaN(grade) && grade >= 0 && grade <= 20) {
+          // استخدام الهيكل الجديد: المسار يبدأ بالطالب
+          const path = `results/${currentAdmin.type}/${semester}/${studentId}/${subject}_${type}`;
+          await set(ref(db, path), {
+            grade: grade,
+            name: studentName,
+            subject: subject,
+            type: type
+          });
+          importCount++;
+        }
+      }
+      
+      msgDiv.textContent = currentLang === 'ar' ? 
+        `✅ تم استيراد ${importCount} نقطة بنجاح` : 
+        `✅ ${importCount} notes importées avec succès`;
+      msgDiv.style.display = 'block';
+      
+      document.getElementById('importSubject').value = '';
+      fileInput.value = '';
+      hideImportForm();
+      
+      setTimeout(() => msgDiv.style.display = 'none', 3000);
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  window.loadSubjectsList = async () => {
+    const semester = document.getElementById('manageSemester').value;
+    const container = document.getElementById('subjectsListContainer');
+    
+    container.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i></div>';
+    
+    const snapshot = await get(child(ref(db), `results/${currentAdmin.type}/${semester}`));
+    
+    if (!snapshot.exists()) {
+      container.innerHTML = '<p style="text-align:center; color:var(--text-light);">' + 
+        (currentLang === 'ar' ? 'لا توجد مواد في هذا الفصل' : 'Aucune matière dans ce semestre') + '</p>';
+      return;
+    }
+    
+    const allStudents = snapshot.val();
+    const subjectsMap = new Map();
+    
+    // جمع جميع المواد الموجودة
+    for (let studentId in allStudents) {
+      const studentSubjects = allStudents[studentId];
+      for (let subjectKey in studentSubjects) {
+        const data = studentSubjects[subjectKey];
+        const key = `${data.subject}_${data.type}`;
+        if (!subjectsMap.has(key)) {
+          subjectsMap.set(key, {
+            subject: data.subject,
+            type: data.type,
+            count: 0,
+            key: subjectKey
+          });
+        }
+        subjectsMap.get(key).count++;
+      }
+    }
+    
+    if (subjectsMap.size === 0) {
+      container.innerHTML = '<p style="text-align:center; color:var(--text-light);">' + 
+        (currentLang === 'ar' ? 'لا توجد مواد في هذا الفصل' : 'Aucune matière dans ce semestre') + '</p>';
+      return;
+    }
+    
+    let html = `
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th>${currentLang === 'ar' ? 'المادة' : 'Matière'}</th>
+            <th>${currentLang === 'ar' ? 'النوع' : 'Type'}</th>
+            <th style="text-align:center;">${currentLang === 'ar' ? 'الطلاب' : 'Étudiants'}</th>
+            <th style="text-align:center;">${currentLang === 'ar' ? 'إجراء' : 'Action'}</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+    
+    for (let [key, data] of subjectsMap) {
+      html += `<tr>
+        <td>${data.subject}</td>
+        <td>${data.type}</td>
+        <td style="text-align:center;">${data.count}</td>
+        <td style="text-align:center;">
+          <button class="admin-btn danger" style="padding:0.3rem 0.8rem; font-size:0.8rem;" 
+            onclick="deleteSubject('${semester}', '${data.subject}', '${data.type}')">
+            <i class="fas fa-trash"></i> ${currentLang === 'ar' ? 'حذف' : 'Supprimer'}
+          </button>
+        </td>
+      </tr>`;
+    }
+    
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  };
+
+  window.deleteSubject = async (semester, subject, type) => {
+    if (!confirm(currentLang === 'ar' ? 
+      '⚠️ هل أنت متأكد من حذف جميع نقاط هذه المادة؟' : 
+      '⚠️ Êtes-vous sûr de vouloir supprimer TOUTES les notes de cette matière ?')) return;
+    
+    const snapshot = await get(child(ref(db), `results/${currentAdmin.type}/${semester}`));
+    if (!snapshot.exists()) return;
+    
+    const allStudents = snapshot.val();
+    const subjectKey = `${subject}_${type}`;
+    
+    for (let studentId in allStudents) {
+      if (allStudents[studentId][subjectKey]) {
+        await remove(ref(db, `results/${currentAdmin.type}/${semester}/${studentId}/${subjectKey}`));
+      }
+    }
+    
+    alert(currentLang === 'ar' ? '✅ تم حذف المادة بنجاح' : '✅ Matière supprimée avec succès');
+    loadSubjectsList();
+  };
+
+  // ===== مستمعات الأحداث =====
+  document.getElementById('studentIdInput').addEventListener('keyup', e => {
+    if (e.key === 'Enter') searchStudentResult();
+  });
+
+  document.addEventListener('click', function(e) {
+    const panel = document.getElementById('adminPanel');
+    if (panel.classList.contains('active') && !panel.contains(e.target) && 
+        !e.target.closest('.admin-btn') && !e.target.closest('#adminPanel')) {
+      // لا تغلق تلقائياً
+    }
+  });
+</script>
+</body>
+</html>
