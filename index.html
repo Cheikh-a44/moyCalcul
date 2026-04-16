@@ -7,6 +7,8 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
   :root {
     --primary: #0077b6;
@@ -308,6 +310,21 @@
     color:var(--text-light);
     font-size:0.9rem;
   }
+
+  .progress-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--primary-light);
+    border-radius: 4px;
+    margin: 1rem 0;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--primary);
+    width: 0%;
+    transition: width 0.3s ease;
+  }
   
   @media (max-width:600px) {
     header h1 { font-size:1.8rem; }
@@ -424,10 +441,10 @@
           <h4 style="margin-bottom:1rem;"><i class="fas fa-file-import"></i> Importer des résultats</h4>
           
           <div class="file-format-info">
-            <i class="fas fa-info-circle"></i> <strong>Formats acceptés :</strong> Excel (.xlsx, .xls), CSV, Texte (.txt)
+            <i class="fas fa-info-circle"></i> <strong>Formats acceptés :</strong> Excel, CSV, Texte, PDF, Images (JPG, PNG)
             <ul>
-              <li><strong>Colonnes attendues :</strong> NUMERO (ou ID), NOM & PRENOM (ou Nom), NOTE/20 (ou Note)</li>
-              <li><strong>Séparateur CSV :</strong> Virgule (,) ou Point-virgule (;)</li>
+              <li><strong>Colonnes attendues :</strong> NUMERO, NOM & PRENOM, NOTE/20</li>
+              <li><strong>Images :</strong> Tableau clair avec ces colonnes (OCR)</li>
             </ul>
           </div>
           
@@ -452,7 +469,14 @@
           
           <div class="form-group">
             <label>Fichier à importer</label>
-            <input type="file" id="importFile" accept=".xlsx, .xls, .csv, .txt">
+            <input type="file" id="importFile" accept=".xlsx, .xls, .csv, .txt, .pdf, .jpg, .jpeg, .png">
+          </div>
+          
+          <div id="ocrProgress" style="display:none;">
+            <div class="progress-bar">
+              <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <p id="progressText" style="text-align:center;">Analyse de l'image...</p>
           </div>
           
           <button class="admin-btn success" onclick="processImport()">
@@ -516,7 +540,8 @@
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
   
-  // Mots de passe des coordinateurs (Hash SHA-256)
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  
   const ADMIN_CREDENTIALS = {
     PPV: {
       passwordHash: "ea00ba89cec418315b1753b51a53cf7c6bcde2945e8bdee9a4944b01b24142ba",
@@ -539,7 +564,6 @@
 
   let currentAdmin = null;
 
-  // Mise à jour des semestres selon le département
   document.getElementById('resultDepartment').addEventListener('change', function() {
     const dept = this.value;
     const semesterSelect = document.getElementById('semesterSelect');
@@ -556,7 +580,6 @@
     }
   });
 
-  // Exposer les fonctions globalement
   window.searchStudentResult = async () => {
     const department = document.getElementById('resultDepartment').value;
     const semester = document.getElementById('semesterSelect').value;
@@ -649,7 +672,6 @@
       document.getElementById('adminPassword').value = '';
       msgDiv.style.display = 'none';
       
-      // Mise à jour des sélecteurs de semestre
       const allowed = currentAdmin.allowedSemesters;
       const importSelect = document.getElementById('importSemester');
       const manageSelect = document.getElementById('manageSemester');
@@ -678,6 +700,7 @@
 
   window.hideImportForm = () => {
     document.getElementById('importForm').style.display = 'none';
+    document.getElementById('ocrProgress').style.display = 'none';
   };
 
   window.showManageSubjects = () => {
@@ -690,17 +713,123 @@
     document.getElementById('manageSubjects').style.display = 'none';
   };
 
+  // استخراج النص من PDF
+  async function extractTextFromPDF(file) {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    let fullText = '';
+    
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items.map(item => item.str).join(' ');
+      fullText += pageText + '\n';
+    }
+    
+    return fullText;
+  }
+
+  // استخراج النص من صورة باستخدام OCR
+  async function extractTextFromImage(file) {
+    const progressDiv = document.getElementById('ocrProgress');
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+    
+    progressDiv.style.display = 'block';
+    
+    const result = await Tesseract.recognize(file, 'fra+eng', {
+      logger: m => {
+        if (m.status === 'recognizing text') {
+          progressFill.style.width = (m.progress * 100) + '%';
+          progressText.textContent = `Analyse OCR: ${Math.round(m.progress * 100)}%`;
+        }
+      }
+    });
+    
+    progressDiv.style.display = 'none';
+    return result.data.text;
+  }
+
+  // تحويل النص إلى بيانات منظمة
+  function parseTextToData(text) {
+    const lines = text.split('\n').filter(line => line.trim().length > 0);
+    const data = [];
+    
+    for (let line of lines) {
+      // نمط: رقم مكون من 6-8 أرقام متبوعاً باسم ثم رقم بين 0 و 20
+      const match = line.match(/(\d{6,8})\s+([A-Za-zÀ-ÿ\s\-]+?)\s+(\d{1,2}(?:[.,]\d{1,2})?)/);
+      if (match) {
+        const grade = parseFloat(match[3].replace(',', '.'));
+        if (grade >= 0 && grade <= 20) {
+          data.push({
+            'NUMERO': match[1],
+            'NOM': match[2].trim(),
+            'NOTE': grade
+          });
+        }
+      }
+    }
+    
+    // إذا لم نجد شيئاً بالنمط الأول، نجرب نمطاً آخر
+    if (data.length === 0) {
+      const numberPattern = /\b(\d{6,8})\b/g;
+      
+      for (let line of lines) {
+        const numbers = [...line.matchAll(numberPattern)];
+        if (numbers.length >= 1) {
+          const studentId = numbers[0][1];
+          
+          const gradeMatch = line.match(/(\d{1,2}(?:[.,]\d{1,2})?)\s*\/?\s*20/);
+          if (gradeMatch) {
+            const grade = parseFloat(gradeMatch[1].replace(',', '.'));
+            if (grade >= 0 && grade <= 20) {
+              const name = line.replace(studentId, '').replace(gradeMatch[0], '').trim();
+              data.push({
+                'NUMERO': studentId,
+                'NOM': name,
+                'NOTE': grade
+              });
+            }
+          }
+        }
+      }
+    }
+    
+    return data;
+  }
+
   async function parseFile(file) {
     const fileName = file.name.toLowerCase();
-    return new Promise((resolve, reject) => {
-      if (fileName.endsWith('.csv') || fileName.endsWith('.txt')) {
+    
+    // معالجة الصور (OCR)
+    if (fileName.endsWith('.jpg') || fileName.endsWith('.jpeg') || fileName.endsWith('.png')) {
+      const text = await extractTextFromImage(file);
+      console.log('Texte extrait de l\'image:', text);
+      return parseTextToData(text);
+    }
+    
+    // معالجة PDF
+    if (fileName.endsWith('.pdf')) {
+      const text = await extractTextFromPDF(file);
+      console.log('Texte extrait du PDF:', text);
+      return parseTextToData(text);
+    }
+    
+    // معالجة CSV و TXT
+    if (fileName.endsWith('.csv') || fileName.endsWith('.txt')) {
+      return new Promise((resolve, reject) => {
         Papa.parse(file, {
           header: true,
           skipEmptyLines: true,
           complete: (results) => resolve(results.data),
           error: (error) => reject(error)
         });
-      } else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
+      });
+    }
+    
+    // معالجة Excel
+    if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
+      return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = (e) => {
           const data = new Uint8Array(e.target.result);
@@ -712,10 +841,10 @@
         };
         reader.onerror = reject;
         reader.readAsArrayBuffer(file);
-      } else {
-        reject(new Error('Format non supporté'));
-      }
-    });
+      });
+    }
+    
+    throw new Error('Format non supporté');
   }
 
   window.processImport = async () => {
@@ -731,17 +860,23 @@
       return;
     }
     
+    msgDiv.textContent = '⏳ Analyse du fichier en cours...';
+    msgDiv.style.display = 'block';
+    msgDiv.className = 'message';
+    
     try {
       const jsonData = await parseFile(file);
+      console.log('Données extraites:', jsonData);
+      
       let importCount = 0;
       
       for (let row of jsonData) {
-        let studentId = row.NUMERO || row.Numero || row.numero || row.ID || row.id || row.Matricule || row.matricule || row['N°'] || row['N° Etudiant'];
+        let studentId = row.NUMERO || row.Numero || row.numero || row.ID || row.id || row.Matricule || row.matricule || row['N°'] || row['N° Etudiant'] || row.NUM;
         if (studentId) studentId = String(studentId).trim();
         
-        const studentName = row['NOM & PRENOM'] || row['Nom et Prenom'] || row.Nom || row.nom || row['NOM'] || row['PRENOM'] || '';
+        const studentName = row['NOM & PRENOM'] || row['Nom et Prenom'] || row.Nom || row.nom || row['NOM'] || row['PRENOM'] || row.NAME || row.Name || row.NOM_COMPLET || row.NOM || '';
         
-        let grade = row['NOTE/20'] || row['Note/20'] || row.Note || row.note || row.Grade || row.grade || row.Moyenne || row.moyenne || row['NOTE'];
+        let grade = row['NOTE/20'] || row['Note/20'] || row.Note || row.note || row.Grade || row.grade || row.Moyenne || row.moyenne || row['NOTE'] || row.NOTE;
         if (grade) grade = parseFloat(String(grade).replace(',', '.'));
         
         if (studentId && !isNaN(grade) && grade >= 0 && grade <= 20) {
@@ -752,13 +887,15 @@
       }
       
       msgDiv.textContent = `✅ ${importCount} notes importées avec succès`;
-      msgDiv.style.display = 'block';
+      msgDiv.className = 'message success';
       document.getElementById('importSubject').value = '';
       fileInput.value = '';
       hideImportForm();
-      setTimeout(() => msgDiv.style.display = 'none', 3000);
+      setTimeout(() => msgDiv.style.display = 'none', 5000);
     } catch (error) {
-      alert('Erreur lors de l\'importation. Vérifiez le format du fichier.');
+      console.error('Erreur:', error);
+      msgDiv.textContent = '❌ Erreur lors de l\'importation. Vérifiez le format du fichier.';
+      msgDiv.className = 'message error';
     }
   };
 
