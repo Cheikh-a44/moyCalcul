@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html lang="fr" dir="ltr">
+<html lang="fr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>نتائج المعهد - ISET Résultats</title>
+<title>Résultats ISET - Consultation des notes</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <style>
   :root {
     --primary: #0077b6;
@@ -55,26 +56,6 @@
     max-width:900px; 
     margin:0 auto; 
     padding:0 1rem; 
-  }
-  
-  .lang-switch {
-    display: inline-flex;
-    gap: 0.5rem;
-    margin-left: 1rem;
-  }
-  .lang-btn {
-    background: rgba(255,255,255,0.2);
-    border: 1px solid rgba(255,255,255,0.5);
-    color: white;
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    cursor: pointer;
-    font-size: 0.8rem;
-    transition: var(--transition);
-  }
-  .lang-btn:hover, .lang-btn.active {
-    background: white;
-    color: var(--primary);
   }
   
   .section-title { 
@@ -288,6 +269,24 @@
     border-color:var(--primary);
   }
   
+  .file-format-info {
+    background:var(--primary-light);
+    padding:1rem;
+    border-radius:var(--radius);
+    margin-bottom:1rem;
+    font-size:0.9rem;
+  }
+  .file-format-info i {
+    margin-right:0.5rem;
+    color:var(--primary);
+  }
+  .file-format-info ul {
+    margin:0.5rem 0 0 1.5rem;
+  }
+  .file-format-info li {
+    margin:0.2rem 0;
+  }
+  
   .message {
     padding:0.8rem 1rem;
     border-radius:var(--radius);
@@ -323,113 +322,117 @@
   <div class="container">
     <h1>
       <i class="fas fa-graduation-cap"></i>
-      <span data-lang="title">نتائج المعهد العالي للتعليم التكنولوجي</span>
-      <span class="lang-switch">
-        <button class="lang-btn active" onclick="setLanguage('fr')">FR</button>
-        <button class="lang-btn" onclick="setLanguage('ar')">عربي</button>
-      </span>
+      Résultats ISET
     </h1>
-    <p data-lang="subtitle">منصة الاستعلام عن النتائج الدراسية - المعهد العالي للتعليم التكنولوجي</p>
+    <p>Plateforme de consultation des résultats académiques - Institut Supérieur d'Enseignement Technologique</p>
   </div>
 </header>
 
 <div class="container">
   
-  <!-- قسم البحث عن النتائج -->
+  <!-- Section consultation des résultats -->
   <div class="result-card">
     <h2 class="section-title">
       <i class="fas fa-search"></i> 
-      <span data-lang="consultResults">استعلام عن النتيجة</span>
+      Consulter votre résultat
     </h2>
     
     <div style="margin-bottom:1.5rem;">
-      <label style="display:block; margin-bottom:0.5rem; font-weight:500;" data-lang="department">القسم</label>
+      <label style="display:block; margin-bottom:0.5rem; font-weight:500;">Département</label>
       <select id="resultDepartment" style="width:100%; padding:0.8rem; border:2px solid var(--primary-light); border-radius:var(--radius); font-size:1rem;">
-        <option value="">-- <span data-lang="chooseDepartment">اختر القسم</span> --</option>
-        <option value="PPV">PPV (وقاية النبات)</option>
-        <option value="TC">TC (جذع مشترك)</option>
+        <option value="">-- Choisir un département --</option>
+        <option value="PPV">PPV (Protection des Végétaux)</option>
+        <option value="TC">TC (Tronc Commun)</option>
       </select>
     </div>
     
     <div style="margin-bottom:1.5rem;">
-      <label style="display:block; margin-bottom:0.5rem; font-weight:500;" data-lang="semester">الفصل</label>
+      <label style="display:block; margin-bottom:0.5rem; font-weight:500;">Semestre</label>
       <select id="semesterSelect" style="width:100%; padding:0.8rem; border:2px solid var(--primary-light); border-radius:var(--radius); font-size:1rem;">
-        <option value="">-- <span data-lang="chooseSemester">اختر الفصل</span> --</option>
+        <option value="">-- Choisir un semestre --</option>
       </select>
     </div>
     
     <div class="search-box">
-      <input type="text" id="studentIdInput" data-lang-placeholder="enterStudentId" placeholder="أدخل رقم الطالب...">
+      <input type="text" id="studentIdInput" placeholder="Entrez votre numéro d'étudiant...">
       <button onclick="searchStudentResult()">
         <i class="fas fa-search"></i> 
-        <span data-lang="search">بحث</span>
+        Rechercher
       </button>
     </div>
     
     <div id="studentResultContainer" style="display:none;"></div>
     <div id="noResultMessage" style="display:none;" class="empty-state">
       <i class="fas fa-user-graduate"></i>
-      <h3 data-lang="noResult">لا توجد نتيجة لهذا الرقم</h3>
-      <p data-lang="noResultDesc">تأكد من رقم الطالب والفصل الدراسي</p>
+      <h3>Aucun résultat trouvé</h3>
+      <p>Vérifiez votre numéro d'étudiant et le semestre</p>
     </div>
   </div>
   
-  <!-- قسم الأدمن -->
+  <!-- Section administrateur -->
   <div class="admin-section">
     <div style="text-align:center;">
       <button class="admin-btn success" onclick="showAdminLogin()">
         <i class="fas fa-lock"></i> 
-        <span data-lang="adminAccess">دخول المشرفين</span>
+        Accès Administrateurs
       </button>
     </div>
     
-    <!-- لوحة الأدمن (مخفية حتى تسجيل الدخول) -->
+    <!-- Panneau administrateur -->
     <div id="adminPanel" class="admin-panel">
       <div id="adminLoginForm">
-        <h3><i class="fas fa-sign-in-alt"></i> <span data-lang="adminLogin">تسجيل دخول المشرف</span></h3>
+        <h3><i class="fas fa-sign-in-alt"></i> Connexion Administrateur</h3>
         <div id="loginMessage" class="message error"></div>
         <div class="form-group">
-          <label data-lang="adminType">نوع المشرف</label>
+          <label>Type d'administrateur</label>
           <select id="adminTypeSelect">
-            <option value="PPV">PPV - مسؤول قسم وقاية النبات</option>
-            <option value="TC">TC - مسؤول الجذع المشترك</option>
+            <option value="PPV">PPV - Responsable Protection des Végétaux</option>
+            <option value="TC">TC - Responsable Tronc Commun</option>
           </select>
         </div>
         <div class="form-group">
-          <label data-lang="password">كلمة المرور</label>
+          <label>Mot de passe</label>
           <input type="password" id="adminPassword" placeholder="••••••••" onkeyup="if(event.key==='Enter') adminLogin()">
         </div>
         <button class="admin-btn" onclick="adminLogin()">
           <i class="fas fa-sign-in-alt"></i> 
-          <span data-lang="login">دخول</span>
+          Connexion
         </button>
         <button class="admin-btn secondary" onclick="hideAdminPanel()">
-          <span data-lang="cancel">إلغاء</span>
+          Annuler
         </button>
       </div>
       
       <div id="adminActions" style="display:none;">
-        <h3><i class="fas fa-user-shield"></i> <span data-lang="adminPanel">لوحة تحكم المشرف</span> - <span id="adminDeptName"></span></h3>
+        <h3><i class="fas fa-user-shield"></i> Panneau d'administration - <span id="adminDeptName"></span></h3>
         
         <div id="adminMessage" class="message success"></div>
         
         <div style="display:grid; gap:1rem; margin:1.5rem 0;">
           <button class="admin-btn success" onclick="showImportForm()">
             <i class="fas fa-upload"></i> 
-            <span data-lang="importResults">استيراد النتائج</span>
+            Importer des résultats
           </button>
           <button class="admin-btn danger" onclick="showManageSubjects()">
             <i class="fas fa-trash-alt"></i> 
-            <span data-lang="manageResults">إدارة المواد</span>
+            Gérer les matières
           </button>
         </div>
         
-        <!-- نموذج استيراد النتائج -->
+        <!-- Formulaire d'importation -->
         <div id="importForm" style="display:none;">
-          <h4 style="margin-bottom:1rem;"><i class="fas fa-file-excel"></i> <span data-lang="importResults">استيراد النتائج</span></h4>
+          <h4 style="margin-bottom:1rem;"><i class="fas fa-file-import"></i> Importer des résultats</h4>
+          
+          <div class="file-format-info">
+            <i class="fas fa-info-circle"></i> <strong>Formats acceptés :</strong> Excel (.xlsx, .xls), CSV, Texte (.txt)
+            <ul>
+              <li><strong>Colonnes attendues :</strong> NUMERO (ou ID), NOM & PRENOM (ou Nom), NOTE/20 (ou Note)</li>
+              <li><strong>Séparateur CSV :</strong> Virgule (,) ou Point-virgule (;)</li>
+            </ul>
+          </div>
           
           <div class="form-group">
-            <label data-lang="semester">الفصل</label>
+            <label>Semestre</label>
             <select id="importSemester">
               <option value="S1">S1</option>
               <option value="S2">S2</option>
@@ -441,39 +444,39 @@
           </div>
           
           <div class="form-group">
-            <label data-lang="evaluationType">نوع التقييم</label>
+            <label>Type d'évaluation</label>
             <select id="importType">
-              <option value="Examen">Examen / امتحان</option>
-              <option value="Contrôle continu">Contrôle continu / مراقبة مستمرة</option>
-              <option value="Rattrapage">Rattrapage / استدراك</option>
+              <option value="Examen">Examen</option>
+              <option value="Contrôle continu">Contrôle continu</option>
+              <option value="Rattrapage">Rattrapage</option>
             </select>
           </div>
           
           <div class="form-group">
-            <label data-lang="subjectName">اسم المادة</label>
-            <input type="text" id="importSubject" placeholder="مثال: Phytoprotection 1">
+            <label>Nom de la matière</label>
+            <input type="text" id="importSubject" placeholder="Ex: Phytoprotection 1">
           </div>
           
           <div class="form-group">
-            <label data-lang="excelFile">ملف Excel</label>
-            <input type="file" id="importFile" accept=".xlsx, .xls, .csv">
+            <label>Fichier à importer</label>
+            <input type="file" id="importFile" accept=".xlsx, .xls, .csv, .txt, text/csv, text/plain, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
           </div>
           
           <button class="admin-btn success" onclick="processImport()">
             <i class="fas fa-upload"></i> 
-            <span data-lang="import">استيراد</span>
+            Importer
           </button>
           <button class="admin-btn secondary" onclick="hideImportForm()">
-            <span data-lang="cancel">إلغاء</span>
+            Annuler
           </button>
         </div>
         
-        <!-- قسم إدارة المواد -->
+        <!-- Section gestion des matières -->
         <div id="manageSubjects" style="display:none;">
-          <h4 style="margin-bottom:1rem;"><i class="fas fa-list"></i> <span data-lang="manageSubjects">إدارة المواد</span></h4>
+          <h4 style="margin-bottom:1rem;"><i class="fas fa-list"></i> Gérer les matières</h4>
           
           <div class="form-group">
-            <label data-lang="semester">الفصل</label>
+            <label>Semestre</label>
             <select id="manageSemester">
               <option value="S1">S1</option>
               <option value="S2">S2</option>
@@ -486,19 +489,19 @@
           
           <button class="admin-btn" onclick="loadSubjectsList()">
             <i class="fas fa-search"></i> 
-            <span data-lang="showSubjects">عرض المواد</span>
+            Afficher les matières
           </button>
           
           <div id="subjectsListContainer" style="margin-top:1.5rem;"></div>
           
           <button class="admin-btn secondary" onclick="hideManageSubjects()" style="margin-top:1rem;">
-            <span data-lang="back">رجوع</span>
+            Retour
           </button>
         </div>
         
         <button class="admin-btn secondary" onclick="adminLogout()" style="margin-top:1rem;">
           <i class="fas fa-sign-out-alt"></i> 
-          <span data-lang="logout">تسجيل الخروج</span>
+          Déconnexion
         </button>
       </div>
     </div>
@@ -507,7 +510,7 @@
 
 <footer class="footer">
   <p>© 2024 ISET - Institut Supérieur d'Enseignement Technologique</p>
-  <p style="margin-top:0.5rem; font-size:0.8rem;">Par Cheikh_A</p>
+  <p style="margin-top:0.5rem; font-size:0.8rem;">Développé par Cheikh_A</p>
 </footer>
 
 <script type="module">
@@ -527,7 +530,7 @@
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
   
-  // كلمات مرور المشرفين
+  // Mots de passe des administrateurs
   const ADMIN_CREDENTIALS = {
     PPV: {
       passwordHash: "9af15b336e6a9619928537df30b2e6a2376569fcf9d7e773eccede65606529a0", // results123
@@ -548,128 +551,13 @@
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   }
 
-  // ===== الترجمة =====
-  const translations = {
-    fr: {
-      title: "Résultats ISET",
-      subtitle: "Plateforme de consultation des résultats académiques - ISET",
-      consultResults: "Consulter votre résultat",
-      department: "Département",
-      semester: "Semestre",
-      chooseDepartment: "Choisir un département",
-      chooseSemester: "Choisir un semestre",
-      enterStudentId: "Entrez votre numéro d'étudiant...",
-      search: "Rechercher",
-      noResult: "Aucun résultat trouvé",
-      noResultDesc: "Vérifiez votre numéro d'étudiant et le semestre",
-      adminAccess: "Accès Administrateurs",
-      adminLogin: "Connexion Administrateur",
-      adminType: "Type d'administrateur",
-      password: "Mot de passe",
-      login: "Connexion",
-      cancel: "Annuler",
-      adminPanel: "Panneau d'administration",
-      importResults: "Importer des résultats",
-      manageResults: "Gérer les matières",
-      evaluationType: "Type d'évaluation",
-      subjectName: "Nom de la matière",
-      excelFile: "Fichier Excel",
-      import: "Importer",
-      manageSubjects: "Gérer les matières",
-      showSubjects: "Afficher les matières",
-      back: "Retour",
-      logout: "Déconnexion",
-      subject: "Matière",
-      type: "Type",
-      students: "Étudiants",
-      action: "Action",
-      delete: "Supprimer",
-      grade: "Note"
-    },
-    ar: {
-      title: "نتائج المعهد العالي للتعليم التكنولوجي",
-      subtitle: "منصة الاستعلام عن النتائج الدراسية - المعهد العالي للتعليم التكنولوجي",
-      consultResults: "استعلام عن النتيجة",
-      department: "القسم",
-      semester: "الفصل",
-      chooseDepartment: "اختر القسم",
-      chooseSemester: "اختر الفصل",
-      enterStudentId: "أدخل رقم الطالب...",
-      search: "بحث",
-      noResult: "لا توجد نتيجة لهذا الرقم",
-      noResultDesc: "تأكد من رقم الطالب والفصل الدراسي",
-      adminAccess: "دخول المشرفين",
-      adminLogin: "تسجيل دخول المشرف",
-      adminType: "نوع المشرف",
-      password: "كلمة المرور",
-      login: "دخول",
-      cancel: "إلغاء",
-      adminPanel: "لوحة تحكم المشرف",
-      importResults: "استيراد النتائج",
-      manageResults: "إدارة المواد",
-      evaluationType: "نوع التقييم",
-      subjectName: "اسم المادة",
-      excelFile: "ملف Excel",
-      import: "استيراد",
-      manageSubjects: "إدارة المواد",
-      showSubjects: "عرض المواد",
-      back: "رجوع",
-      logout: "تسجيل الخروج",
-      subject: "المادة",
-      type: "النوع",
-      students: "الطلاب",
-      action: "إجراء",
-      delete: "حذف",
-      grade: "النقطة"
-    }
-  };
+  let currentAdmin = null;
 
-  let currentLang = 'fr';
-  let currentAdmin = null; // { type: 'PPV' or 'TC' }
-
-  window.setLanguage = (lang) => {
-    currentLang = lang;
-    
-    document.querySelectorAll('.lang-btn').forEach(btn => {
-      btn.classList.remove('active');
-      if ((lang === 'fr' && btn.textContent === 'FR') || (lang === 'ar' && btn.textContent === 'عربي')) {
-        btn.classList.add('active');
-      }
-    });
-    
-    document.querySelectorAll('[data-lang]').forEach(el => {
-      const key = el.getAttribute('data-lang');
-      if (translations[lang] && translations[lang][key]) {
-        el.textContent = translations[lang][key];
-      }
-    });
-    
-    document.querySelectorAll('[data-lang-placeholder]').forEach(el => {
-      const key = el.getAttribute('data-lang-placeholder');
-      if (translations[lang] && translations[lang][key]) {
-        el.placeholder = translations[lang][key];
-      }
-    });
-    
-    if (lang === 'ar') {
-      document.documentElement.setAttribute('dir', 'rtl');
-      document.documentElement.setAttribute('lang', 'ar');
-    } else {
-      document.documentElement.setAttribute('dir', 'ltr');
-      document.documentElement.setAttribute('lang', 'fr');
-    }
-    
-    localStorage.setItem('preferredLanguage', lang);
-  };
-
-  const savedLang = localStorage.getItem('preferredLanguage') || 'fr';
-  setLanguage(savedLang);
-
-  // تحديث قائمة الفصول حسب القسم
+  // Mise à jour des semestres selon le département
   document.getElementById('resultDepartment').addEventListener('change', function() {
     const dept = this.value;
     const semesterSelect = document.getElementById('semesterSelect');
-    semesterSelect.innerHTML = '<option value="">-- ' + translations[currentLang].chooseSemester + ' --</option>';
+    semesterSelect.innerHTML = '<option value="">-- Choisir un semestre --</option>';
     
     if (dept === 'PPV') {
       ['S3', 'S4', 'S5', 'S6'].forEach(s => {
@@ -682,7 +570,7 @@
     }
   });
 
-  // ===== البحث عن نتيجة طالب (مع التحسين) =====
+  // ===== Recherche de résultat =====
   window.searchStudentResult = async () => {
     const department = document.getElementById('resultDepartment').value;
     const semester = document.getElementById('semesterSelect').value;
@@ -691,16 +579,14 @@
     const noResult = document.getElementById('noResultMessage');
     
     if (!department || !semester || !studentId) {
-      alert(currentLang === 'ar' ? 'الرجاء ملء جميع الحقول' : 'Veuillez remplir tous les champs');
+      alert('Veuillez remplir tous les champs');
       return;
     }
     
-    container.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><p>' + 
-      (currentLang === 'ar' ? 'جاري التحميل...' : 'Chargement...') + '</p></div>';
+    container.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><p>Chargement...</p></div>';
     container.style.display = 'block';
     noResult.style.display = 'none';
     
-    // استخدام الهيكل الجديد: النتائج مقسمة حسب الطالب أولاً
     const snapshot = await get(child(ref(db), `results/${department}/${semester}/${studentId}`));
     
     if (!snapshot.exists()) {
@@ -713,7 +599,6 @@
     const results = [];
     let studentName = '';
     
-    // جمع جميع نتائج هذا الطالب
     for (let key in studentData) {
       const data = studentData[key];
       results.push({
@@ -724,19 +609,18 @@
       if (!studentName) studentName = data.name;
     }
     
-    // عرض النتائج
     let html = `
       <div class="student-header">
         <i class="fas fa-user-graduate"></i>
-        <h3>${studentName || (currentLang === 'ar' ? 'طالب' : 'Étudiant')}</h3>
+        <h3>${studentName || 'Étudiant'}</h3>
         <p>N° ${studentId} | ${department} | ${semester}</p>
       </div>
       <table class="results-table">
         <thead>
           <tr>
-            <th>${currentLang === 'ar' ? 'المادة' : 'Matière'}</th>
-            <th>${currentLang === 'ar' ? 'النوع' : 'Type'}</th>
-            <th style="text-align:center;">${currentLang === 'ar' ? 'النقطة' : 'Note'}</th>
+            <th>Matière</th>
+            <th>Type</th>
+            <th style="text-align:center;">Note</th>
           </tr>
         </thead>
         <tbody>
@@ -757,7 +641,7 @@
     container.innerHTML = html;
   };
 
-  // ===== وظائف الأدمن =====
+  // ===== Fonctions administrateur =====
   window.showAdminLogin = () => {
     document.getElementById('adminPanel').classList.add('active');
     document.getElementById('adminLoginForm').style.display = 'block';
@@ -776,7 +660,7 @@
     const msgDiv = document.getElementById('loginMessage');
     
     if (!password) {
-      msgDiv.textContent = currentLang === 'ar' ? 'الرجاء إدخال كلمة المرور' : 'Veuillez entrer le mot de passe';
+      msgDiv.textContent = 'Veuillez entrer le mot de passe';
       msgDiv.style.display = 'block';
       return;
     }
@@ -795,10 +679,9 @@
       document.getElementById('adminPassword').value = '';
       msgDiv.style.display = 'none';
       
-      // تحديث قوائم الفصول حسب صلاحيات المشرف
       updateAdminSemesterSelects();
     } else {
-      msgDiv.textContent = currentLang === 'ar' ? 'كلمة المرور غير صحيحة' : 'Mot de passe incorrect';
+      msgDiv.textContent = 'Mot de passe incorrect';
       msgDiv.style.display = 'block';
     }
   };
@@ -843,6 +726,40 @@
     document.getElementById('manageSubjects').style.display = 'none';
   };
 
+  // Fonction pour parser les différents formats de fichiers
+  async function parseFile(file) {
+    const fileName = file.name.toLowerCase();
+    
+    return new Promise((resolve, reject) => {
+      // Fichier CSV ou TXT
+      if (fileName.endsWith('.csv') || fileName.endsWith('.txt')) {
+        Papa.parse(file, {
+          header: true,
+          skipEmptyLines: true,
+          complete: (results) => resolve(results.data),
+          error: (error) => reject(error)
+        });
+      }
+      // Fichier Excel
+      else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const sheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[sheetName];
+          const jsonData = XLSX.utils.sheet_to_json(worksheet);
+          resolve(jsonData);
+        };
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
+      }
+      else {
+        reject(new Error('Format de fichier non supporté'));
+      }
+    });
+  }
+
   window.processImport = async () => {
     const semester = document.getElementById('importSemester').value;
     const type = document.getElementById('importType').value;
@@ -852,31 +769,33 @@
     const msgDiv = document.getElementById('adminMessage');
     
     if (!subject || !file) {
-      alert(currentLang === 'ar' ? 'الرجاء ملء جميع الحقول واختيار ملف' : 'Veuillez remplir tous les champs et choisir un fichier');
+      alert('Veuillez remplir tous les champs et choisir un fichier');
       return;
     }
     
-    const reader = new FileReader();
-    reader.onload = async function(event) {
-      const data = new Uint8Array(event.target.result);
-      const workbook = XLSX.read(data, { type: 'array' });
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet);
-      
+    try {
+      const jsonData = await parseFile(file);
       let importCount = 0;
       
       for (let row of jsonData) {
-        let studentId = row.NUMERO || row.Numero || row.numero || row.ID || row.id || row.Matricule || row.matricule;
+        // Recherche du numéro d'étudiant (plusieurs noms de colonnes possibles)
+        let studentId = row.NUMERO || row.Numero || row.numero || row.ID || row.id || 
+                        row.Matricule || row.matricule || row['N°'] || row['N° Etudiant'];
         if (studentId) studentId = String(studentId).trim();
         
-        const studentName = row['NOM & PRENOM'] || row['Nom et Prenom'] || row.Nom || row.nom || '';
+        // Recherche du nom
+        const studentName = row['NOM & PRENOM'] || row['Nom et Prenom'] || row.Nom || row.nom || 
+                           row['NOM'] || row['PRENOM'] || '';
         
-        let grade = row['NOTE/20'] || row['Note/20'] || row.Note || row.note || row.Grade || row.grade || row.Moyenne || row.moyenne;
-        if (grade) grade = parseFloat(String(grade).replace(',', '.'));
+        // Recherche de la note
+        let grade = row['NOTE/20'] || row['Note/20'] || row.Note || row.note || 
+                    row.Grade || row.grade || row.Moyenne || row.moyenne || row['NOTE'];
+        if (grade) {
+          // Remplacer la virgule par un point et parser
+          grade = parseFloat(String(grade).replace(',', '.'));
+        }
         
         if (studentId && !isNaN(grade) && grade >= 0 && grade <= 20) {
-          // استخدام الهيكل الجديد: المسار يبدأ بالطالب
           const path = `results/${currentAdmin.type}/${semester}/${studentId}/${subject}_${type}`;
           await set(ref(db, path), {
             grade: grade,
@@ -888,9 +807,7 @@
         }
       }
       
-      msgDiv.textContent = currentLang === 'ar' ? 
-        `✅ تم استيراد ${importCount} نقطة بنجاح` : 
-        `✅ ${importCount} notes importées avec succès`;
+      msgDiv.textContent = `✅ ${importCount} notes importées avec succès`;
       msgDiv.style.display = 'block';
       
       document.getElementById('importSubject').value = '';
@@ -898,8 +815,11 @@
       hideImportForm();
       
       setTimeout(() => msgDiv.style.display = 'none', 3000);
-    };
-    reader.readAsArrayBuffer(file);
+      
+    } catch (error) {
+      console.error('Erreur d\'importation:', error);
+      alert('Erreur lors de l\'importation. Vérifiez le format du fichier.');
+    }
   };
 
   window.loadSubjectsList = async () => {
@@ -911,15 +831,13 @@
     const snapshot = await get(child(ref(db), `results/${currentAdmin.type}/${semester}`));
     
     if (!snapshot.exists()) {
-      container.innerHTML = '<p style="text-align:center; color:var(--text-light);">' + 
-        (currentLang === 'ar' ? 'لا توجد مواد في هذا الفصل' : 'Aucune matière dans ce semestre') + '</p>';
+      container.innerHTML = '<p style="text-align:center; color:var(--text-light);">Aucune matière dans ce semestre</p>';
       return;
     }
     
     const allStudents = snapshot.val();
     const subjectsMap = new Map();
     
-    // جمع جميع المواد الموجودة
     for (let studentId in allStudents) {
       const studentSubjects = allStudents[studentId];
       for (let subjectKey in studentSubjects) {
@@ -938,8 +856,7 @@
     }
     
     if (subjectsMap.size === 0) {
-      container.innerHTML = '<p style="text-align:center; color:var(--text-light);">' + 
-        (currentLang === 'ar' ? 'لا توجد مواد في هذا الفصل' : 'Aucune matière dans ce semestre') + '</p>';
+      container.innerHTML = '<p style="text-align:center; color:var(--text-light);">Aucune matière dans ce semestre</p>';
       return;
     }
     
@@ -947,10 +864,10 @@
       <table class="results-table">
         <thead>
           <tr>
-            <th>${currentLang === 'ar' ? 'المادة' : 'Matière'}</th>
-            <th>${currentLang === 'ar' ? 'النوع' : 'Type'}</th>
-            <th style="text-align:center;">${currentLang === 'ar' ? 'الطلاب' : 'Étudiants'}</th>
-            <th style="text-align:center;">${currentLang === 'ar' ? 'إجراء' : 'Action'}</th>
+            <th>Matière</th>
+            <th>Type</th>
+            <th style="text-align:center;">Étudiants</th>
+            <th style="text-align:center;">Action</th>
           </tr>
         </thead>
         <tbody>
@@ -964,7 +881,7 @@
         <td style="text-align:center;">
           <button class="admin-btn danger" style="padding:0.3rem 0.8rem; font-size:0.8rem;" 
             onclick="deleteSubject('${semester}', '${data.subject}', '${data.type}')">
-            <i class="fas fa-trash"></i> ${currentLang === 'ar' ? 'حذف' : 'Supprimer'}
+            <i class="fas fa-trash"></i> Supprimer
           </button>
         </td>
       </tr>`;
@@ -975,9 +892,7 @@
   };
 
   window.deleteSubject = async (semester, subject, type) => {
-    if (!confirm(currentLang === 'ar' ? 
-      '⚠️ هل أنت متأكد من حذف جميع نقاط هذه المادة؟' : 
-      '⚠️ Êtes-vous sûr de vouloir supprimer TOUTES les notes de cette matière ?')) return;
+    if (!confirm('⚠️ Êtes-vous sûr de vouloir supprimer TOUTES les notes de cette matière ?')) return;
     
     const snapshot = await get(child(ref(db), `results/${currentAdmin.type}/${semester}`));
     if (!snapshot.exists()) return;
@@ -991,21 +906,13 @@
       }
     }
     
-    alert(currentLang === 'ar' ? '✅ تم حذف المادة بنجاح' : '✅ Matière supprimée avec succès');
+    alert('✅ Matière supprimée avec succès');
     loadSubjectsList();
   };
 
-  // ===== مستمعات الأحداث =====
+  // Événement Enter pour la recherche
   document.getElementById('studentIdInput').addEventListener('keyup', e => {
     if (e.key === 'Enter') searchStudentResult();
-  });
-
-  document.addEventListener('click', function(e) {
-    const panel = document.getElementById('adminPanel');
-    if (panel.classList.contains('active') && !panel.contains(e.target) && 
-        !e.target.closest('.admin-btn') && !e.target.closest('#adminPanel')) {
-      // لا تغلق تلقائياً
-    }
   });
 </script>
 </body>
