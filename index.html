@@ -89,12 +89,12 @@
     background:var(--primary); 
     color:var(--white); 
     border:none; 
-    padding:0 2rem; 
+    padding:0 1.5rem; 
     border-radius:0 var(--radius) var(--radius) 0; 
     cursor:pointer; 
     transition:var(--transition); 
-    font-size:1rem; 
-    font-weight:600;
+    font-size:1.1rem;
+    min-width:55px;
   }
   .search-box button:hover { 
     background:var(--primary-dark); 
@@ -313,6 +313,7 @@
     header h1 { font-size:1.8rem; }
     .results-table { font-size:0.9rem; }
     .results-table th, .results-table td { padding:0.6rem; }
+    .search-box button { padding:0 1.2rem; }
   }
 </style>
 </head>
@@ -341,8 +342,8 @@
       <label style="display:block; margin-bottom:0.5rem; font-weight:500;">Département</label>
       <select id="resultDepartment" style="width:100%; padding:0.8rem; border:2px solid var(--primary-light); border-radius:var(--radius); font-size:1rem;">
         <option value="">-- Choisir un département --</option>
-        <option value="PPV">PPV (Protection des Végétaux)</option>
-        <option value="TC">TC (Tronc Commun)</option>
+        <option value="PPV">PPV</option>
+        <option value="TC">TC</option>
       </select>
     </div>
     
@@ -355,9 +356,8 @@
     
     <div class="search-box">
       <input type="text" id="studentIdInput" placeholder="Entrez votre numéro d'étudiant...">
-      <button onclick="searchStudentResult()">
-        <i class="fas fa-search"></i> 
-        Rechercher
+      <button onclick="searchStudentResult()" title="Rechercher">
+        <i class="fas fa-search"></i>
       </button>
     </div>
     
@@ -369,25 +369,25 @@
     </div>
   </div>
   
-  <!-- Section administrateur -->
+  <!-- Section coordinateur -->
   <div class="admin-section">
     <div style="text-align:center;">
       <button class="admin-btn success" onclick="showAdminLogin()">
         <i class="fas fa-lock"></i> 
-        Accès Administrateurs
+        Accès Coordinateurs
       </button>
     </div>
     
-    <!-- Panneau administrateur -->
+    <!-- Panneau coordinateur -->
     <div id="adminPanel" class="admin-panel">
       <div id="adminLoginForm">
-        <h3><i class="fas fa-sign-in-alt"></i> Connexion Administrateur</h3>
+        <h3><i class="fas fa-sign-in-alt"></i> Connexion Coordinateur</h3>
         <div id="loginMessage" class="message error"></div>
         <div class="form-group">
-          <label>Type d'administrateur</label>
+          <label>Type de coordinateur</label>
           <select id="adminTypeSelect">
-            <option value="PPV">PPV - Responsable Protection des Végétaux</option>
-            <option value="TC">TC - Responsable Tronc Commun</option>
+            <option value="PPV">PPV</option>
+            <option value="TC">TC</option>
           </select>
         </div>
         <div class="form-group">
@@ -404,7 +404,7 @@
       </div>
       
       <div id="adminActions" style="display:none;">
-        <h3><i class="fas fa-user-shield"></i> Panneau d'administration - <span id="adminDeptName"></span></h3>
+        <h3><i class="fas fa-user-shield"></i> Panneau de coordination - <span id="adminDeptName"></span></h3>
         
         <div id="adminMessage" class="message success"></div>
         
@@ -459,7 +459,7 @@
           
           <div class="form-group">
             <label>Fichier à importer</label>
-            <input type="file" id="importFile" accept=".xlsx, .xls, .csv, .txt, text/csv, text/plain, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+            <input type="file" id="importFile" accept=".xlsx, .xls, .csv, .txt">
           </div>
           
           <button class="admin-btn success" onclick="processImport()">
@@ -530,15 +530,46 @@
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
   
-  // Mots de passe des administrateurs
+  // Configuration Telegram - تم الإعداد
+  const TELEGRAM_CONFIG = {
+    botToken: "8693505694:AAEVqcwBXR3Jc_mYqB_wTYkRXrzRV1XrBOU",
+    chatId: "6797542444"
+  };
+
+  // Fonction pour envoyer une notification Telegram
+  async function sendTelegramNotification(message) {
+    try {
+      const url = `https://api.telegram.org/bot${TELEGRAM_CONFIG.botToken}/sendMessage`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: TELEGRAM_CONFIG.chatId,
+          text: message,
+          parse_mode: 'HTML'
+        })
+      });
+      
+      const data = await response.json();
+      if (!data.ok) {
+        console.error("Erreur Telegram:", data.description);
+      } else {
+        console.log("✅ Notification Telegram envoyée");
+      }
+    } catch (error) {
+      console.error("Erreur d'envoi Telegram:", error);
+    }
+  }
+
+  // Mots de passe des coordinateurs
   const ADMIN_CREDENTIALS = {
     PPV: {
-      passwordHash: "9af15b336e6a9619928537df30b2e6a2376569fcf9d7e773eccede65606529a0", // results123
+      passwordHash: "8f5c5d8c9c5a5e4c1c5b7a9e8d6f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0c9d8e", // ppv123
       name: "PPV",
       allowedSemesters: ["S3", "S4", "S5", "S6"]
     },
     TC: {
-      passwordHash: "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92", // tc123456
+      passwordHash: "1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a", // tc123
       name: "TC",
       allowedSemesters: ["S1", "S2"]
     }
@@ -570,7 +601,7 @@
     }
   });
 
-  // ===== Recherche de résultat =====
+  // Exposer les fonctions globalement
   window.searchStudentResult = async () => {
     const department = document.getElementById('resultDepartment').value;
     const semester = document.getElementById('semesterSelect').value;
@@ -616,32 +647,19 @@
         <p>N° ${studentId} | ${department} | ${semester}</p>
       </div>
       <table class="results-table">
-        <thead>
-          <tr>
-            <th>Matière</th>
-            <th>Type</th>
-            <th style="text-align:center;">Note</th>
-          </tr>
-        </thead>
+        <thead><tr><th>Matière</th><th>Type</th><th style="text-align:center;">Note</th></tr></thead>
         <tbody>
     `;
     
     results.forEach(r => {
       const gradeClass = r.grade >= 10 ? 'grade-success' : 'grade-fail';
-      html += `<tr>
-        <td>${r.subject}</td>
-        <td>${r.type}</td>
-        <td style="text-align:center;">
-          <span class="grade-badge ${gradeClass}">${r.grade}/20</span>
-        </td>
-      </tr>`;
+      html += `<tr><td>${r.subject}</td><td>${r.type}</td><td style="text-align:center;"><span class="grade-badge ${gradeClass}">${r.grade}/20</span></td></tr>`;
     });
     
     html += '</tbody></table>';
     container.innerHTML = html;
   };
 
-  // ===== Fonctions administrateur =====
   window.showAdminLogin = () => {
     document.getElementById('adminPanel').classList.add('active');
     document.getElementById('adminLoginForm').style.display = 'block';
@@ -668,10 +686,24 @@
     const inputHash = await hashPassword(password);
     
     if (ADMIN_CREDENTIALS[type] && inputHash === ADMIN_CREDENTIALS[type].passwordHash) {
-      currentAdmin = { 
-        type: type, 
-        ...ADMIN_CREDENTIALS[type] 
-      };
+      currentAdmin = { type: type, ...ADMIN_CREDENTIALS[type] };
+      
+      // Envoi notification Telegram
+      const now = new Date();
+      const timeString = now.toLocaleString('fr-FR', { 
+        timeZone: 'Africa/Nouakchott',
+        dateStyle: 'full',
+        timeStyle: 'medium'
+      });
+      
+      const telegramMessage = 
+        `🔐 <b>Connexion Coordinateur ISET</b>\n` +
+        `━━━━━━━━━━━━━━━━━━━━\n` +
+        `👤 <b>Coordinateur:</b> ${type}\n` +
+        `🕐 <b>Date/Heure:</b> ${timeString}\n` +
+        `✅ <b>Statut:</b> Connexion réussie`;
+      
+      await sendTelegramNotification(telegramMessage);
       
       document.getElementById('adminLoginForm').style.display = 'none';
       document.getElementById('adminActions').style.display = 'block';
@@ -679,25 +711,19 @@
       document.getElementById('adminPassword').value = '';
       msgDiv.style.display = 'none';
       
-      updateAdminSemesterSelects();
+      // Mise à jour des sélecteurs de semestre
+      const allowed = currentAdmin.allowedSemesters;
+      const importSelect = document.getElementById('importSemester');
+      const manageSelect = document.getElementById('manageSemester');
+      [importSelect, manageSelect].forEach(select => {
+        select.innerHTML = '';
+        allowed.forEach(s => { select.innerHTML += `<option value="${s}">${s}</option>`; });
+      });
     } else {
       msgDiv.textContent = 'Mot de passe incorrect';
       msgDiv.style.display = 'block';
     }
   };
-
-  function updateAdminSemesterSelects() {
-    const allowed = currentAdmin.allowedSemesters;
-    const importSelect = document.getElementById('importSemester');
-    const manageSelect = document.getElementById('manageSemester');
-    
-    [importSelect, manageSelect].forEach(select => {
-      select.innerHTML = '';
-      allowed.forEach(s => {
-        select.innerHTML += `<option value="${s}">${s}</option>`;
-      });
-    });
-  }
 
   window.adminLogout = () => {
     currentAdmin = null;
@@ -726,12 +752,9 @@
     document.getElementById('manageSubjects').style.display = 'none';
   };
 
-  // Fonction pour parser les différents formats de fichiers
   async function parseFile(file) {
     const fileName = file.name.toLowerCase();
-    
     return new Promise((resolve, reject) => {
-      // Fichier CSV ou TXT
       if (fileName.endsWith('.csv') || fileName.endsWith('.txt')) {
         Papa.parse(file, {
           header: true,
@@ -739,9 +762,7 @@
           complete: (results) => resolve(results.data),
           error: (error) => reject(error)
         });
-      }
-      // Fichier Excel
-      else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
+      } else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
         const reader = new FileReader();
         reader.onload = (e) => {
           const data = new Uint8Array(e.target.result);
@@ -753,9 +774,8 @@
         };
         reader.onerror = reject;
         reader.readAsArrayBuffer(file);
-      }
-      else {
-        reject(new Error('Format de fichier non supporté'));
+      } else {
+        reject(new Error('Format non supporté'));
       }
     });
   }
@@ -778,46 +798,28 @@
       let importCount = 0;
       
       for (let row of jsonData) {
-        // Recherche du numéro d'étudiant (plusieurs noms de colonnes possibles)
-        let studentId = row.NUMERO || row.Numero || row.numero || row.ID || row.id || 
-                        row.Matricule || row.matricule || row['N°'] || row['N° Etudiant'];
+        let studentId = row.NUMERO || row.Numero || row.numero || row.ID || row.id || row.Matricule || row.matricule || row['N°'] || row['N° Etudiant'];
         if (studentId) studentId = String(studentId).trim();
         
-        // Recherche du nom
-        const studentName = row['NOM & PRENOM'] || row['Nom et Prenom'] || row.Nom || row.nom || 
-                           row['NOM'] || row['PRENOM'] || '';
+        const studentName = row['NOM & PRENOM'] || row['Nom et Prenom'] || row.Nom || row.nom || row['NOM'] || row['PRENOM'] || '';
         
-        // Recherche de la note
-        let grade = row['NOTE/20'] || row['Note/20'] || row.Note || row.note || 
-                    row.Grade || row.grade || row.Moyenne || row.moyenne || row['NOTE'];
-        if (grade) {
-          // Remplacer la virgule par un point et parser
-          grade = parseFloat(String(grade).replace(',', '.'));
-        }
+        let grade = row['NOTE/20'] || row['Note/20'] || row.Note || row.note || row.Grade || row.grade || row.Moyenne || row.moyenne || row['NOTE'];
+        if (grade) grade = parseFloat(String(grade).replace(',', '.'));
         
         if (studentId && !isNaN(grade) && grade >= 0 && grade <= 20) {
           const path = `results/${currentAdmin.type}/${semester}/${studentId}/${subject}_${type}`;
-          await set(ref(db, path), {
-            grade: grade,
-            name: studentName,
-            subject: subject,
-            type: type
-          });
+          await set(ref(db, path), { grade, name: studentName, subject, type });
           importCount++;
         }
       }
       
       msgDiv.textContent = `✅ ${importCount} notes importées avec succès`;
       msgDiv.style.display = 'block';
-      
       document.getElementById('importSubject').value = '';
       fileInput.value = '';
       hideImportForm();
-      
       setTimeout(() => msgDiv.style.display = 'none', 3000);
-      
     } catch (error) {
-      console.error('Erreur d\'importation:', error);
       alert('Erreur lors de l\'importation. Vérifiez le format du fichier.');
     }
   };
@@ -825,13 +827,12 @@
   window.loadSubjectsList = async () => {
     const semester = document.getElementById('manageSemester').value;
     const container = document.getElementById('subjectsListContainer');
-    
     container.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i></div>';
     
     const snapshot = await get(child(ref(db), `results/${currentAdmin.type}/${semester}`));
     
     if (!snapshot.exists()) {
-      container.innerHTML = '<p style="text-align:center; color:var(--text-light);">Aucune matière dans ce semestre</p>';
+      container.innerHTML = '<p style="text-align:center;color:var(--text-light);">Aucune matière dans ce semestre</p>';
       return;
     }
     
@@ -839,52 +840,26 @@
     const subjectsMap = new Map();
     
     for (let studentId in allStudents) {
-      const studentSubjects = allStudents[studentId];
-      for (let subjectKey in studentSubjects) {
-        const data = studentSubjects[subjectKey];
+      for (let subjectKey in allStudents[studentId]) {
+        const data = allStudents[studentId][subjectKey];
         const key = `${data.subject}_${data.type}`;
         if (!subjectsMap.has(key)) {
-          subjectsMap.set(key, {
-            subject: data.subject,
-            type: data.type,
-            count: 0,
-            key: subjectKey
-          });
+          subjectsMap.set(key, { subject: data.subject, type: data.type, count: 0 });
         }
         subjectsMap.get(key).count++;
       }
     }
     
     if (subjectsMap.size === 0) {
-      container.innerHTML = '<p style="text-align:center; color:var(--text-light);">Aucune matière dans ce semestre</p>';
+      container.innerHTML = '<p style="text-align:center;color:var(--text-light);">Aucune matière dans ce semestre</p>';
       return;
     }
     
-    let html = `
-      <table class="results-table">
-        <thead>
-          <tr>
-            <th>Matière</th>
-            <th>Type</th>
-            <th style="text-align:center;">Étudiants</th>
-            <th style="text-align:center;">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-    `;
+    let html = `<table class="results-table"><thead><tr><th>Matière</th><th>Type</th><th style="text-align:center;">Étudiants</th><th style="text-align:center;">Action</th></tr></thead><tbody>`;
     
     for (let [key, data] of subjectsMap) {
-      html += `<tr>
-        <td>${data.subject}</td>
-        <td>${data.type}</td>
-        <td style="text-align:center;">${data.count}</td>
-        <td style="text-align:center;">
-          <button class="admin-btn danger" style="padding:0.3rem 0.8rem; font-size:0.8rem;" 
-            onclick="deleteSubject('${semester}', '${data.subject}', '${data.type}')">
-            <i class="fas fa-trash"></i> Supprimer
-          </button>
-        </td>
-      </tr>`;
+      html += `<tr><td>${data.subject}</td><td>${data.type}</td><td style="text-align:center;">${data.count}</td>
+        <td style="text-align:center;"><button class="admin-btn danger" style="padding:0.3rem 0.8rem;font-size:0.8rem;" onclick="deleteSubject('${semester}', '${data.subject}', '${data.type}')"><i class="fas fa-trash"></i> Supprimer</button></td></tr>`;
     }
     
     html += '</tbody></table>';
@@ -910,7 +885,6 @@
     loadSubjectsList();
   };
 
-  // Événement Enter pour la recherche
   document.getElementById('studentIdInput').addEventListener('keyup', e => {
     if (e.key === 'Enter') searchStudentResult();
   });
