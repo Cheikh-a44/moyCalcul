@@ -348,7 +348,6 @@
 
 <div class="container">
   
-  <!-- Section consultation des résultats -->
   <div class="result-card">
     <h2 class="section-title">
       <i class="fas fa-search"></i> 
@@ -386,7 +385,6 @@
     </div>
   </div>
   
-  <!-- Section coordinateur -->
   <div class="admin-section">
     <div style="text-align:center;">
       <button class="admin-btn success" onclick="showAdminLogin()">
@@ -395,7 +393,6 @@
       </button>
     </div>
     
-    <!-- Panneau coordinateur -->
     <div id="adminPanel" class="admin-panel">
       <div id="adminLoginForm">
         <h3><i class="fas fa-sign-in-alt"></i> Connexion Coordinateur</h3>
@@ -436,7 +433,6 @@
           </button>
         </div>
         
-        <!-- Formulaire d'importation -->
         <div id="importForm" style="display:none;">
           <h4 style="margin-bottom:1rem;"><i class="fas fa-file-import"></i> Importer des résultats</h4>
           
@@ -487,7 +483,6 @@
           </button>
         </div>
         
-        <!-- Section gestion des matières -->
         <div id="manageSubjects" style="display:none;">
           <h4 style="margin-bottom:1rem;"><i class="fas fa-list"></i> Gérer les matières</h4>
           
@@ -522,37 +517,46 @@
   <p style="margin-top:0.5rem; font-size:0.8rem;">Développé par Cheikh_A</p>
 </footer>
 
-<script>
-  // =====================================================
-  // URL DE VOTRE WORKER CLOUDFLARE
-  // =====================================================
-  const API_URL = 'https://rough-wave-5923.cheikhahmedoumedlemine.workers.dev';
-  // =====================================================
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, set, remove, get, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDnrW6WnmbEFpbWzlW9IGglxAafajt2Kyo",
+    authDomain: "iset-b9974.firebaseapp.com",
+    projectId: "iset-b9974",
+    storageBucket: "iset-b9974.firebasestorage.app",
+    messagingSenderId: "1054170284751",
+    appId: "1:1054170284751:web:8f02232478430d5ae2adba",
+    databaseURL: "https://iset-b9974-default-rtdb.firebaseio.com/"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
   
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
   
-  let currentAdmin = null;
-  let adminToken = null;
-
-  async function callAPI(endpoint, method = 'GET', body = null) {
-    const headers = { 'Content-Type': 'application/json' };
-    if (adminToken) {
-      headers['Authorization'] = `Bearer ${adminToken}`;
+  const ADMIN_CREDENTIALS = {
+    PPV: {
+      passwordHash: "13b34364b6022a2cd99414b5a0f9e5c3d86036b2e248b000c0f001e10928a26a",
+      name: "PPV",
+      allowedSemesters: ["S3", "S4", "S5", "S6"]
+    },
+    TC: {
+      passwordHash: "7918ed501fbf72de90159f9ebcccc9998b8f47c80c0c921127764455c9a79aee",
+      name: "TC",
+      allowedSemesters: ["S1", "S2"]
     }
-    
-    const options = { method, headers };
-    if (body) {
-      options.body = JSON.stringify(body);
-    }
-    
-    try {
-      const response = await fetch(`${API_URL}${endpoint}`, options);
-      return response.json();
-    } catch (error) {
-      console.error('Erreur API:', error);
-      return { error: 'Erreur de connexion au serveur' };
-    }
+  };
+  
+  async function hashPassword(password) {
+    const msgBuffer = new TextEncoder().encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   }
+
+  let currentAdmin = null;
 
   document.getElementById('resultDepartment').addEventListener('change', function() {
     const dept = this.value;
@@ -586,15 +590,15 @@
     container.style.display = 'block';
     noResult.style.display = 'none';
     
-    const result = await callAPI(`/results/${department}/${semester}/${studentId}`);
+    const snapshot = await get(child(ref(db), `results/${department}/${semester}/${studentId}`));
     
-    if (!result.exists) {
+    if (!snapshot.exists()) {
       container.style.display = 'none';
       noResult.style.display = 'block';
       return;
     }
     
-    const studentData = result.data;
+    const studentData = snapshot.val();
     const results = [];
     let studentName = '';
     
@@ -638,7 +642,6 @@
   window.hideAdminPanel = () => {
     document.getElementById('adminPanel').classList.remove('active');
     currentAdmin = null;
-    adminToken = null;
   };
 
   window.adminLogin = async () => {
@@ -652,11 +655,10 @@
       return;
     }
     
-    const result = await callAPI('/auth/login', 'POST', { type, password });
+    const inputHash = await hashPassword(password);
     
-    if (result.success) {
-      currentAdmin = result.admin;
-      adminToken = result.token;
+    if (ADMIN_CREDENTIALS[type] && inputHash === ADMIN_CREDENTIALS[type].passwordHash) {
+      currentAdmin = { type: type, ...ADMIN_CREDENTIALS[type] };
       
       document.getElementById('adminLoginForm').style.display = 'none';
       document.getElementById('adminActions').style.display = 'block';
@@ -672,14 +674,13 @@
         allowed.forEach(s => { select.innerHTML += `<option value="${s}">${s}</option>`; });
       });
     } else {
-      msgDiv.textContent = result.message || 'Mot de passe incorrect';
+      msgDiv.textContent = 'Mot de passe incorrect';
       msgDiv.style.display = 'block';
     }
   };
 
   window.adminLogout = () => {
     currentAdmin = null;
-    adminToken = null;
     document.getElementById('adminLoginForm').style.display = 'block';
     document.getElementById('adminActions').style.display = 'none';
     document.getElementById('importForm').style.display = 'none';
@@ -848,17 +849,26 @@
     
     try {
       const jsonData = await parseFile(file);
+      let importCount = 0;
       
-      const result = await callAPI('/results/import', 'POST', {
-        department: currentAdmin.type,
-        semester,
-        type,
-        subject,
-        data: jsonData
-      });
+      for (let row of jsonData) {
+        let studentId = row.NUMERO || row.Numero || row.numero || row.ID || row.id || row.Matricule || row.matricule || row['N°'] || row.NUM;
+        if (studentId) studentId = String(studentId).trim();
+        
+        const studentName = row['NOM & PRENOM'] || row['Nom et Prenom'] || row.Nom || row.nom || row['NOM'] || row['PRENOM'] || row.NOM || '';
+        
+        let grade = row['NOTE/20'] || row['Note/20'] || row.Note || row.note || row.Grade || row.grade || row.Moyenne || row.moyenne || row['NOTE'] || row.NOTE;
+        if (grade) grade = parseFloat(String(grade).replace(',', '.'));
+        
+        if (studentId && !isNaN(grade) && grade >= 0 && grade <= 20) {
+          const path = `results/${currentAdmin.type}/${semester}/${studentId}/${subject}_${type}`;
+          await set(ref(db, path), { grade, name: studentName, subject, type });
+          importCount++;
+        }
+      }
       
-      msgDiv.textContent = result.message || 'Importation terminée';
-      msgDiv.className = result.success ? 'message success' : 'message error';
+      msgDiv.textContent = `✅ ${importCount} notes importées avec succès`;
+      msgDiv.className = 'message success';
       document.getElementById('importSubject').value = '';
       fileInput.value = '';
       hideImportForm();
@@ -875,16 +885,35 @@
     const container = document.getElementById('subjectsListContainer');
     container.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i></div>';
     
-    const result = await callAPI(`/subjects/${currentAdmin.type}/${semester}`);
+    const snapshot = await get(child(ref(db), `results/${currentAdmin.type}/${semester}`));
     
-    if (!result.exists || !result.subjects || result.subjects.length === 0) {
+    if (!snapshot.exists()) {
+      container.innerHTML = '<p style="text-align:center;color:var(--text-light);">Aucune matière dans ce semestre</p>';
+      return;
+    }
+    
+    const allStudents = snapshot.val();
+    const subjectsMap = new Map();
+    
+    for (let studentId in allStudents) {
+      for (let subjectKey in allStudents[studentId]) {
+        const data = allStudents[studentId][subjectKey];
+        const key = `${data.subject}_${data.type}`;
+        if (!subjectsMap.has(key)) {
+          subjectsMap.set(key, { subject: data.subject, type: data.type, count: 0 });
+        }
+        subjectsMap.get(key).count++;
+      }
+    }
+    
+    if (subjectsMap.size === 0) {
       container.innerHTML = '<p style="text-align:center;color:var(--text-light);">Aucune matière dans ce semestre</p>';
       return;
     }
     
     let html = `<table class="results-table"><thead><tr><th>Matière</th><th>Type</th><th style="text-align:center;">Étudiants</th><th style="text-align:center;">Action</th></tr></thead><tbody>`;
     
-    for (let data of result.subjects) {
+    for (let [key, data] of subjectsMap) {
       html += `<tr><td>${data.subject}</td><td>${data.type}</td><td style="text-align:center;">${data.count}</td>
         <td style="text-align:center;"><button class="admin-btn danger" style="padding:0.3rem 0.8rem;font-size:0.8rem;" onclick="deleteSubject('${semester}', '${data.subject}', '${data.type}')"><i class="fas fa-trash"></i> Supprimer</button></td></tr>`;
     }
@@ -896,14 +925,19 @@
   window.deleteSubject = async (semester, subject, type) => {
     if (!confirm('⚠️ Êtes-vous sûr de vouloir supprimer TOUTES les notes de cette matière ?')) return;
     
-    const result = await callAPI('/subjects/delete', 'POST', {
-      department: currentAdmin.type,
-      semester,
-      subject,
-      type
-    });
+    const snapshot = await get(child(ref(db), `results/${currentAdmin.type}/${semester}`));
+    if (!snapshot.exists()) return;
     
-    alert(result.message || 'Opération terminée');
+    const allStudents = snapshot.val();
+    const subjectKey = `${subject}_${type}`;
+    
+    for (let studentId in allStudents) {
+      if (allStudents[studentId][subjectKey]) {
+        await remove(ref(db, `results/${currentAdmin.type}/${semester}/${studentId}/${subjectKey}`));
+      }
+    }
+    
+    alert('✅ Matière supprimée avec succès');
     loadSubjectsList();
   };
 
