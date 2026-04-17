@@ -459,7 +459,9 @@
           
           <div class="form-group">
             <label>Nom de la matière</label>
-            <input type="text" id="importSubject" placeholder="Ex: Phytoprotection 1">
+            <select id="importSubject" style="width:100%; padding:0.8rem; border:2px solid var(--primary-light); border-radius:var(--radius); font-size:1rem;">
+              <option value="">-- Sélectionner une matière --</option>
+            </select>
           </div>
           
           <div class="form-group">
@@ -548,7 +550,21 @@
       allowedSemesters: ["S1", "S2"]
     }
   };
-  
+
+  // --- Matières par département et semestre ---
+  const SUBJECTS_BY_DEPT = {
+    TC: {
+      S1: ["Anglais", "Français", "Math et Statistique", "Informatique", "Physique", "Chimie", "Biologie", "Micro et Génétique"],
+      S2: ["Anglais 2", "Français 2", "PPV", "TIC", "PSA", "STA", "GAB", "GEM"]
+    },
+    PPV: {
+      S3: ["Français s3", "Économie", "Horticulture", "Agronomie", "Entomologie .Nemat", "Pesticides agricoles", "Science des sols", "Science des plantes"],
+      S4: ["Vulgarisation", "Technique de propagation", "Technique d'irrigation et BEC", "Ecophysiologie et Biochimie", "Fertilité du sol", "Méthodes de diagnostic", "Malherbologie"],
+      S5: [], // Laissé vide comme demandé
+      S6: []  // Laissé vide comme demandé
+    }
+  };
+
   async function hashPassword(password) {
     const msgBuffer = new TextEncoder().encode(password);
     const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
@@ -557,6 +573,24 @@
   }
 
   let currentAdmin = null;
+
+  // Mise à jour de la liste des matières en fonction du semestre sélectionné dans le formulaire d'import
+  function updateSubjectsListForImport() {
+    if (!currentAdmin) return;
+    const semester = document.getElementById('importSemester').value;
+    const subjectSelect = document.getElementById('importSubject');
+    subjectSelect.innerHTML = '<option value="">-- Sélectionner une matière --</option>';
+    
+    if (!semester) return;
+    
+    const subjects = SUBJECTS_BY_DEPT[currentAdmin.type]?.[semester] || [];
+    subjects.forEach(subj => {
+      const option = document.createElement('option');
+      option.value = subj;
+      option.textContent = subj;
+      subjectSelect.appendChild(option);
+    });
+  }
 
   document.getElementById('resultDepartment').addEventListener('change', function() {
     const dept = this.value;
@@ -673,6 +707,11 @@
         select.innerHTML = '';
         allowed.forEach(s => { select.innerHTML += `<option value="${s}">${s}</option>`; });
       });
+      
+      // Ajouter un écouteur pour mettre à jour les matières quand le semestre change dans l'import
+      importSelect.addEventListener('change', updateSubjectsListForImport);
+      // Initialiser la liste des matières si un semestre est déjà sélectionné
+      updateSubjectsListForImport();
     } else {
       msgDiv.textContent = 'Mot de passe incorrect';
       msgDiv.style.display = 'block';
@@ -690,6 +729,8 @@
   window.showImportForm = () => {
     document.getElementById('importForm').style.display = 'block';
     document.getElementById('manageSubjects').style.display = 'none';
+    // Rafraîchir la liste des matières au cas où
+    updateSubjectsListForImport();
   };
 
   window.hideImportForm = () => {
@@ -838,8 +879,8 @@
     const file = fileInput.files[0];
     const msgDiv = document.getElementById('adminMessage');
     
-    if (!subject || !file) {
-      alert('Veuillez remplir tous les champs et choisir un fichier');
+    if (!semester || !subject || !file) {
+      alert('Veuillez remplir tous les champs (semestre, matière, fichier)');
       return;
     }
     
@@ -867,7 +908,7 @@
         }
       }
       
-      msgDiv.textContent = `✅ ${importCount} notes importées avec succès`;
+      msgDiv.textContent = `✅ ${importCount} notes importées avec succès pour la matière "${subject}"`;
       msgDiv.className = 'message success';
       document.getElementById('importSubject').value = '';
       fileInput.value = '';
@@ -923,7 +964,7 @@
   };
 
   window.deleteSubject = async (semester, subject, type) => {
-    if (!confirm('⚠️ Êtes-vous sûr de vouloir supprimer TOUTES les notes de cette matière ?')) return;
+    if (!confirm(`⚠️ Êtes-vous sûr de vouloir supprimer TOUTES les notes de la matière "${subject}" (${type}) ?`)) return;
     
     const snapshot = await get(child(ref(db), `results/${currentAdmin.type}/${semester}`));
     if (!snapshot.exists()) return;
