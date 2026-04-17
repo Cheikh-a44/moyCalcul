@@ -450,10 +450,11 @@
           
           <div class="form-group">
             <label>Type d'évaluation</label>
-            <select id="importType">
+            <select id="importType" onchange="updateSubjectsForImportType()">
               <option value="Examen">Examen</option>
               <option value="Contrôle continu">Contrôle continu</option>
               <option value="Rattrapage">Rattrapage</option>
+              <option value="TP">TP</option>
             </select>
           </div>
           
@@ -560,10 +561,55 @@
     PPV: {
       S3: ["Français s3", "Économie", "Horticulture", "Agronomie", "Entomologie .Nemat", "Pesticides agricoles", "Science des sols", "Science des plantes"],
       S4: ["Vulgarisation", "Technique de propagation", "Technique d'irrigation et BEC", "Ecophysiologie et Biochimie", "Fertilité du sol", "Méthodes de diagnostic", "Malherbologie"],
-      S5: [], // Laissé vide comme demandé
-      S6: []  // Laissé vide comme demandé
+      S5: [],
+      S6: []
     }
   };
+
+  // Matières qui n'ont PAS de TP (toutes les autres en ont)
+  const SUBJECTS_WITHOUT_TP = [
+    "Anglais", "Anglais 2", "Français", "Français 2", "Français s3",
+    "Math et Statistique", "Économie", "Vulgarisation", "Technique d'irrigation et BEC"
+  ];
+
+  // Fonction pour vérifier si une matière a des TP
+  function hasTP(subjectName) {
+    return !SUBJECTS_WITHOUT_TP.includes(subjectName);
+  }
+
+  // Fonction pour mettre à jour la liste des matières en fonction du type d'évaluation
+  function updateSubjectsForImportType() {
+    if (!currentAdmin) return;
+    const semester = document.getElementById('importSemester').value;
+    const evaluationType = document.getElementById('importType').value;
+    const subjectSelect = document.getElementById('importSubject');
+    subjectSelect.innerHTML = '<option value="">-- Sélectionner une matière --</option>';
+    
+    if (!semester) return;
+    
+    let subjects = SUBJECTS_BY_DEPT[currentAdmin.type]?.[semester] || [];
+    
+    // Si le type est "TP", filtrer uniquement les matières qui ont des TP
+    if (evaluationType === "TP") {
+      subjects = subjects.filter(subject => hasTP(subject));
+    }
+    
+    subjects.forEach(subj => {
+      const option = document.createElement('option');
+      option.value = subj;
+      option.textContent = subj;
+      subjectSelect.appendChild(option);
+    });
+    
+    // Si aucune matière n'est disponible, afficher un message
+    if (subjects.length === 0) {
+      const option = document.createElement('option');
+      option.value = "";
+      option.textContent = "-- Aucune matière disponible pour ce type --";
+      option.disabled = true;
+      subjectSelect.appendChild(option);
+    }
+  }
 
   async function hashPassword(password) {
     const msgBuffer = new TextEncoder().encode(password);
@@ -574,22 +620,9 @@
 
   let currentAdmin = null;
 
-  // Mise à jour de la liste des matières en fonction du semestre sélectionné dans le formulaire d'import
+  // Mise à jour de la liste des matières en fonction du semestre sélectionné
   function updateSubjectsListForImport() {
-    if (!currentAdmin) return;
-    const semester = document.getElementById('importSemester').value;
-    const subjectSelect = document.getElementById('importSubject');
-    subjectSelect.innerHTML = '<option value="">-- Sélectionner une matière --</option>';
-    
-    if (!semester) return;
-    
-    const subjects = SUBJECTS_BY_DEPT[currentAdmin.type]?.[semester] || [];
-    subjects.forEach(subj => {
-      const option = document.createElement('option');
-      option.value = subj;
-      option.textContent = subj;
-      subjectSelect.appendChild(option);
-    });
+    updateSubjectsForImportType();
   }
 
   document.getElementById('resultDepartment').addEventListener('change', function() {
@@ -659,7 +692,7 @@
     
     results.forEach(r => {
       const gradeClass = r.grade >= 10 ? 'grade-success' : 'grade-fail';
-      html += `<tr><td>${r.subject}</td><td>${r.type}</td><td style="text-align:center;"><span class="grade-badge ${gradeClass}">${r.grade}/20</span></td></tr>`;
+      html += `<tr><td><strong>${r.subject}</strong></td><td>${r.type}</td><td style="text-align:center;"><span class="grade-badge ${gradeClass}">${r.grade}/20</span></td></tr>`;
     });
     
     html += '</tbody></table>';
@@ -884,6 +917,12 @@
       return;
     }
     
+    // Vérification supplémentaire pour TP : s'assurer que la matière a bien des TP
+    if (type === "TP" && !hasTP(subject)) {
+      alert(`La matière "${subject}" ne possède pas de TP. Veuillez sélectionner une autre matière ou un autre type d'évaluation.`);
+      return;
+    }
+    
     msgDiv.textContent = '⏳ Analyse du fichier en cours...';
     msgDiv.style.display = 'block';
     msgDiv.className = 'message';
@@ -908,7 +947,7 @@
         }
       }
       
-      msgDiv.textContent = `✅ ${importCount} notes importées avec succès pour la matière "${subject}"`;
+      msgDiv.textContent = `✅ ${importCount} notes importées avec succès pour la matière "${subject}" (${type})`;
       msgDiv.className = 'message success';
       document.getElementById('importSubject').value = '';
       fileInput.value = '';
@@ -955,7 +994,7 @@
     let html = `<table class="results-table"><thead><tr><th>Matière</th><th>Type</th><th style="text-align:center;">Étudiants</th><th style="text-align:center;">Action</th></tr></thead><tbody>`;
     
     for (let [key, data] of subjectsMap) {
-      html += `<tr><td>${data.subject}</td><td>${data.type}</td><td style="text-align:center;">${data.count}</td>
+      html += `<tr><td><strong>${data.subject}</strong></td><td>${data.type}</td><td style="text-align:center;">${data.count}</td>
         <td style="text-align:center;"><button class="admin-btn danger" style="padding:0.3rem 0.8rem;font-size:0.8rem;" onclick="deleteSubject('${semester}', '${data.subject}', '${data.type}')"><i class="fas fa-trash"></i> Supprimer</button></td></tr>`;
     }
     
