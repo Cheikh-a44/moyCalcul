@@ -133,6 +133,42 @@
     font-weight:bold;
   }
   
+  /* Tableaux séparés pour avant calcul */
+  .simple-table {
+    width:100%;
+    border-collapse:collapse;
+    margin:1rem 0;
+    font-size:14px;
+  }
+  .simple-table th, .simple-table td {
+    border:1px solid #ddd;
+    padding:8px;
+    text-align:center;
+  }
+  .simple-table th {
+    background:var(--primary-light);
+    font-weight:bold;
+  }
+  .simple-table td:first-child {
+    text-align:left;
+  }
+  .section-subtitle {
+    font-size:1.1rem;
+    color:var(--primary);
+    margin:1rem 0 0.5rem 0;
+    padding-bottom:0.3rem;
+    border-bottom:2px solid var(--primary-light);
+  }
+  .neutral-message {
+    text-align:center;
+    margin-top:1rem;
+    padding:0.8rem;
+    background:#e9ecef;
+    color:#6c757d;
+    border-radius:var(--radius);
+    font-weight:normal;
+  }
+  
   @media (max-width:768px) {
     .notes-table { font-size:12px; }
     .notes-table input { width:55px; }
@@ -647,8 +683,17 @@
     const results = student.results;
     
     if (!results || !student.calculated) {
-      // Affichage des notes brutes avant calcul
+      // Affichage des notes brutes avant calcul (tableaux séparés)
       const semesterConfig = SEMESTERS_CONFIG[currentAdmin][currentSemester];
+      const requiredSubjects = [];
+      for (let moduleCode in semesterConfig.modules) {
+        for (let subject of semesterConfig.modules[moduleCode].subjects) {
+          if (!requiredSubjects.includes(subject.name)) {
+            requiredSubjects.push(subject.name);
+          }
+        }
+      }
+      
       let html = `
         <div class="student-header">
           <i class="fas fa-user-graduate"></i>
@@ -660,36 +705,105 @@
         </div>
       `;
       
-      html += '<div style="overflow-x:auto;"><table class="releve-table"><thead><tr>';
-      html += '<th>Module</th><th>Matière</th><th>TP</th><th>CC</th><th>Examen</th><th>Rattrapage</th>';
-      html += '</tr></thead><tbody>';
+      // 1. Tableau des TP
+      const tpSubjects = requiredSubjects.filter(s => {
+        for (let moduleCode in semesterConfig.modules) {
+          for (let subject of semesterConfig.modules[moduleCode].subjects) {
+            if (subject.name === s && subject.hasTP) return true;
+          }
+        }
+        return false;
+      });
       
-      for (let moduleCode in semesterConfig.modules) {
-        const module = semesterConfig.modules[moduleCode];
-        let firstRow = true;
-        for (let subject of module.subjects) {
-          const grades = student.grades?.[subject.code] || {};
-          html += `<tr>
-            <td>${firstRow ? moduleCode + '<br>' + module.name : ''}</td>
-            <td style="text-align:left; padding-left:20px;">${subject.name}</td>
-            <td>${grades.tp !== undefined ? grades.tp.toFixed(2) : '-'}</td>
-            <td>${grades.cc !== undefined ? grades.cc.toFixed(2) : '-'}</td>
-            <td>${grades.examen !== undefined ? grades.examen.toFixed(2) : '-'}</td>
-            <td>${grades.rattrapage !== undefined ? grades.rattrapage.toFixed(2) : '-'}</td>
-          </tr>`;
-          firstRow = false;
+      if (tpSubjects.length > 0) {
+        html += `<h4 class="section-subtitle"><i class="fas fa-microchip"></i> Résultats TP</h4>`;
+        html += '<table class="simple-table"><thead><tr><th>Matière</th><th>Note TP</th></tr></thead><tbody>';
+        for (let subject of tpSubjects) {
+          let code = null;
+          for (let moduleCode in semesterConfig.modules) {
+            for (let subj of semesterConfig.modules[moduleCode].subjects) {
+              if (subj.name === subject) code = subj.code;
+            }
+          }
+          const note = student.grades?.[code]?.tp;
+          html += `<tr><td>${subject}</td><td>${note !== undefined ? note.toFixed(2) : '-'}</td></tr>`;
+        }
+        html += '</tbody></table>';
+      }
+      
+      // 2. Tableau des CC
+      html += `<h4 class="section-subtitle"><i class="fas fa-pen"></i> Résultats Contrôle continu</h4>`;
+      html += '<table class="simple-table"><thead><tr><th>Matière</th><th>Note CC</th></tr></thead><tbody>';
+      for (let subject of requiredSubjects) {
+        let code = null;
+        for (let moduleCode in semesterConfig.modules) {
+          for (let subj of semesterConfig.modules[moduleCode].subjects) {
+            if (subj.name === subject) code = subj.code;
+          }
+        }
+        const note = student.grades?.[code]?.cc;
+        html += `<tr><td>${subject}</td><td>${note !== undefined ? note.toFixed(2) : '-'}</td></tr>`;
+      }
+      html += '</tbody></table>';
+      
+      // 3. Tableau des Examens
+      html += `<h4 class="section-subtitle"><i class="fas fa-book"></i> Résultats Examen</h4>`;
+      html += '<table class="simple-table"><thead><tr><th>Matière</th><th>Note Examen</th></tr></thead><tbody>';
+      for (let subject of requiredSubjects) {
+        let code = null;
+        for (let moduleCode in semesterConfig.modules) {
+          for (let subj of semesterConfig.modules[moduleCode].subjects) {
+            if (subj.name === subject) code = subj.code;
+          }
+        }
+        const note = student.grades?.[code]?.examen;
+        html += `<tr><td>${subject}</td><td>${note !== undefined ? note.toFixed(2) : '-'}</td></tr>`;
+      }
+      html += '</tbody></table>';
+      
+      // 4. Tableau des Rattrapages
+      let hasRattrapage = false;
+      for (let subject of requiredSubjects) {
+        let code = null;
+        for (let moduleCode in semesterConfig.modules) {
+          for (let subj of semesterConfig.modules[moduleCode].subjects) {
+            if (subj.name === subject) code = subj.code;
+          }
+        }
+        if (student.grades?.[code]?.rattrapage !== undefined) {
+          hasRattrapage = true;
+          break;
         }
       }
       
-      html += '</tbody></table></div>';
-      html += '<div class="warning-message" style="text-align:center; margin-top:1rem; color:#dc3545;"><i class="fas fa-exclamation-triangle"></i> ⚠️ Les résultats ne sont pas encore complets. Le coordinateur doit finaliser les notes.</div>';
+      if (hasRattrapage) {
+        html += `<h4 class="section-subtitle"><i class="fas fa-repeat"></i> Résultats Rattrapage</h4>`;
+        html += '<table class="simple-table"><thead><tr><th>Matière</th><th>Note Rattrapage</th></tr></thead><tbody>';
+        for (let subject of requiredSubjects) {
+          let code = null;
+          for (let moduleCode in semesterConfig.modules) {
+            for (let subj of semesterConfig.modules[moduleCode].subjects) {
+              if (subj.name === subject) code = subj.code;
+            }
+          }
+          const note = student.grades?.[code]?.rattrapage;
+          if (note !== undefined) {
+            html += `<tr><td>${subject}</td><td>${note.toFixed(2)}</td></tr>`;
+          }
+        }
+        html += '</tbody></table>';
+      }
+      
+      html += `<div class="neutral-message">
+        <i class="fas fa-info-circle"></i> Les résultats ne sont pas encore finalisés par le coordinateur.
+      </div>`;
       
       document.getElementById('studentResults').innerHTML = html;
       document.getElementById('pdfButtonContainer').innerHTML = '';
       return;
     }
     
-    // Affichage des résultats calculés façon relevé de notes
+    // ========== AFFICHAGE APRÈS CALCUL (TABLEAU FINAL COMME DANS L'IMAGE) ==========
     let html = `
       <div class="student-header">
         <i class="fas fa-user-graduate"></i>
@@ -731,6 +845,8 @@
       for (let subject of module.subjects) {
         const grades = student.grades?.[subject.code] || {};
         const tpDisplay = subject.hasTP ? (grades.tp !== undefined ? grades.tp.toFixed(2) : '-') : '-';
+        const creditEarned = subject.status === 'C' ? subject.credit : 0;
+        
         html += `<tr class="subject-row">
           <td></td>
           <td style="text-align:left; padding-left:40px;">${subject.name}</td>
@@ -738,7 +854,7 @@
           <td>${grades.cc !== undefined ? grades.cc.toFixed(2) : '-'}</td>
           <td>${grades.examen !== undefined ? grades.examen.toFixed(2) : '-'}</td>
           <td style="font-weight:bold;">${subject.moyenne.toFixed(2)}</td>
-          <td>${subject.credit}</td>
+          <td>${creditEarned.toFixed(1)}</td>
           <td class="${subject.status === 'C' ? 'status-C' : 'status-NC'}">${subject.status}</td>
         </tr>`;
       }
@@ -782,7 +898,8 @@
         <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
           <tr><td style="padding:5px;"><strong>Étudiant(e) :</strong> ${studentName}</td>
               <td style="padding:5px;"><strong>N° d'étudiant :</strong> ${studentId}</td>
-              <td style="padding:5px;"><strong>Département :</strong> ${currentAdmin}</td></tr>
+              <td style="padding:5px;"><strong>Département :</strong> ${currentAdmin}</td>
+          </tr>
         </table>
         
         <table style="width:100%; border-collapse:collapse; border:1px solid #000;">
@@ -829,6 +946,8 @@
       for (let subject of module.subjects) {
         const grades = currentStudentData.grades?.[subject.code] || {};
         const tpDisplay = subject.hasTP ? (grades.tp !== undefined ? grades.tp.toFixed(2) : '-') : '-';
+        const creditEarned = subject.status === 'C' ? subject.credit : 0;
+        
         content += `<tr>
           <td style="border:1px solid #000; padding:8px;"></td>
           <td style="border:1px solid #000; padding:8px; text-align:left; padding-left:20px;">${subject.name}</td>
@@ -836,9 +955,9 @@
           <td style="border:1px solid #000; padding:8px; text-align:center;">${grades.cc !== undefined ? grades.cc.toFixed(2) : '-'}</td>
           <td style="border:1px solid #000; padding:8px; text-align:center;">${grades.examen !== undefined ? grades.examen.toFixed(2) : '-'}</td>
           <td style="border:1px solid #000; padding:8px; text-align:center; font-weight:bold;">${subject.moyenne.toFixed(2)}</td>
-          <td style="border:1px solid #000; padding:8px; text-align:center;">${subject.credit}</td>
+          <td style="border:1px solid #000; padding:8px; text-align:center;">${creditEarned.toFixed(1)}</td>
           <td style="border:1px solid #000; padding:8px; text-align:center;">${subject.status}</td>
-        </tr>`;
+        </table>`;
       }
     }
     
@@ -893,14 +1012,15 @@
       currentStudentData = student;
       displayStudentResults(student, id);
     } else {
-      document.getElementById('studentResults').innerHTML = `
-        <div class="empty-state">
-          <i class="fas fa-user-graduate"></i>
-          <h3>Aucun résultat trouvé</h3>
-          <p>Aucun étudiant avec ce numéro n'a été trouvé dans le système.</p>
-        </div>
-      `;
-      document.getElementById('pdfButtonContainer').innerHTML = '';
+      // Créer un étudiant temporaire si nécessaire
+      const tempStudent = { name: name || 'Étudiant', grades: {}, calculated: false };
+      allStudents[key] = tempStudent;
+      saveToLocalStorage();
+      currentAdmin = dept;
+      currentSemester = sem;
+      currentStudentId = id;
+      currentStudentData = tempStudent;
+      displayStudentResults(tempStudent, id);
     }
   }
 </script>
