@@ -556,6 +556,7 @@
           <button class="admin-btn success" onclick="showImportForm()"><i class="fas fa-upload"></i> Importer des résultats</button>
           <button class="admin-btn danger" onclick="showManageSubjects()"><i class="fas fa-trash-alt"></i> Gérer les matières</button>
           <button class="admin-btn warning" onclick="openAnnonceModal()"><i class="fas fa-bullhorn"></i> Gérer l'annonce</button>
+          <button class="admin-btn danger" onclick="showResetDataForm()" style="background:#f8d7da; border-color:#dc3545; color:#721c24;"><i class="fas fa-database"></i> حذف جميع البيانات</button>
         </div>
         
         <div id="importForm" style="display:none;">
@@ -584,6 +585,24 @@
           <button class="admin-btn" onclick="loadSubjectsList()">Afficher les matières</button>
           <div id="subjectsListContainer" style="margin-top:1.5rem;"></div>
           <button class="admin-btn secondary" onclick="hideManageSubjects()" style="margin-top:1rem;">Retour</button>
+        </div>
+        
+        <div id="resetDataForm" style="display:none; margin-top:1rem; padding:1rem; background:#f8d7da; border-radius:8px; border:1px solid #dc3545;">
+          <h4 style="color:#721c24; margin-bottom:1rem;"><i class="fas fa-exclamation-triangle"></i> حذف جميع البيانات</h4>
+          <p style="margin-bottom:1rem; color:#721c24;">⚠️ تحذير: هذا الإجراء سيقوم بحذف جميع بيانات الطلاب والنتائج بشكل نهائي. لا يمكن التراجع عنه.</p>
+          <div class="form-group">
+            <label>اختر القسم للحذف</label>
+            <select id="resetDeptSelect">
+              <option value="PPV">PPV</option>
+              <option value="TC">TC</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>اختر السيمستر للحذف</label>
+            <select id="resetSemesterSelect"></select>
+          </div>
+          <button class="admin-btn danger" onclick="resetAllData()" style="background:#dc3545; color:white;">تأكيد حذف جميع البيانات</button>
+          <button class="admin-btn secondary" onclick="hideResetDataForm()">إلغاء</button>
         </div>
         
         <button class="admin-btn secondary" onclick="adminLogout()" style="margin-top:1rem;">Déconnexion</button>
@@ -830,14 +849,14 @@
         html += `</tbody></table>`;
       }
       if (hasAnyExam) {
-        html += `<h4 class="section-subtitle">Résultats Examen</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note Examen</th></tr></thead><tbody>`;
+        html += `<h4 class="section-subtitle">Résultats Examen</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note Examen</th><tr></thead><tbody>`;
         for (let subject of requiredSubjects) { const note = notesBySubject[subject]?.['Examen']; html += `<tr><td>${displaySubjectName(subject)}</td><td style="text-align:center;">${note !== undefined ? note.toFixed(2) : '-'}</td></tr>`; }
         html += `</tbody></table>`;
       }
       if (hasAnyRattrapage) {
         html += `<h4 class="section-subtitle">Résultats Rattrapage</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note Rattrapage</th></tr></thead><tbody>`;
         for (let subject of requiredSubjects) { const note = notesBySubject[subject]?.['Rattrapage']; if (note !== undefined) html += `<tr><td>${displaySubjectName(subject)}</td><td style="text-align:center;">${note.toFixed(2)}</td></tr>`; }
-        html += `</tbody></tr>`;
+        html += `</tbody></table>`;
       }
       html += `<div class="neutral-message"><i class="fas fa-info-circle"></i> Les résultats ne sont pas encore finalisés par le coordinateur.</div>`;
     }
@@ -885,17 +904,79 @@
       document.getElementById('adminDeptName').textContent = type; document.getElementById('adminPassword').value = ''; msgDiv.style.display = 'none';
       const allowed = currentAdmin.allowedSemesters;
       const importSelect = document.getElementById('importSemester'); const manageSelect = document.getElementById('manageSemester');
-      [importSelect, manageSelect].forEach(select => { select.innerHTML = ''; allowed.forEach(s => { select.innerHTML += `<option value="${s}">${s}</option>`; }); });
+      const resetSelect = document.getElementById('resetSemesterSelect');
+      [importSelect, manageSelect, resetSelect].forEach(select => {
+        if (select) { select.innerHTML = ''; allowed.forEach(s => { select.innerHTML += `<option value="${s}">${s}</option>`; }); }
+      });
       importSelect.addEventListener('change', updateSubjectsListForImport);
       updateSubjectsListForImport(); afficherAnnonce();
     } else { msgDiv.textContent = 'Mot de passe incorrect'; msgDiv.style.display = 'block'; }
   };
   
-  window.adminLogout = () => { currentAdmin = null; document.getElementById('adminLoginForm').style.display = 'block'; document.getElementById('adminActions').style.display = 'none'; document.getElementById('importForm').style.display = 'none'; document.getElementById('manageSubjects').style.display = 'none'; afficherAnnonce(); };
-  window.showImportForm = () => { document.getElementById('importForm').style.display = 'block'; document.getElementById('manageSubjects').style.display = 'none'; updateSubjectsListForImport(); };
+  window.adminLogout = () => { currentAdmin = null; document.getElementById('adminLoginForm').style.display = 'block'; document.getElementById('adminActions').style.display = 'none'; document.getElementById('importForm').style.display = 'none'; document.getElementById('manageSubjects').style.display = 'none'; document.getElementById('resetDataForm').style.display = 'none'; afficherAnnonce(); };
+  window.showImportForm = () => { document.getElementById('importForm').style.display = 'block'; document.getElementById('manageSubjects').style.display = 'none'; document.getElementById('resetDataForm').style.display = 'none'; updateSubjectsListForImport(); };
   window.hideImportForm = () => { document.getElementById('importForm').style.display = 'none'; document.getElementById('ocrProgress').style.display = 'none'; };
-  window.showManageSubjects = () => { document.getElementById('manageSubjects').style.display = 'block'; document.getElementById('importForm').style.display = 'none'; document.getElementById('subjectsListContainer').innerHTML = ''; };
+  window.showManageSubjects = () => { document.getElementById('manageSubjects').style.display = 'block'; document.getElementById('importForm').style.display = 'none'; document.getElementById('resetDataForm').style.display = 'none'; document.getElementById('subjectsListContainer').innerHTML = ''; };
   window.hideManageSubjects = () => { document.getElementById('manageSubjects').style.display = 'none'; };
+  window.showResetDataForm = () => { document.getElementById('resetDataForm').style.display = 'block'; document.getElementById('importForm').style.display = 'none'; document.getElementById('manageSubjects').style.display = 'none'; };
+  window.hideResetDataForm = () => { document.getElementById('resetDataForm').style.display = 'none'; };
+  
+  // دالة حذف جميع البيانات
+  window.resetAllData = async () => {
+    const dept = document.getElementById('resetDeptSelect').value;
+    const semester = document.getElementById('resetSemesterSelect').value;
+    
+    if (!dept || !semester) {
+      alert('Veuillez sélectionner le département et le semestre');
+      return;
+    }
+    
+    if (!confirm(`⚠️ ATTENTION ! Êtes-vous sûr de vouloir supprimer TOUTES les données du ${dept} - ${semester} ?\n\nCette action est irréversible.`)) {
+      return;
+    }
+    
+    const msgDiv = document.getElementById('adminMessage');
+    msgDiv.textContent = '⏳ Suppression en cours...';
+    msgDiv.style.display = 'block';
+    msgDiv.className = 'message';
+    
+    try {
+      const path = `results/${dept}/${semester}`;
+      const snapshot = await get(child(ref(db), path));
+      
+      if (!snapshot.exists()) {
+        msgDiv.textContent = '❌ Aucune donnée trouvée pour ce semestre';
+        msgDiv.className = 'message error';
+        setTimeout(() => msgDiv.style.display = 'none', 3000);
+        return;
+      }
+      
+      const allStudents = snapshot.val();
+      let deletedCount = 0;
+      
+      for (let studentId in allStudents) {
+        await remove(ref(db, `${path}/${studentId}`));
+        deletedCount++;
+      }
+      
+      msgDiv.textContent = `✅ Suppression terminée ! ${deletedCount} étudiant(s) supprimés du ${dept} - ${semester}`;
+      msgDiv.className = 'message success';
+      hideResetDataForm();
+      
+      // تحديث قائمة المواد في "Gérer les matières" إذا كانت مفتوحة
+      if (document.getElementById('manageSubjects').style.display === 'block') {
+        loadSubjectsList();
+      }
+      
+      setTimeout(() => msgDiv.style.display = 'none', 5000);
+      
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      msgDiv.textContent = '❌ Erreur lors de la suppression des données';
+      msgDiv.className = 'message error';
+      setTimeout(() => msgDiv.style.display = 'none', 3000);
+    }
+  };
   
   // استخراج النصوص من PDF والصورة
   async function extractTextFromPDF(file) { const arrayBuffer = await file.arrayBuffer(); const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise; let fullText = ''; for (let i = 1; i <= pdf.numPages; i++) { const page = await pdf.getPage(i); const textContent = await page.getTextContent(); const pageText = textContent.items.map(item => item.str).join(' '); fullText += pageText + '\n'; } return fullText; }
@@ -920,7 +1001,7 @@
     throw new Error('Format non supporté');
   }
   
-  // ==================== استيراد الملفات مع تجنب التكرار وعدم إغلاق النموذج ====================
+  // ==================== استيراد الملفات مع تجنب التكرار ====================
   window.processImport = async () => {
     const semester = document.getElementById('importSemester').value;
     const type = document.getElementById('importType').value;
@@ -946,7 +1027,6 @@
     msgDiv.className = 'message';
     
     try {
-      // ✅ 1. جلب جميع الطلاب الموجودين حالياً لهذه المادة ونوع التقييم
       const prefix = `${currentAdmin.type}/${semester}`;
       const snapshot = await get(child(ref(db), prefix));
       
@@ -961,7 +1041,6 @@
         }
       }
       
-      // ✅ 2. قراءة الملف الجديد
       msgDiv.textContent = '⏳ Analyse du fichier en cours...';
       const jsonData = await parseFile(file);
       let importCount = 0;
@@ -987,31 +1066,25 @@
           continue;
         }
         
-        // ✅ 3. التحقق من عدم وجود الطالب مسبقاً
         if (existingStudents.has(studentId)) {
           duplicateCount++;
           continue;
         }
         
-        // ✅ 4. إضافة الطالب الجديد فقط
         const path = `results/${currentAdmin.type}/${semester}/${studentId}/${cleanSubject}_${type}`;
         await set(ref(db, path), { grade, name: studentName, subject: subject, type, dateAdded: Date.now() });
         importCount++;
         existingStudents.add(studentId);
       }
       
-      // ✅ 5. عرض تقرير مفصل (دون إغلاق النموذج)
       let message = `✅ ${importCount} nouveaux étudiants ajoutés pour "${displaySubjectName(subject)}" (${type})`;
       if (duplicateCount > 0) message += `\n⚠️ ${duplicateCount} étudiants déjà existants (ignorés)`;
       if (errorCount > 0) message += `\n❌ ${errorCount} lignes avec erreur (ignorées)`;
       
       msgDiv.textContent = message;
       msgDiv.className = 'message success';
-      
-      // ✅ فقط مسح حقل الملف، وليس إخفاء النموذج
       fileInput.value = '';
       
-      // ✅ إعادة تعيين الرسالة بعد 5 ثوانٍ
       setTimeout(() => {
         if (msgDiv.style.display === 'block') {
           msgDiv.style.display = 'none';
