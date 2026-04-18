@@ -6,28 +6,9 @@
 <title>Relevé de Notes - ISET Rosso</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyDnrW6WnmbEFpbWzlW9IGglxAafajt2Kyo",
-    authDomain: "iset-b9974.firebaseapp.com",
-    projectId: "iset-b9974",
-    storageBucket: "iset-b9974.firebasestorage.app",
-    messagingSenderId: "1054170284751",
-    appId: "1:1054170284751:web:8f02232478430d5ae2adba",
-    databaseURL: "https://iset-b9974-default-rtdb.firebaseio.com/"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-  
-  window.db = db;
-  window.ref = ref;
-  window.get = get;
-  window.child = child;
-</script>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <style>
   :root {
     --primary: #0077b6;
@@ -173,7 +154,28 @@
 </footer>
 
 <script>
-  // ==================== CONFIGURATION ====================
+  // ==================== CONFIGURATION FIREBASE ====================
+  const firebaseConfig = {
+    apiKey: "AIzaSyDnrW6WnmbEFpbWzlW9IGglxAafajt2Kyo",
+    authDomain: "iset-b9974.firebaseapp.com",
+    projectId: "iset-b9974",
+    storageBucket: "iset-b9974.firebasestorage.app",
+    messagingSenderId: "1054170284751",
+    appId: "1:1054170284751:web:8f02232478430d5ae2adba",
+    databaseURL: "https://iset-b9974-default-rtdb.firebaseio.com/"
+  };
+
+  // تهيئة Firebase
+  let db;
+  try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.database();
+    console.log("Firebase initialisé avec succès");
+  } catch(e) {
+    console.error("Erreur Firebase:", e);
+  }
+
+  // ==================== CONFIGURATION DES DONNÉES ====================
   const SUBJECTS_WITHOUT_TP = [
     "Anglais", "Anglais 2", "Français", "Français 2", "Français 3",
     "Math et Statistique", "Économie", "Vulgarisation", "Technique d'irrigation et BEC"
@@ -181,7 +183,6 @@
 
   function hasTP(subjectName) { return !SUBJECTS_WITHOUT_TP.includes(subjectName); }
 
-  // هيكل المواد والموديولات
   const MODULES_STRUCTURE = {
     TC: {
       S1: {
@@ -229,7 +230,7 @@
   let currentDept = null;
   let currentSemester = null;
 
-  // دالة حساب النتائج من البيانات الخام
+  // دالة حساب النتائج
   function calculateResultsFromNotes(notesBySubject, dept, semester) {
     const modulesStructure = MODULES_STRUCTURE[dept]?.[semester];
     if (!modulesStructure) return null;
@@ -241,7 +242,6 @@
       }
     }
     
-    // حساب معدلات المواد
     const subjectAverages = {};
     const subjectStatus = {};
     
@@ -264,7 +264,6 @@
       subjectStatus[subject] = moyenne >= 10 ? 'C' : 'NC';
     }
     
-    // حساب معدلات الموديولات
     const moduleAverages = {};
     const moduleStatus = {};
     
@@ -287,7 +286,6 @@
       moduleStatus[moduleCode] = allC && moduleMoyenne >= 10 ? 'V' : 'NV';
     }
     
-    // حساب المعدل العام
     let totalWeightedGeneral = 0;
     let totalCreditsGeneral = 0;
     for (let subject of requiredSubjects) {
@@ -298,7 +296,6 @@
     const generaleMoyenne = totalCreditsGeneral > 0 ? totalWeightedGeneral / totalCreditsGeneral : 0;
     const semestreStatus = generaleMoyenne >= 10 ? 'Validé' : 'Non Validé';
     
-    // بناء كائن النتائج
     const modules = {};
     for (let moduleCode in modulesStructure) {
       const module = modulesStructure[moduleCode];
@@ -351,8 +348,11 @@
     document.getElementById('studentResults').innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-pulse"></i><h3>Chargement...</h3></div>';
     
     try {
-      // جلب البيانات من Firebase
-      const snapshot = await window.get(window.child(window.ref(window.db), `results/${dept}/${sem}/${id}`));
+      if (!db) {
+        throw new Error("Firebase non initialisé");
+      }
+      
+      const snapshot = await db.ref(`results/${dept}/${sem}/${id}`).once('value');
       
       if (!snapshot.exists()) {
         document.getElementById('studentResults').innerHTML = `
@@ -371,7 +371,6 @@
         if (studentData[key].name && !studentName) studentName = studentData[key].name;
       }
       
-      // تنظيم النوتات
       const notesBySubject = {};
       for (let key in studentData) {
         const data = studentData[key];
@@ -379,7 +378,6 @@
         notesBySubject[data.subject][data.type] = data.grade;
       }
       
-      // التحقق من اكتمال جميع المواد
       const modulesStructure = MODULES_STRUCTURE[dept]?.[sem];
       let allSubjectsPresent = true;
       if (modulesStructure) {
@@ -398,16 +396,14 @@
       }
       
       if (allSubjectsPresent && modulesStructure) {
-        // حساب النتائج
         const results = calculateResultsFromNotes(notesBySubject, dept, sem);
         currentData = { name: studentName, grades: notesBySubject, results: results, calculated: true };
         
-        // عرض الجدول النهائي
         let html = `
           <div class="student-header">
             <i class="fas fa-user-graduate"></i>
-            <h3>${studentName || 'Étudiant'}</h3>
-            <p>N° ${id} | ${dept} | ${sem}</p>
+            <h3>${escapeHtml(studentName) || 'Étudiant'}</h3>
+            <p>N° ${escapeHtml(id)} | ${escapeHtml(dept)} | ${escapeHtml(sem)}</p>
           </div>
         `;
         
@@ -416,25 +412,23 @@
         html += '<th>Numéro</th><th>Nom et Prénom</th><th>TP</th><th>CC</th><th>Examen</th><th>NFe</th><th>Crédit</th><th>Observations</th>';
         html += '</thead><tbody>';
         
-        // Ligne étudiant
         html += `<tr class="student-info-row">
-          <td>${id}</td>
-          <td style="text-align:left; padding-left:15px;">${studentName}</td>
-          <td style="text-align:center;">-</td><td style="text-align:center;">-</td><td style="text-align:center;">-</td>
+          <td>${escapeHtml(id)}</td>
+          <td style="text-align:left; padding-left:15px;">${escapeHtml(studentName)}</td>
+          <td>-</td><td>-</td><td>-</td>
           <td style="font-weight:bold;">Moy Sem: ${results.moyenneGenerale.toFixed(2)}</td>
-          <td style="text-align:center;">-</td>
+          <td>-</td>
           <td class="${results.semestreStatus === 'Validé' ? 'status-V' : 'status-NV'}">${results.semestreStatus}</td>
-        </table>`;
+        </tr>`;
         
-        // Modules et matières
         for (let moduleCode in results.modules) {
           const module = results.modules[moduleCode];
           html += `<tr class="module-row">
-            <td>${moduleCode}</td>
-            <td style="text-align:left; padding-left:15px;">${module.name}</td>
-            <td style="text-align:center;">-</td><td style="text-align:center;">-</td><td style="text-align:center;">-</td>
+            <td>${escapeHtml(moduleCode)}</td>
+            <td style="text-align:left; padding-left:15px;">${escapeHtml(module.name)}</td>
+            <td>-</td><td>-</td><td>-</td>
             <td style="font-weight:bold;">${module.moyenne.toFixed(2)}</td>
-            <td style="text-align:center;">${module.credit}</td>
+            <td>${module.credit}</td>
             <td class="${module.status === 'V' ? 'status-V' : 'status-NV'}">${module.status}</td>
           </tr>`;
           
@@ -444,13 +438,13 @@
             const creditEarned = subject.status === 'C' ? subject.credit : 0;
             
             html += `<tr class="subject-row">
-              <td style="text-align:center;">-</td>
-              <td style="text-align:left; padding-left:40px;">${subject.name}</td>
-              <td style="text-align:center;">${tpDisplay}</td>
-              <td style="text-align:center;">${grades['Contrôle continu'] !== undefined ? grades['Contrôle continu'].toFixed(2) : '-'}</td>
-              <td style="text-align:center;">${grades['Examen'] !== undefined ? grades['Examen'].toFixed(2) : '-'}</td>
+              <td>-</td>
+              <td style="text-align:left; padding-left:40px;">${escapeHtml(subject.name)}</td>
+              <td>${tpDisplay}</td>
+              <td>${grades['Contrôle continu'] !== undefined ? grades['Contrôle continu'].toFixed(2) : '-'}</td>
+              <td>${grades['Examen'] !== undefined ? grades['Examen'].toFixed(2) : '-'}</td>
               <td style="font-weight:bold;">${subject.moyenne.toFixed(2)}</td>
-              <td style="text-align:center;">${creditEarned.toFixed(1)}</td>
+              <td>${creditEarned.toFixed(1)}</td>
               <td class="${subject.status === 'C' ? 'status-C' : 'status-NC'}">${subject.status}</td>
             </tr>`;
           }
@@ -466,54 +460,52 @@
         `;
         
       } else {
-        // عرض الجداول المنفصلة (TP, CC, Examen) قبل اكتمال المواد
         let html = `
           <div class="student-header">
             <i class="fas fa-user-graduate"></i>
-            <h3>${studentName || 'Étudiant'}</h3>
-            <p>N° ${id} | ${dept} | ${sem}</p>
+            <h3>${escapeHtml(studentName) || 'Étudiant'}</h3>
+            <p>N° ${escapeHtml(id)} | ${escapeHtml(dept)} | ${escapeHtml(sem)}</p>
           </div>
           <div class="neutral-message">
             <i class="fas fa-info-circle"></i> Les résultats ne sont pas encore finalisés par le coordinateur.
           </div>
         `;
         
-        // جدول TP
-        let hasTPData = false;
-        let tpHtml = '<h4 class="section-subtitle">Résultats TP</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note TP</th></tr></thead><tbody>';
-        for (let moduleCode in modulesStructure) {
-          for (let subject of modulesStructure[moduleCode].subjects) {
-            if (hasTP(subject)) {
-              const grade = notesBySubject[subject]?.['TP'];
-              if (grade !== undefined) hasTPData = true;
-              tpHtml += `<tr><td>${subject}</td><td style="text-align:center;">${grade !== undefined ? grade.toFixed(2) : '-'}</td></tr>`;
+        if (modulesStructure) {
+          let hasTPData = false;
+          let tpHtml = '<h4 class="section-subtitle">Résultats TP</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note TP</th></tr></thead><tbody>';
+          for (let moduleCode in modulesStructure) {
+            for (let subject of modulesStructure[moduleCode].subjects) {
+              if (hasTP(subject)) {
+                const grade = notesBySubject[subject]?.['TP'];
+                if (grade !== undefined) hasTPData = true;
+                tpHtml += `<tr><td>${escapeHtml(subject)}</td><td>${grade !== undefined ? grade.toFixed(2) : '-'}</td></tr>`;
+              }
             }
           }
-        }
-        tpHtml += '</tbody>赶';
-        if (hasTPData) html += tpHtml;
-        
-        // جدول CC
-        let ccHtml = '<h4 class="section-subtitle">Résultats Contrôle continu</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note CC</th></tr></thead><tbody>';
-        for (let moduleCode in modulesStructure) {
-          for (let subject of modulesStructure[moduleCode].subjects) {
-            const grade = notesBySubject[subject]?.['Contrôle continu'];
-            ccHtml += `<tr><td>${subject}</td><td style="text-align:center;">${grade !== undefined ? grade.toFixed(2) : '-'}</td></tr>`;
+          tpHtml += '</tbody>赶';
+          if (hasTPData) html += tpHtml;
+          
+          let ccHtml = '<h4 class="section-subtitle">Résultats Contrôle continu</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note CC</th></tr></thead><tbody>';
+          for (let moduleCode in modulesStructure) {
+            for (let subject of modulesStructure[moduleCode].subjects) {
+              const grade = notesBySubject[subject]?.['Contrôle continu'];
+              ccHtml += `<tr><td>${escapeHtml(subject)}</td><td>${grade !== undefined ? grade.toFixed(2) : '-'}</td></tr>`;
+            }
           }
-        }
-        ccHtml += '</tbody>赶';
-        html += ccHtml;
-        
-        // جدول Examen
-        let examHtml = '<h4 class="section-subtitle">Résultats Examen</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note Examen</th></tr></thead><tbody>';
-        for (let moduleCode in modulesStructure) {
-          for (let subject of modulesStructure[moduleCode].subjects) {
-            const grade = notesBySubject[subject]?.['Examen'];
-            examHtml += `<tr><td>${subject}</td><td style="text-align:center;">${grade !== undefined ? grade.toFixed(2) : '-'}</td></tr>`;
+          ccHtml += '</tbody>赶';
+          html += ccHtml;
+          
+          let examHtml = '<h4 class="section-subtitle">Résultats Examen</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note Examen</th></tr></thead><tbody>';
+          for (let moduleCode in modulesStructure) {
+            for (let subject of modulesStructure[moduleCode].subjects) {
+              const grade = notesBySubject[subject]?.['Examen'];
+              examHtml += `<tr><td>${escapeHtml(subject)}</td><td>${grade !== undefined ? grade.toFixed(2) : '-'}</td></tr>`;
+            }
           }
+          examHtml += '</tbody>赶';
+          html += examHtml;
         }
-        examHtml += '</tbody>赶';
-        html += examHtml;
         
         document.getElementById('studentResults').innerHTML = html;
         document.getElementById('pdfButtonContainer').innerHTML = '';
@@ -525,13 +517,23 @@
         <div class="empty-state">
           <i class="fas fa-exclamation-circle"></i>
           <h3>Erreur de chargement</h3>
-          <p>Une erreur est survenue lors du chargement des données.</p>
+          <p>Une erreur est survenue: ${error.message}</p>
         </div>
       `;
     }
   }
   
-  function generateFinalPDF() {
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+      if (m === '&') return '&amp;';
+      if (m === '<') return '&lt;';
+      if (m === '>') return '&gt;';
+      return m;
+    });
+  }
+  
+  window.generateFinalPDF = function() {
     if (!currentData || !currentData.results) {
       alert("Les résultats ne sont pas encore disponibles.");
       return;
@@ -539,7 +541,6 @@
     
     const results = currentData.results;
     const studentName = currentData.name;
-    const semesterName = currentSemester;
     
     let content = `
       <div style="padding: 15mm; font-family: 'Times New Roman', Times, serif; font-size:12px;">
@@ -554,9 +555,9 @@
         </div>
         
         <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
-          <tr><td style="padding:5px;"><strong>Étudiant(e) :</strong> ${studentName}</td>
-              <td style="padding:5px;"><strong>N° d'étudiant :</strong> ${currentStudentId}</td>
-              <td style="padding:5px;"><strong>Département :</strong> ${currentDept}</td>
+          <tr><td style="padding:5px;"><strong>Étudiant(e) :</strong> ${escapeHtml(studentName)}</td>
+              <td style="padding:5px;"><strong>N° d'étudiant :</strong> ${escapeHtml(currentStudentId)}</td>
+              <td style="padding:5px;"><strong>Département :</strong> ${escapeHtml(currentDept)}</td>
           </tr>
         </table>
         
@@ -577,8 +578,8 @@
     `;
     
     content += `<tr style="background:#f0f8ff;">
-      <td style="border:1px solid #000; padding:8px;">${currentStudentId}</td>
-      <td style="border:1px solid #000; padding:8px; text-align:left;">${studentName}</td>
+      <td style="border:1px solid #000; padding:8px;">${escapeHtml(currentStudentId)}</td>
+      <td style="border:1px solid #000; padding:8px; text-align:left;">${escapeHtml(studentName)}</td>
       <td style="border:1px solid #000; padding:8px;">-</td><td style="border:1px solid #000; padding:8px;">-</td><td style="border:1px solid #000; padding:8px;">-</td>
       <td style="border:1px solid #000; padding:8px; font-weight:bold;">Moy Sem: ${results.moyenneGenerale.toFixed(2)}</td>
       <td style="border:1px solid #000; padding:8px;">-</td>
@@ -588,8 +589,8 @@
     for (let moduleCode in results.modules) {
       const module = results.modules[moduleCode];
       content += `<tr style="background:#e8f4fc;">
-        <td style="border:1px solid #000; padding:8px;">${moduleCode}</td>
-        <td style="border:1px solid #000; padding:8px; text-align:left;">${module.name}</td>
+        <td style="border:1px solid #000; padding:8px;">${escapeHtml(moduleCode)}</td>
+        <td style="border:1px solid #000; padding:8px; text-align:left;">${escapeHtml(module.name)}</td>
         <td style="border:1px solid #000; padding:8px;">-</td><td style="border:1px solid #000; padding:8px;">-</td><td style="border:1px solid #000; padding:8px;">-</td>
         <td style="border:1px solid #000; padding:8px; font-weight:bold;">${module.moyenne.toFixed(2)}</td>
         <td style="border:1px solid #000; padding:8px;">${module.credit}</td>
@@ -603,7 +604,7 @@
         
         content += `<tr>
           <td style="border:1px solid #000; padding:8px;">-</td>
-          <td style="border:1px solid #000; padding:8px; text-align:left; padding-left:20px;">${subject.name}</td>
+          <td style="border:1px solid #000; padding:8px; text-align:left; padding-left:20px;">${escapeHtml(subject.name)}</td>
           <td style="border:1px solid #000; padding:8px;">${tpDisplay}</td>
           <td style="border:1px solid #000; padding:8px;">${grades['Contrôle continu'] !== undefined ? grades['Contrôle continu'].toFixed(2) : '-'}</td>
           <td style="border:1px solid #000; padding:8px;">${grades['Examen'] !== undefined ? grades['Examen'].toFixed(2) : '-'}</td>
@@ -641,11 +642,8 @@
     }).from(element).save().then(() => { 
       document.body.removeChild(element); 
     });
-  }
+  };
   
-  window.generateFinalPDF = generateFinalPDF;
-  
-  // تشغيل التحميل
   loadAndDisplay();
 </script>
 </body>
