@@ -384,7 +384,6 @@
     const id = urlParams.get('id');
     const name = urlParams.get('name');
     
-    // التحقق من وجود المعلمات
     if (!dept || !sem || !id) {
       document.getElementById('studentResults').innerHTML = `
         <div class="empty-state">
@@ -402,7 +401,6 @@
     currentStudentName = name ? decodeURIComponent(name) : '';
     
     try {
-      // جلب البيانات من Firebase
       const snapshot = await get(child(ref(db), `results/${dept}/${sem}/${id}`));
       
       if (!snapshot.exists()) {
@@ -418,7 +416,6 @@
       
       const studentData = snapshot.val();
       
-      // استخراج اسم الطالب إذا لم يكن موجوداً في URL
       if (!currentStudentName) {
         for (let key in studentData) {
           if (studentData[key].name) {
@@ -428,7 +425,6 @@
         }
       }
       
-      // تجميع النقاط حسب المادة ونوع التقييم
       const notesBySubject = {};
       for (let key in studentData) {
         const data = studentData[key];
@@ -439,7 +435,6 @@
       const modulesStructure = MODULES_STRUCTURE[dept]?.[sem];
       let allSubjectsPresent = true;
       
-      // التحقق من اكتمال جميع النقاط
       if (modulesStructure) {
         for (let moduleCode in modulesStructure) {
           for (let subject of modulesStructure[moduleCode].subjects) {
@@ -455,7 +450,6 @@
         }
       }
       
-      // حفظ البيانات للاستخدام في PDF
       currentData = {
         name: currentStudentName,
         grades: notesBySubject,
@@ -463,7 +457,6 @@
       };
       
       if (allSubjectsPresent && modulesStructure) {
-        // جميع النقاط مكتملة - حساب النتائج وعرض كشف النقاط الكامل
         const results = calculateResultsFromNotes(notesBySubject, dept, sem);
         currentData.results = results;
         
@@ -484,7 +477,7 @@
                   <th>Examen</th>
                   <th>NFe</th>
                   <th>Crédit</th>
-                  <th>Observations</th>
+                  <th>Obs</th>
                 </tr>
               </thead>
               <tbody>
@@ -494,7 +487,7 @@
                   <td>-</td><td>-</td><td>-</td>
                   <td style="font-weight:bold;">Moy Sem: ${results.moyenneGenerale.toFixed(2)}</td>
                   <td>-</td>
-                  <td class="${results.semestreStatus === 'Validé' ? 'status-V' : 'status-NV'}">${results.semestreStatus}</td>
+                  <td class="${results.semestreStatus === 'Validé' ? 'status-V' : 'status-NV'}">${results.semestreStatus === 'Validé' ? 'V' : 'NV'}</td>
                 </tr>
         `;
         
@@ -545,7 +538,6 @@
         `;
         
       } else {
-        // النقاط غير مكتملة - عرض النتائج الجزئية
         let html = `
           <div class="student-header">
             <i class="fas fa-user-graduate"></i>
@@ -558,7 +550,6 @@
         `;
         
         if (modulesStructure) {
-          // عرض نتائج TP
           let hasTPData = false;
           let tpHtml = '<h4 class="section-subtitle"><i class="fas fa-flask"></i> Résultats TP</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note TP</th></tr></thead><tbody>';
           for (let moduleCode in modulesStructure) {
@@ -573,7 +564,6 @@
           tpHtml += '</tbody></table>';
           if (hasTPData) html += tpHtml;
           
-          // عرض نتائج CC
           let ccHtml = '<h4 class="section-subtitle"><i class="fas fa-pencil-alt"></i> Résultats Contrôle continu</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note CC</th></tr></thead><tbody>';
           for (let moduleCode in modulesStructure) {
             for (let subject of modulesStructure[moduleCode].subjects) {
@@ -584,7 +574,6 @@
           ccHtml += '</tbody></table>';
           html += ccHtml;
           
-          // عرض نتائج Examen
           let examHtml = '<h4 class="section-subtitle"><i class="fas fa-file-alt"></i> Résultats Examen</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note Examen</th></tr></thead><tbody>';
           for (let moduleCode in modulesStructure) {
             for (let subject of modulesStructure[moduleCode].subjects) {
@@ -595,7 +584,6 @@
           examHtml += '</tbody></table>';
           html += examHtml;
           
-          // عرض نتائج Rattrapage إن وجدت
           let hasRattrapage = false;
           let rattrapageHtml = '<h4 class="section-subtitle"><i class="fas fa-redo-alt"></i> Résultats Rattrapage</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note Rattrapage</th></tr></thead><tbody>';
           for (let moduleCode in modulesStructure) {
@@ -622,13 +610,12 @@
           <i class="fas fa-exclamation-circle"></i>
           <h3>Erreur de chargement</h3>
           <p>Une erreur est survenue lors du chargement des résultats.</p>
-          <p style="font-size:0.8rem; margin-top:1rem;">${escapeHtml(error.message)}</p>
         </div>
       `;
     }
   }
   
-  // ==================== دالة توليد PDF ====================
+  // ==================== دالة توليد PDF (نسخة مبسطة حسب الصورة) ====================
   window.generatePDF = function() {
     if (!currentData || !currentData.results) {
       alert("Les résultats complets ne sont pas encore disponibles pour générer le PDF.");
@@ -640,53 +627,57 @@
     const date = new Date();
     const dateStr = date.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
     
-    // بناء محتوى PDF بتنسيق رسمي
+    // تحديد اسم الشعبة حسب القسم
+    let filiere = '';
+    if (currentDept === 'TC') {
+      filiere = currentSemester === 'S1' ? 'L1TC-L1 Licence TC' : 'L1TC-L1 Licence TC';
+    } else if (currentDept === 'PPV') {
+      filiere = currentSemester === 'S3' ? 'L2PPV-L2 Licence PPV' : 'L2PPV-L2 Licence PPV';
+    }
+    
+    // بناء محتوى PDF بالتنسيق المطلوب (مبسط كما في الصورة)
     let content = `
-      <div style="padding: 12mm; font-family: 'Times New Roman', Times, serif; font-size: 11pt;">
-        <!-- رأس الصفحة -->
-        <div style="text-align:center; margin-bottom:20px;">
-          <h2 style="margin:5px 0;">République Islamique de Mauritanie</h2>
-          <h3 style="margin:5px 0;">Ministère de l'Enseignement Supérieur et de la Recherche Scientifique</h3>
-          <h3 style="margin:5px 0;">Institut Supérieur d'Enseignement Technologique de Rosso</h3>
-          <hr style="margin:15px 0; border:1px solid #0077b6;">
-          <h1 style="color:#0077b6; margin:10px 0;">RELEVÉ DE NOTES</h1>
-          <h3 style="margin:5px 0;">Semestre ${escapeHtml(currentSemester)}</h3>
-          <h3 style="margin:5px 0;">Année académique 2024-2025</h3>
+      <div style="padding: 10mm; font-family: 'Times New Roman', Times, serif; font-size: 11pt;">
+        
+        <!-- رأس الصفحة - مبسط -->
+        <div style="margin-bottom: 15px;">
+          <div style="font-weight: bold; font-size: 12pt;">Institut Supérieur d'Enseignement Technologique de Rosso</div>
+          <div style="display: flex; justify-content: space-between; margin-top: 8px;">
+            <span style="font-weight: bold; font-size: 14pt;">Résultats du ${currentSemester}</span>
+            <span style="font-weight: normal;">Année Universitaire : 2024-2025</span>
+          </div>
+          <div style="margin-top: 5px;">
+            <span style="font-weight: bold;">Filière :</span> ${filiere}
+          </div>
         </div>
         
-        <!-- معلومات الطالب -->
-        <table style="width:100%; border-collapse:collapse; margin-bottom:20px; border:1px solid #000;">
-          <tr>
-            <td style="padding:8px; border:1px solid #000;"><strong>Étudiant(e) :</strong> ${escapeHtml(studentName)}</td>
-            <td style="padding:8px; border:1px solid #000;"><strong>N° d'étudiant :</strong> ${escapeHtml(currentStudentId)}</td>
-            <td style="padding:8px; border:1px solid #000;"><strong>Département :</strong> ${escapeHtml(currentDept)}</td>
-          </tr>
-        </table>
-        
         <!-- جدول النتائج -->
-        <table style="width:100%; border-collapse:collapse; border:1px solid #000; font-size:10pt;">
+        <table style="width:100%; border-collapse:collapse; border:1px solid #000; font-size:10pt; margin-top:15px;">
           <thead>
-            <tr style="background:#caf0f8;">
+            <tr style="background:#e8f4fc;">
               <th style="border:1px solid #000; padding:6px;">Numéro</th>
               <th style="border:1px solid #000; padding:6px;">Nom et Prénom</th>
               <th style="border:1px solid #000; padding:6px;">TP</th>
               <th style="border:1px solid #000; padding:6px;">CC</th>
               <th style="border:1px solid #000; padding:6px;">Examen</th>
+              <th style="border:1px solid #000; padding:6px;">SR</th>
               <th style="border:1px solid #000; padding:6px;">NFe</th>
               <th style="border:1px solid #000; padding:6px;">Crédit</th>
               <th style="border:1px solid #000; padding:6px;">Obs</th>
             </tr>
           </thead>
           <tbody>
+            <!-- صف الطالب الرئيسي -->
             <tr style="background:#f0f8ff;">
               <td style="border:1px solid #000; padding:6px;">${escapeHtml(currentStudentId)}</td>
               <td style="border:1px solid #000; padding:6px; text-align:left;">${escapeHtml(studentName)}</td>
-              <td style="border:1px solid #000; padding:6px;">-</td>
-              <td style="border:1px solid #000; padding:6px;">-</td>
-              <td style="border:1px solid #000; padding:6px;">-</td>
-              <td style="border:1px solid #000; padding:6px; font-weight:bold;">Moy: ${results.moyenneGenerale.toFixed(2)}</td>
-              <td style="border:1px solid #000; padding:6px;">-</td>
-              <td style="border:1px solid #000; padding:6px; font-weight:bold;">${results.semestreStatus}</td>
+              <td style="border:1px solid #000; padding:6px;"></td>
+              <td style="border:1px solid #000; padding:6px;"></td>
+              <td style="border:1px solid #000; padding:6px;"></td>
+              <td style="border:1px solid #000; padding:6px;"></td>
+              <td style="border:1px solid #000; padding:6px; font-weight:bold;">${results.moyenneGenerale.toFixed(2)}</td>
+              <td style="border:1px solid #000; padding:6px;"></td>
+              <td style="border:1px solid #000; padding:6px; font-weight:bold;">${results.semestreStatus === 'Validé' ? 'V' : 'NV'}</td>
             </tr>
     `;
     
@@ -697,9 +688,10 @@
         <tr style="background:#e8f4fc;">
           <td style="border:1px solid #000; padding:6px;">${escapeHtml(moduleCode)}</td>
           <td style="border:1px solid #000; padding:6px; text-align:left;">${escapeHtml(module.name)}</td>
-          <td style="border:1px solid #000; padding:6px;">-</td>
-          <td style="border:1px solid #000; padding:6px;">-</td>
-          <td style="border:1px solid #000; padding:6px;">-</td>
+          <td style="border:1px solid #000; padding:6px;"></td>
+          <td style="border:1px solid #000; padding:6px;"></td>
+          <td style="border:1px solid #000; padding:6px;"></td>
+          <td style="border:1px solid #000; padding:6px;"></td>
           <td style="border:1px solid #000; padding:6px; font-weight:bold;">${module.moyenne.toFixed(2)}</td>
           <td style="border:1px solid #000; padding:6px;">${module.credit}</td>
           <td style="border:1px solid #000; padding:6px;">${module.status}</td>
@@ -708,16 +700,21 @@
       
       for (let subject of module.subjects) {
         const grades = currentData.grades[subject.name] || {};
-        const tpDisplay = subject.hasTP ? (grades['TP'] !== undefined ? grades['TP'].toFixed(2) : '-') : '-';
+        const tpDisplay = subject.hasTP ? (grades['TP'] !== undefined ? grades['TP'].toFixed(2) : '') : '';
+        const ccDisplay = grades['Contrôle continu'] !== undefined ? grades['Contrôle continu'].toFixed(2) : '';
+        const examDisplay = grades['Examen'] !== undefined ? grades['Examen'].toFixed(2) : '';
+        const rattrapage = grades['Rattrapage'];
+        const srDisplay = (rattrapage !== undefined && rattrapage > (grades['Examen'] || 0)) ? rattrapage.toFixed(2) : '';
         const creditEarned = subject.status === 'C' ? subject.credit : 0;
         
         content += `
           <tr>
-            <td style="border:1px solid #000; padding:6px;">-</td>
+            <td style="border:1px solid #000; padding:6px;"></td>
             <td style="border:1px solid #000; padding:6px; text-align:left; padding-left:20px;">${escapeHtml(displaySubjectName(subject.name))}</td>
             <td style="border:1px solid #000; padding:6px;">${tpDisplay}</td>
-            <td style="border:1px solid #000; padding:6px;">${grades['Contrôle continu'] !== undefined ? grades['Contrôle continu'].toFixed(2) : '-'}</td>
-            <td style="border:1px solid #000; padding:6px;">${grades['Examen'] !== undefined ? grades['Examen'].toFixed(2) : '-'}</td>
+            <td style="border:1px solid #000; padding:6px;">${ccDisplay}</td>
+            <td style="border:1px solid #000; padding:6px;">${examDisplay}</td>
+            <td style="border:1px solid #000; padding:6px;">${srDisplay}</td>
             <td style="border:1px solid #000; padding:6px; font-weight:bold;">${subject.moyenne.toFixed(2)}</td>
             <td style="border:1px solid #000; padding:6px;">${creditEarned.toFixed(1)}</td>
             <td style="border:1px solid #000; padding:6px;">${subject.status}</td>
@@ -726,22 +723,23 @@
       }
     }
     
+    // إضافة سطر المعدل العام في نهاية الجدول
     content += `
+            <tr style="background:#f0f8ff;">
+              <td colspan="6" style="border:1px solid #000; padding:6px; text-align:right; font-weight:bold;">Moyenne Semestre :</td>
+              <td style="border:1px solid #000; padding:6px; font-weight:bold;">${results.moyenneGenerale.toFixed(2)}</td>
+              <td colspan="2" style="border:1px solid #000; padding:6px;"></td>
+            </tr>
           </tbody>
         </table>
         
         <!-- التوقيع والتاريخ -->
-        <div style="margin-top:30px;">
-          <p style="text-align:right;">Fait à Rosso, le ${dateStr}</p>
-          <div style="text-align:right; margin-top:30px;">
+        <div style="margin-top: 30px;">
+          <p style="text-align: right;">Fait à Rosso, le ${dateStr}</p>
+          <div style="text-align: right; margin-top: 30px;">
             <p>Le Chef du Service Scolarité</p>
-            <div style="border-top:1px solid #000; width:200px; margin-top:5px; margin-left:auto;"></div>
+            <div style="border-top: 1px solid #000; width: 200px; margin-top: 5px; margin-left: auto;"></div>
           </div>
-        </div>
-        
-        <!-- تذييل الصفحة -->
-        <div style="position:fixed; bottom:10px; left:0; right:0; text-align:center; font-size:8pt; color:#666;">
-          ISET Rosso - Document officiel généré le ${dateStr}
         </div>
       </div>
     `;
