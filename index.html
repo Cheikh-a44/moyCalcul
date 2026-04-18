@@ -102,9 +102,7 @@
     border-radius: 50%;
     transition: var(--transition);
   }
-  .annonce-fermer:hover {
-    background: rgba(0,0,0,0.1);
-  }
+  .annonce-fermer:hover { background: rgba(0,0,0,0.1); }
   
   .modal {
     display: none;
@@ -126,10 +124,7 @@
     width: 90%;
     box-shadow: var(--shadow);
   }
-  .modal-content h3 {
-    margin-bottom: 0.8rem;
-    color: var(--primary);
-  }
+  .modal-content h3 { margin-bottom: 0.8rem; color: var(--primary); }
   .modal-content textarea {
     width: 100%;
     padding: 0.6rem;
@@ -170,9 +165,7 @@
     outline:none; 
     transition:var(--transition); 
   }
-  .search-box input:focus { 
-    border-color:var(--primary); 
-  }
+  .search-box input:focus { border-color:var(--primary); }
   .search-box button { 
     background:var(--primary); 
     color:var(--white); 
@@ -184,9 +177,7 @@
     font-size:1rem;
     min-width:50px;
   }
-  .search-box button:hover { 
-    background:var(--primary-dark); 
-  }
+  .search-box button:hover { background:var(--primary-dark); }
   
   .result-card {
     background:var(--white);
@@ -202,45 +193,16 @@
     padding-bottom:0.8rem;
     border-bottom:2px solid var(--primary-light);
   }
-  .student-header i {
-    font-size:2.5rem;
-    color:var(--primary);
-    margin-bottom:0.3rem;
-  }
-  .student-header h3 {
-    font-size:1.2rem;
-    color:var(--text);
-  }
-  .student-header p {
-    color:var(--text-light);
-    font-size:0.85rem;
-  }
+  .student-header i { font-size:2.5rem; color:var(--primary); margin-bottom:0.3rem; }
+  .student-header h3 { font-size:1.2rem; color:var(--text); }
+  .student-header p { color:var(--text-light); font-size:0.85rem; }
   
-  .empty-state { 
-    text-align:center; 
-    padding:2rem 1rem; 
-    color:var(--text-light); 
-  }
-  .empty-state i { 
-    font-size:3rem; 
-    margin-bottom:0.8rem; 
-    color:var(--primary-light); 
-  }
+  .empty-state { text-align:center; padding:2rem 1rem; color:var(--text-light); }
+  .empty-state i { font-size:3rem; margin-bottom:0.8rem; color:var(--primary-light); }
   
-  .loading { 
-    text-align:center; 
-    padding:2rem; 
-    color:var(--text-light); 
-  }
-  .loading i { 
-    font-size:2rem; 
-    animation:spin 1s linear infinite; 
-    margin-bottom:0.8rem; 
-  }
-  @keyframes spin { 
-    from{transform:rotate(0deg)} 
-    to{transform:rotate(360deg)} 
-  }
+  .loading { text-align:center; padding:2rem; color:var(--text-light); }
+  .loading i { font-size:2rem; animation:spin 1s linear infinite; margin-bottom:0.8rem; }
+  @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
   
   .admin-section {
     margin-top:2rem;
@@ -260,38 +222,14 @@
     transition:var(--transition);
     margin:0.2rem;
   }
-  .admin-btn:hover {
-    background:#e0e0e0;
-    transform:translateY(-1px);
-  }
-  .admin-btn.secondary {
-    background:#e9ecef;
-    border-color:#adb5bd;
-  }
-  .admin-btn.danger {
-    background:#f8d7da;
-    border-color:#dc3545;
-    color:#721c24;
-  }
-  .admin-btn.danger:hover {
-    background:#f5c6cb;
-  }
-  .admin-btn.success {
-    background:#d4edda;
-    border-color:#28a745;
-    color:#155724;
-  }
-  .admin-btn.success:hover {
-    background:#c3e6cb;
-  }
-  .admin-btn.warning {
-    background:#fff3cd;
-    border-color:#ffc107;
-    color:#856404;
-  }
-  .admin-btn.warning:hover {
-    background:#ffeaa7;
-  }
+  .admin-btn:hover { background:#e0e0e0; transform:translateY(-1px); }
+  .admin-btn.secondary { background:#e9ecef; border-color:#adb5bd; }
+  .admin-btn.danger { background:#f8d7da; border-color:#dc3545; color:#721c24; }
+  .admin-btn.danger:hover { background:#f5c6cb; }
+  .admin-btn.success { background:#d4edda; border-color:#28a745; color:#155724; }
+  .admin-btn.success:hover { background:#c3e6cb; }
+  .admin-btn.warning { background:#fff3cd; border-color:#ffc107; color:#856404; }
+  .admin-btn.warning:hover { background:#ffeaa7; }
   
   .admin-panel {
     background:var(--white);
@@ -301,26 +239,11 @@
     box-shadow:var(--shadow);
     display:none;
   }
-  .admin-panel.active {
-    display:block;
-  }
-  .admin-panel h3 {
-    color:var(--primary);
-    margin-bottom:1rem;
-    display:flex;
-    align-items:center;
-    gap:0.5rem;
-  }
+  .admin-panel.active { display:block; }
+  .admin-panel h3 { color:var(--primary); margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem; }
   
-  .form-group {
-    margin-bottom:1rem;
-  }
-  .form-group label {
-    display:block;
-    font-weight:600;
-    margin-bottom:0.2rem;
-    color:var(--text);
-  }
+  .form-group { margin-bottom:1rem; }
+  .form-group label { display:block; font-weight:600; margin-bottom:0.2rem; color:var(--text); }
   .form-group select, .form-group input {
     width:100%;
     padding:0.6rem 0.8rem;
@@ -330,9 +253,7 @@
     outline:none;
     transition:var(--transition);
   }
-  .form-group select:focus, .form-group input:focus {
-    border-color:var(--primary);
-  }
+  .form-group select:focus, .form-group input:focus { border-color:var(--primary); }
   
   .file-format-info {
     background:var(--primary-light);
@@ -341,16 +262,9 @@
     margin-bottom:0.8rem;
     font-size:0.85rem;
   }
-  .file-format-info i {
-    margin-right:0.5rem;
-    color:var(--primary);
-  }
-  .file-format-info ul {
-    margin:0.3rem 0 0 1.5rem;
-  }
-  .file-format-info li {
-    margin:0.1rem 0;
-  }
+  .file-format-info i { margin-right:0.5rem; color:var(--primary); }
+  .file-format-info ul { margin:0.3rem 0 0 1.5rem; }
+  .file-format-info li { margin:0.1rem 0; }
   
   .message {
     padding:0.6rem 0.8rem;
@@ -358,22 +272,11 @@
     margin-bottom:0.8rem;
     display:none;
   }
-  .message.success {
-    background:#d4edda;
-    color:#155724;
-  }
-  .message.error {
-    background:#f8d7da;
-    color:#721c24;
-  }
+  .message.success { background:#d4edda; color:#155724; }
+  .message.error { background:#f8d7da; color:#721c24; }
   
-  .footer {
-    text-align:center;
-    padding:1.5rem;
-    color:var(--text-light);
-    font-size:0.85rem;
-  }
-
+  .footer { text-align:center; padding:1.5rem; color:var(--text-light); font-size:0.85rem; }
+  
   .progress-bar {
     width: 100%;
     height: 6px;
@@ -400,10 +303,7 @@
     transition: var(--transition);
     margin-top: 0.8rem;
   }
-  .pdf-link:hover {
-    background: #218838;
-    transform: translateY(-2px);
-  }
+  .pdf-link:hover { background: #218838; transform: translateY(-2px); }
   
   .neutral-message {
     text-align: center;
@@ -426,13 +326,8 @@
     padding: 5px;
     text-align: center;
   }
-  .simple-table th {
-    background: var(--primary-light);
-    font-weight: bold;
-  }
-  .simple-table td:first-child {
-    text-align: left;
-  }
+  .simple-table th { background: var(--primary-light); font-weight: bold; }
+  .simple-table td:first-child { text-align: left; }
   
   .releve-table {
     width: 100%;
@@ -447,29 +342,14 @@
     background: var(--primary-light);
     font-weight: bold;
   }
-  .releve-table td {
-    border: 1px solid #aaa;
-    padding: 2px 4px;
-    text-align: center;
-  }
+  .releve-table td { padding: 2px 4px; text-align: center; }
   
-  .releve-table .module-row {
-    background: #d0e8f7;
-    font-weight: bold;
-  }
-  .releve-table .module-row td {
-    border-left: none;
-    border-right: none;
-    padding: 2px 4px;
-  }
-  .releve-table .module-row td:first-child { border-left: 1px solid #aaa; }
-  .releve-table .module-row td:last-child { border-right: 1px solid #aaa; }
+  .releve-table tbody tr:not(.module-row):not(.student-info-row):not(.moyenne-row) td { border: 1px solid #aaa; }
   
-  .releve-table .student-info-row {
-    background: #f0f8ff;
-    font-weight: bold;
-  }
+  .releve-table .student-info-row { background: #f0f8ff; font-weight: bold; }
   .releve-table .student-info-row td {
+    border-top: 1px solid #aaa;
+    border-bottom: 1px solid #aaa;
     border-left: none;
     border-right: none;
     padding: 2px 4px;
@@ -477,25 +357,24 @@
   .releve-table .student-info-row td:first-child { border-left: 1px solid #aaa; }
   .releve-table .student-info-row td:last-child { border-right: 1px solid #aaa; }
   
-  .releve-table .subject-row td:first-child {
-    text-align: left;
-    padding-left: 20px;
+  .releve-table .module-row { background: #d0e8f7; font-weight: bold; }
+  .releve-table .module-row td {
+    border-top: 1px solid #aaa;
+    border-bottom: 1px solid #aaa;
+    border-left: none;
+    border-right: none;
+    padding: 2px 4px;
   }
-  .releve-table .subject-row td {
-    padding: 1px 4px;
-  }
+  .releve-table .module-row td:first-child { border-left: 1px solid #aaa; }
+  .releve-table .module-row td:last-child { border-right: 1px solid #aaa; }
+  
+  .releve-table .subject-row td:first-child { text-align: left; padding-left: 20px; }
+  .releve-table .subject-row td { padding: 1px 4px; }
   
   .status-C, .status-V { color: #27ae60; font-weight: bold; }
   .status-NC, .status-NV { color: #e74c3c; font-weight: bold; }
   
-  .moyenne-row {
-    background: transparent;
-  }
-  .moyenne-row td {
-    border: none !important;
-    padding: 6px 4px 2px 4px;
-    background: transparent;
-  }
+  .moyenne-row td { border: none !important; padding: 6px 4px 2px 4px; background: transparent; }
   
   .section-subtitle {
     font-size: 1rem;
@@ -699,14 +578,8 @@
   ];
 
   function hasTP(subjectName) { return !SUBJECTS_WITHOUT_TP.includes(subjectName); }
-
-  function cleanSubjectName(subject) {
-    return subject.replace(/\./g, '_').replace(/\s+/g, '_').replace(/[éèêë]/g, 'e').replace(/[ç]/g, 'c');
-  }
-
-  function displaySubjectName(subject) {
-    return subject.replace(/_/g, ' ').replace(/I_/g, 'I.').replace(/et_/g, 'et ');
-  }
+  function cleanSubjectName(subject) { return subject.replace(/\./g, '_').replace(/\s+/g, '_').replace(/[éèêë]/g, 'e').replace(/[ç]/g, 'c'); }
+  function displaySubjectName(subject) { return subject.replace(/_/g, ' ').replace(/I_/g, 'I.').replace(/et_/g, 'et '); }
 
   function updateSubjectsForImportType() {
     if (!currentAdmin) return;
@@ -864,10 +737,9 @@
           const notes = notesBySubject[subject] || {};
           const hasTPforSubject = hasTP(subject);
           const credit = SUBJECT_CREDITS[department]?.[semester]?.[subject] || 3.0;
-          const creditEarned = subjectStatus[subject] === 'C' ? credit : 0;
           const rattrapage = notes['Rattrapage'];
           const srDisplay = (rattrapage !== undefined && rattrapage > (notes['Examen'] || 0)) ? rattrapage.toFixed(2) : '';
-          html += `<tr class="subject-row"><td></td><td style="text-align:left; padding-left:30px;">${displaySubjectName(subject)}</td><td>${hasTPforSubject ? (notes['TP'] !== undefined ? notes['TP'].toFixed(2) : '') : ''}</td><td>${notes['Contrôle continu'] !== undefined ? notes['Contrôle continu'].toFixed(2) : ''}</td><td>${notes['Examen'] !== undefined ? notes['Examen'].toFixed(2) : ''}</td>${showSRColumn ? `<td>${srDisplay}</td>` : ''}<td style="font-weight:bold;">${subjectAverages[subject].toFixed(2)}</td><td>${creditEarned.toFixed(1)}</td><td class="${subjectStatus[subject] === 'C' ? 'status-C' : 'status-NC'}">${subjectStatus[subject]}</td></tr>`;
+          html += `<tr class="subject-row"><td></td><td style="text-align:left; padding-left:30px;">${displaySubjectName(subject)}</td><td>${hasTPforSubject ? (notes['TP'] !== undefined ? notes['TP'].toFixed(2) : '') : ''}</td><td>${notes['Contrôle continu'] !== undefined ? notes['Contrôle continu'].toFixed(2) : ''}</td><td>${notes['Examen'] !== undefined ? notes['Examen'].toFixed(2) : ''}</td>${showSRColumn ? `<td>${srDisplay}</td>` : ''}<td style="font-weight:bold;">${subjectAverages[subject].toFixed(2)}</td><td>${credit.toFixed(1)}</td><td class="${subjectStatus[subject] === 'C' ? 'status-C' : 'status-NC'}">${subjectStatus[subject]}</td></tr>`;
         }
       }
       
