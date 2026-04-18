@@ -66,24 +66,42 @@
   }
   .releve-table th, .releve-table td {
     border: 1px solid #ddd;
-    padding: 8px 6px;
+    padding: 4px 6px;
     text-align: center;
   }
   .releve-table th {
     background: var(--primary-light);
     font-weight: bold;
+    padding: 5px 6px;
   }
   .releve-table .module-row {
     background: #e8f4fc;
     font-weight: bold;
   }
+  .releve-table .module-row td {
+    padding: 3px 6px;
+  }
   .releve-table .subject-row td:first-child {
     text-align: left;
     padding-left: 25px;
   }
+  .releve-table .subject-row td {
+    padding: 2px 6px;
+  }
   .status-C, .status-V { color: #27ae60; font-weight: bold; }
   .status-NC, .status-NV { color: #e74c3c; font-weight: bold; }
   .student-info-row { background: #f0f8ff; font-weight: bold; }
+  .student-info-row td {
+    padding: 3px 6px;
+  }
+  
+  .moyenne-row {
+    background: #f0f8ff;
+    font-weight: bold;
+  }
+  .moyenne-row td {
+    padding: 5px 6px;
+  }
   
   .empty-state { text-align:center; padding:3rem 1rem; color:var(--text-light); }
   .empty-state i { font-size:4rem; margin-bottom:1rem; color:var(--primary-light); }
@@ -137,7 +155,7 @@
   
   @media (max-width:768px) {
     .releve-table { font-size: 11px; }
-    .releve-table th, .releve-table td { padding: 6px 4px; }
+    .releve-table th, .releve-table td { padding: 3px 4px; }
   }
 </style>
 </head>
@@ -273,7 +291,7 @@
     
     const subjectAverages = {};
     const subjectStatus = {};
-    const subjectHasSR = {}; // لتتبع المواد التي استخدمت فيها SR
+    const subjectHasSR = {};
     
     for (let subject of requiredSubjects) {
       const notes = notesBySubject[subject] || {};
@@ -283,7 +301,6 @@
       const tp = notes['TP'] || 0;
       const rattrapage = notes['Rattrapage'];
       
-      // تحديد ما إذا كان SR مستخدماً
       const useSR = (rattrapage !== undefined && rattrapage > exam);
       subjectHasSR[subject] = useSR;
       
@@ -301,16 +318,24 @@
     
     const moduleAverages = {};
     const moduleStatus = {};
+    const moduleEarnedCredits = {};
     
     for (let moduleCode in modulesStructure) {
       const module = modulesStructure[moduleCode];
       let totalWeighted = 0;
       let totalCredits = 0;
+      let earnedModuleCredits = 0;
+      
       for (let subject of module.subjects) {
         const credit = SUBJECT_CREDITS[dept]?.[semester]?.[subject] || 3.0;
         totalWeighted += (subjectAverages[subject] || 0) * credit;
         totalCredits += credit;
+        
+        if (subjectStatus[subject] === 'C') {
+          earnedModuleCredits += credit;
+        }
       }
+      
       const moduleMoyenne = totalCredits > 0 ? totalWeighted / totalCredits : 0;
       moduleAverages[moduleCode] = moduleMoyenne;
       
@@ -319,6 +344,7 @@
         if (subjectStatus[subject] !== 'C') allC = false;
       }
       moduleStatus[moduleCode] = allC && moduleMoyenne >= 10 ? 'V' : 'NV';
+      moduleEarnedCredits[moduleCode] = earnedModuleCredits;
     }
     
     let totalWeightedGeneral = 0;
@@ -329,9 +355,17 @@
       totalCreditsGeneral += credit;
     }
     const generaleMoyenne = totalCreditsGeneral > 0 ? totalWeightedGeneral / totalCreditsGeneral : 0;
-    const semestreStatus = generaleMoyenne >= 10 ? 'Validé' : 'Non Validé';
     
-    // التحقق من وجود أي مادة استخدمت SR
+    let hasAnyNV = false;
+    for (let moduleCode in moduleStatus) {
+      if (moduleStatus[moduleCode] === 'NV') {
+        hasAnyNV = true;
+        break;
+      }
+    }
+    
+    const semestreStatus = hasAnyNV ? 'Non Validé' : (generaleMoyenne >= 10 ? 'Validé' : 'Non Validé');
+    
     let hasAnySR = false;
     for (let subject of requiredSubjects) {
       if (subjectHasSR[subject]) {
@@ -348,6 +382,7 @@
         moyenne: moduleAverages[moduleCode],
         status: moduleStatus[moduleCode],
         credit: module.credit,
+        earnedCredits: moduleEarnedCredits[moduleCode],
         subjects: module.subjects.map(s => ({
           name: s,
           credit: SUBJECT_CREDITS[dept]?.[semester]?.[s] || 3.0,
@@ -451,7 +486,6 @@
         const results = calculateResultsFromNotes(notesBySubject, dept, sem);
         currentData.results = results;
         
-        // تحديد إذا كان سيتم عرض عمود SR
         const showSRColumn = results.hasAnySR;
         
         let html = `
@@ -481,9 +515,9 @@
                   <td style="text-align:left; padding-left:15px;">${escapeHtml(currentStudentName)}</td>
                   <td>-</td><td>-</td><td>-</td>
                   ${showSRColumn ? '<td>-</td>' : ''}
-                  <td style="font-weight:bold;">-</td>
                   <td>-</td>
-                  <td class="${results.semestreStatus === 'Validé' ? 'status-V' : 'status-NV'}">${results.semestreStatus === 'Validé' ? 'V' : 'NV'}</td>
+                  <td>-</td>
+                  <td>-</td>
                 </tr>
         `;
         
@@ -496,7 +530,7 @@
               <td>-</td><td>-</td><td>-</td>
               ${showSRColumn ? '<td>-</td>' : ''}
               <td style="font-weight:bold;">${module.moyenne.toFixed(2)}</td>
-              <td>${module.credit}</td>
+              <td>${module.earnedCredits.toFixed(1)}</td>
               <td class="${module.status === 'V' ? 'status-V' : 'status-NV'}">${module.status}</td>
             </tr>
           `;
@@ -526,13 +560,13 @@
           }
         }
         
-        // إضافة سطر المعدل العام في الأسفل فقط
         const colspanValue = showSRColumn ? 6 : 5;
         html += `
-                <tr style="background:#f0f8ff;">
-                  <td colspan="${colspanValue}" style="border:1px solid #ddd; padding:8px; text-align:right; font-weight:bold;">Moyenne Semestre :</td>
-                  <td style="border:1px solid #ddd; padding:8px; font-weight:bold;">${results.moyenneGenerale.toFixed(2)}</td>
-                  <td colspan="2" style="border:1px solid #ddd; padding:8px;"></td>
+                <tr class="moyenne-row">
+                  <td colspan="${colspanValue}" style="text-align:right; font-weight:bold;">Moyenne Semestre :</td>
+                  <td style="font-weight:bold;">${results.moyenneGenerale.toFixed(2)}</td>
+                  <td></td>
+                  <td class="${results.semestreStatus === 'Validé' ? 'status-V' : 'status-NV'}" style="font-weight:bold;">${results.semestreStatus}</td>
                 </tr>
               </tbody>
             </table>
@@ -649,28 +683,28 @@
         <table style="width:100%; border-collapse:collapse; border:1px solid #000; font-size:10pt; margin-top:10px;">
           <thead>
             <tr style="background:#e8f4fc;">
-              <th style="border:1px solid #000; padding:6px;">Numéro</th>
-              <th style="border:1px solid #000; padding:6px;">Nom et Prénom</th>
-              <th style="border:1px solid #000; padding:6px;">TP</th>
-              <th style="border:1px solid #000; padding:6px;">CC</th>
-              <th style="border:1px solid #000; padding:6px;">Examen</th>
-              ${showSRColumn ? '<th style="border:1px solid #000; padding:6px;">SR</th>' : ''}
-              <th style="border:1px solid #000; padding:6px;">NF°</th>
-              <th style="border:1px solid #000; padding:6px;">Crédit</th>
-              <th style="border:1px solid #000; padding:6px;">Obs</th>
+              <th style="border:1px solid #000; padding:4px;">Numéro</th>
+              <th style="border:1px solid #000; padding:4px;">Nom et Prénom</th>
+              <th style="border:1px solid #000; padding:4px;">TP</th>
+              <th style="border:1px solid #000; padding:4px;">CC</th>
+              <th style="border:1px solid #000; padding:4px;">Examen</th>
+              ${showSRColumn ? '<th style="border:1px solid #000; padding:4px;">SR</th>' : ''}
+              <th style="border:1px solid #000; padding:4px;">NF°</th>
+              <th style="border:1px solid #000; padding:4px;">Crédit</th>
+              <th style="border:1px solid #000; padding:4px;">Obs</th>
             </tr>
           </thead>
           <tbody>
             <tr style="background:#f0f8ff;">
-              <td style="border:1px solid #000; padding:6px;">${escapeHtml(currentStudentId)}</td>
-              <td style="border:1px solid #000; padding:6px; text-align:left;">${escapeHtml(studentName)}</td>
-              <td style="border:1px solid #000; padding:6px;"></td>
-              <td style="border:1px solid #000; padding:6px;"></td>
-              <td style="border:1px solid #000; padding:6px;"></td>
-              ${showSRColumn ? '<td style="border:1px solid #000; padding:6px;"></td>' : ''}
-              <td style="border:1px solid #000; padding:6px;"></td>
-              <td style="border:1px solid #000; padding:6px;"></td>
-              <td style="border:1px solid #000; padding:6px; font-weight:bold;">${results.semestreStatus === 'Validé' ? 'V' : 'NV'}</td>
+              <td style="border:1px solid #000; padding:3px;">${escapeHtml(currentStudentId)}</td>
+              <td style="border:1px solid #000; padding:3px; text-align:left;">${escapeHtml(studentName)}</td>
+              <td style="border:1px solid #000; padding:3px;"></td>
+              <td style="border:1px solid #000; padding:3px;"></td>
+              <td style="border:1px solid #000; padding:3px;"></td>
+              ${showSRColumn ? '<td style="border:1px solid #000; padding:3px;"></td>' : ''}
+              <td style="border:1px solid #000; padding:3px;"></td>
+              <td style="border:1px solid #000; padding:3px;"></td>
+              <td style="border:1px solid #000; padding:3px;"></td>
             </tr>
     `;
     
@@ -678,15 +712,15 @@
       const module = results.modules[moduleCode];
       content += `
         <tr style="background:#e8f4fc;">
-          <td style="border:1px solid #000; padding:6px;">${escapeHtml(moduleCode)}</td>
-          <td style="border:1px solid #000; padding:6px; text-align:left;">${escapeHtml(module.name)}</td>
-          <td style="border:1px solid #000; padding:6px;"></td>
-          <td style="border:1px solid #000; padding:6px;"></td>
-          <td style="border:1px solid #000; padding:6px;"></td>
-          ${showSRColumn ? '<td style="border:1px solid #000; padding:6px;"></td>' : ''}
-          <td style="border:1px solid #000; padding:6px; font-weight:bold;">${module.moyenne.toFixed(2)}</td>
-          <td style="border:1px solid #000; padding:6px;">${module.credit}</td>
-          <td style="border:1px solid #000; padding:6px;">${module.status}</td>
+          <td style="border:1px solid #000; padding:3px;">${escapeHtml(moduleCode)}</td>
+          <td style="border:1px solid #000; padding:3px; text-align:left;">${escapeHtml(module.name)}</td>
+          <td style="border:1px solid #000; padding:3px;"></td>
+          <td style="border:1px solid #000; padding:3px;"></td>
+          <td style="border:1px solid #000; padding:3px;"></td>
+          ${showSRColumn ? '<td style="border:1px solid #000; padding:3px;"></td>' : ''}
+          <td style="border:1px solid #000; padding:3px; font-weight:bold;">${module.moyenne.toFixed(2)}</td>
+          <td style="border:1px solid #000; padding:3px;">${module.earnedCredits.toFixed(1)}</td>
+          <td style="border:1px solid #000; padding:3px;">${module.status}</td>
         </tr>
       `;
       
@@ -701,26 +735,26 @@
         
         content += `
           <tr>
-            <td style="border:1px solid #000; padding:6px;"></td>
-            <td style="border:1px solid #000; padding:6px; text-align:left; padding-left:20px;">${escapeHtml(displaySubjectName(subject.name))}</td>
-            <td style="border:1px solid #000; padding:6px;">${tpDisplay}</td>
-            <td style="border:1px solid #000; padding:6px;">${ccDisplay}</td>
-            <td style="border:1px solid #000; padding:6px;">${examDisplay}</td>
-            ${showSRColumn ? `<td style="border:1px solid #000; padding:6px;">${srDisplay}</td>` : ''}
-            <td style="border:1px solid #000; padding:6px; font-weight:bold;">${subject.moyenne.toFixed(2)}</td>
-            <td style="border:1px solid #000; padding:6px;">${creditEarned.toFixed(1)}</td>
-            <td style="border:1px solid #000; padding:6px;">${subject.status}</td>
+            <td style="border:1px solid #000; padding:2px;"></td>
+            <td style="border:1px solid #000; padding:2px; text-align:left; padding-left:20px;">${escapeHtml(displaySubjectName(subject.name))}</td>
+            <td style="border:1px solid #000; padding:2px;">${tpDisplay}</td>
+            <td style="border:1px solid #000; padding:2px;">${ccDisplay}</td>
+            <td style="border:1px solid #000; padding:2px;">${examDisplay}</td>
+            ${showSRColumn ? `<td style="border:1px solid #000; padding:2px;">${srDisplay}</td>` : ''}
+            <td style="border:1px solid #000; padding:2px; font-weight:bold;">${subject.moyenne.toFixed(2)}</td>
+            <td style="border:1px solid #000; padding:2px;">${creditEarned.toFixed(1)}</td>
+            <td style="border:1px solid #000; padding:2px;">${subject.status}</td>
           </tr>
         `;
       }
     }
     
-    // سطر المعدل العام في الأسفل فقط
     content += `
             <tr style="background:#f0f8ff;">
-              <td colspan="${colspanValue}" style="border:1px solid #000; padding:6px; text-align:right; font-weight:bold;">Moyenne Semestre :</td>
-              <td style="border:1px solid #000; padding:6px; font-weight:bold;">${results.moyenneGenerale.toFixed(2)}</td>
-              <td colspan="2" style="border:1px solid #000; padding:6px;"></td>
+              <td colspan="${colspanValue}" style="border:1px solid #000; padding:5px; text-align:right; font-weight:bold;">Moyenne Semestre :</td>
+              <td style="border:1px solid #000; padding:5px; font-weight:bold;">${results.moyenneGenerale.toFixed(2)}</td>
+              <td style="border:1px solid #000; padding:5px;"></td>
+              <td style="border:1px solid #000; padding:5px; font-weight:bold;">${results.semestreStatus}</td>
             </tr>
           </tbody>
         </table>
