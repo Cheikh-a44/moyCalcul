@@ -73,21 +73,11 @@
     background: var(--primary-light);
     font-weight: bold;
   }
-  .releve-table td {
-    padding: 2px 4px;
-    text-align: center;
-  }
+  .releve-table td { padding: 2px 4px; text-align: center; }
   
-  /* صفوف عادية - بحدود */
-  .releve-table tbody tr:not(.module-row):not(.student-info-row):not(.moyenne-row) td {
-    border: 1px solid #aaa;
-  }
+  .releve-table tbody tr:not(.module-row):not(.student-info-row):not(.moyenne-row) td { border: 1px solid #aaa; }
   
-  /* صف الطالب - بدون حدود داخلية */
-  .releve-table .student-info-row {
-    background: #f0f8ff;
-    font-weight: bold;
-  }
+  .releve-table .student-info-row { background: #f0f8ff; font-weight: bold; }
   .releve-table .student-info-row td {
     border-top: 1px solid #aaa;
     border-bottom: 1px solid #aaa;
@@ -98,11 +88,7 @@
   .releve-table .student-info-row td:first-child { border-left: 1px solid #aaa; }
   .releve-table .student-info-row td:last-child { border-right: 1px solid #aaa; }
   
-  /* صف الموديل - بدون حدود داخلية */
-  .releve-table .module-row {
-    background: #d0e8f7;
-    font-weight: bold;
-  }
+  .releve-table .module-row { background: #d0e8f7; font-weight: bold; }
   .releve-table .module-row td {
     border-top: 1px solid #aaa;
     border-bottom: 1px solid #aaa;
@@ -113,23 +99,13 @@
   .releve-table .module-row td:first-child { border-left: 1px solid #aaa; }
   .releve-table .module-row td:last-child { border-right: 1px solid #aaa; }
   
-  .releve-table .subject-row td:first-child {
-    text-align: left;
-    padding-left: 20px;
-  }
-  .releve-table .subject-row td {
-    padding: 1px 4px;
-  }
+  .releve-table .subject-row td:first-child { text-align: left; padding-left: 20px; }
+  .releve-table .subject-row td { padding: 1px 4px; }
   
   .status-C, .status-V { color: #27ae60; font-weight: bold; }
   .status-NC, .status-NV { color: #e74c3c; font-weight: bold; }
   
-  /* صف المعدل - بدون أي حدود */
-  .moyenne-row td {
-    border: none !important;
-    padding: 6px 4px 2px 4px;
-    background: transparent;
-  }
+  .moyenne-row td { border: none !important; padding: 6px 4px 2px 4px; background: transparent; }
   
   .empty-state { text-align:center; padding:2rem 1rem; color:var(--text-light); }
   .empty-state i { font-size:3rem; margin-bottom:0.8rem; color:var(--primary-light); }
@@ -155,13 +131,8 @@
     padding: 5px;
     text-align: center;
   }
-  .simple-table th {
-    background: var(--primary-light);
-    font-weight: bold;
-  }
-  .simple-table td:first-child {
-    text-align: left;
-  }
+  .simple-table th { background: var(--primary-light); font-weight: bold; }
+  .simple-table td:first-child { text-align: left; }
   .section-subtitle {
     font-size: 1rem;
     color: var(--primary);
@@ -170,15 +141,8 @@
     border-bottom: 2px solid var(--primary-light);
   }
   
-  .loading-spinner {
-    text-align: center;
-    padding: 2rem;
-  }
-  .loading-spinner i {
-    font-size: 2.5rem;
-    color: var(--primary);
-    animation: spin 1s linear infinite;
-  }
+  .loading-spinner { text-align: center; padding: 2rem; }
+  .loading-spinner i { font-size: 2.5rem; color: var(--primary); animation: spin 1s linear infinite; }
   @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
   
   @media (max-width:768px) {
@@ -278,35 +242,19 @@
   };
 
   function hasTP(subjectName) { return !SUBJECTS_WITHOUT_TP.includes(subjectName); }
+  function displaySubjectName(subject) { return subject.replace(/_/g, ' ').replace(/I_/g, 'I.').replace(/et_/g, 'et ').replace(/_s3/g, '').replace(/_2/g, ' 2'); }
+  function escapeHtml(str) { if (!str) return ''; return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;'); }
 
-  function displaySubjectName(subject) {
-    return subject.replace(/_/g, ' ').replace(/I_/g, 'I.').replace(/et_/g, 'et ').replace(/_s3/g, '').replace(/_2/g, ' 2');
-  }
-
-  function escapeHtml(str) {
-    if (!str) return '';
-    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-  }
-
-  let currentData = null;
-  let currentStudentId = null;
-  let currentDept = null;
-  let currentSemester = null;
-  let currentStudentName = '';
+  let currentData = null, currentStudentId = null, currentDept = null, currentSemester = null, currentStudentName = '';
 
   function calculateResultsFromNotes(notesBySubject, dept, semester) {
     const modulesStructure = MODULES_STRUCTURE[dept]?.[semester];
     if (!modulesStructure) return null;
     
     const requiredSubjects = [];
-    for (let moduleCode in modulesStructure) {
-      for (let subject of modulesStructure[moduleCode].subjects) {
-        if (!requiredSubjects.includes(subject)) requiredSubjects.push(subject);
-      }
-    }
+    for (let moduleCode in modulesStructure) for (let subject of modulesStructure[moduleCode].subjects) if (!requiredSubjects.includes(subject)) requiredSubjects.push(subject);
     
     const subjectAverages = {}, subjectStatus = {}, subjectHasSR = {};
-    
     for (let subject of requiredSubjects) {
       const notes = notesBySubject[subject] || {};
       const hasTPforSubject = hasTP(subject);
@@ -321,7 +269,6 @@
     }
     
     const moduleAverages = {}, moduleStatus = {}, moduleEarnedCredits = {};
-    
     for (let moduleCode in modulesStructure) {
       const module = modulesStructure[moduleCode];
       let totalWeighted = 0, totalCredits = 0, earnedModuleCredits = 0;
@@ -392,11 +339,7 @@
       if (!currentStudentName) for (let key in studentData) if (studentData[key].name) { currentStudentName = studentData[key].name; break; }
       
       const notesBySubject = {};
-      for (let key in studentData) {
-        const data = studentData[key];
-        if (!notesBySubject[data.subject]) notesBySubject[data.subject] = {};
-        notesBySubject[data.subject][data.type] = data.grade;
-      }
+      for (let key in studentData) { const data = studentData[key]; if (!notesBySubject[data.subject]) notesBySubject[data.subject] = {}; notesBySubject[data.subject][data.type] = data.grade; }
       
       const modulesStructure = MODULES_STRUCTURE[dept]?.[sem];
       let allSubjectsPresent = true;
@@ -421,32 +364,18 @@
         const showSRColumn = results.hasAnySR;
         
         let html = `
-          <div class="student-header">
-            <i class="fas fa-user-graduate"></i>
-            <h3>${escapeHtml(currentStudentName) || 'Étudiant'}</h3>
-            <p>N° ${escapeHtml(id)} | ${escapeHtml(dept)} | ${escapeHtml(sem)}</p>
-          </div>
+          <div class="student-header"><i class="fas fa-user-graduate"></i><h3>${escapeHtml(currentStudentName) || 'Étudiant'}</h3><p>N° ${escapeHtml(id)} | ${escapeHtml(dept)} | ${escapeHtml(sem)}</p></div>
           <div style="overflow-x:auto;">
             <table class="releve-table">
-              <thead>
-                <tr><th>Numéro</th><th>Nom et Prénom</th><th>TP</th><th>CC</th><th>Examen</th>${showSRColumn ? '<th>SR</th>' : ''}<th>NFe</th><th>Crédit</th><th>Obs</th></tr>
-              </thead>
+              <thead><tr><th>Numéro</th><th>Nom et Prénom</th><th>TP</th><th>CC</th><th>Examen</th>${showSRColumn ? '<th>SR</th>' : ''}<th>NFe</th><th>Crédit</th><th>Obs</th></tr></thead>
               <tbody>
-                <tr class="student-info-row">
-                  <td>${escapeHtml(id)}</td><td style="text-align:left; padding-left:15px;">${escapeHtml(currentStudentName)}</td>
-                  <td></td><td></td><td></td>${showSRColumn ? '<td></td>' : ''}<td></td><td></td><td></td>
-                </tr>
+                <tr class="student-info-row"><td>${escapeHtml(id)}</td><td style="text-align:left; padding-left:15px;">${escapeHtml(currentStudentName)}</td><td></td><td></td><td></td>${showSRColumn ? '<td></td>' : ''}<td></td><td></td><td></td></tr>
         `;
         
         for (let moduleCode in results.modules) {
           const module = results.modules[moduleCode];
           html += `
-            <tr class="module-row">
-              <td>${escapeHtml(moduleCode)}</td><td style="text-align:left; padding-left:15px;">${escapeHtml(module.name)}</td>
-              <td></td><td></td><td></td>${showSRColumn ? '<td></td>' : ''}
-              <td style="font-weight:bold;">${module.moyenne.toFixed(2)}</td><td>${module.earnedCredits.toFixed(1)}</td>
-              <td class="${module.status === 'V' ? 'status-V' : 'status-NV'}">${module.status}</td>
-            </tr>
+            <tr class="module-row"><td>${escapeHtml(moduleCode)}</td><td style="text-align:left; padding-left:15px;">${escapeHtml(module.name)}</td><td></td><td></td><td></td>${showSRColumn ? '<td></td>' : ''}<td style="font-weight:bold;">${module.moyenne.toFixed(2)}</td><td>${module.earnedCredits.toFixed(1)}</td><td class="${module.status === 'V' ? 'status-V' : 'status-NV'}">${module.status}</td></tr>
           `;
           
           for (let subject of module.subjects) {
@@ -456,134 +385,64 @@
             const examDisplay = grades['Examen'] !== undefined ? grades['Examen'].toFixed(2) : '';
             const rattrapage = grades['Rattrapage'];
             const srDisplay = (rattrapage !== undefined && rattrapage > (grades['Examen'] || 0)) ? rattrapage.toFixed(2) : '';
-            const creditEarned = subject.status === 'C' ? subject.credit : 0;
             
             html += `
-              <tr class="subject-row">
-                <td></td><td style="text-align:left; padding-left:30px;">${escapeHtml(displaySubjectName(subject.name))}</td>
-                <td>${tpDisplay}</td><td>${ccDisplay}</td><td>${examDisplay}</td>${showSRColumn ? `<td>${srDisplay}</td>` : ''}
-                <td style="font-weight:bold;">${subject.moyenne.toFixed(2)}</td><td>${creditEarned.toFixed(1)}</td>
-                <td class="${subject.status === 'C' ? 'status-C' : 'status-NC'}">${subject.status}</td>
-              </tr>
+              <tr class="subject-row"><td></td><td style="text-align:left; padding-left:30px;">${escapeHtml(displaySubjectName(subject.name))}</td><td>${tpDisplay}</td><td>${ccDisplay}</td><td>${examDisplay}</td>${showSRColumn ? `<td>${srDisplay}</td>` : ''}<td style="font-weight:bold;">${subject.moyenne.toFixed(2)}</td><td>${subject.credit.toFixed(1)}</td><td class="${subject.status === 'C' ? 'status-C' : 'status-NC'}">${subject.status}</td></tr>
             `;
           }
         }
         
         const colspanValue = showSRColumn ? 6 : 5;
-        html += `
-                <tr class="moyenne-row">
-                  <td colspan="${colspanValue}" style="text-align:right; font-weight:bold;">Moyenne Semestre :</td>
-                  <td style="font-weight:bold;">${results.moyenneGenerale.toFixed(2)}</td>
-                  <td></td>
-                  <td class="${results.semestreStatus === 'Validé' ? 'status-V' : 'status-NV'}" style="font-weight:bold;">${results.semestreStatus}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        `;
+        html += `<tr class="moyenne-row"><td colspan="${colspanValue}" style="text-align:right; font-weight:bold;">Moyenne Semestre :</td><td style="font-weight:bold;">${results.moyenneGenerale.toFixed(2)}</td><td></td><td class="${results.semestreStatus === 'Validé' ? 'status-V' : 'status-NV'}" style="font-weight:bold;">${results.semestreStatus}</td></tr></tbody></table></div>`;
         
         document.getElementById('studentResults').innerHTML = html;
         document.getElementById('pdfButtonContainer').innerHTML = `<button class="admin-btn success" onclick="window.generatePDF()"><i class="fas fa-file-pdf"></i> 📂 Télécharger mon relevé PDF</button>`;
         
       } else {
-        let html = `
-          <div class="student-header"><i class="fas fa-user-graduate"></i><h3>${escapeHtml(currentStudentName) || 'Étudiant'}</h3><p>N° ${escapeHtml(id)} | ${escapeHtml(dept)} | ${escapeHtml(sem)}</p></div>
-          <div class="neutral-message"><i class="fas fa-info-circle"></i> Les résultats ne sont pas encore finalisés par le coordinateur.</div>
-        `;
-        
+        let html = `<div class="student-header"><i class="fas fa-user-graduate"></i><h3>${escapeHtml(currentStudentName) || 'Étudiant'}</h3><p>N° ${escapeHtml(id)} | ${escapeHtml(dept)} | ${escapeHtml(sem)}</p></div><div class="neutral-message"><i class="fas fa-info-circle"></i> Les résultats ne sont pas encore finalisés par le coordinateur.</div>`;
         if (modulesStructure) {
-          let hasTPData = false;
-          let tpHtml = '<h4 class="section-subtitle"><i class="fas fa-flask"></i> Résultats TP</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note TP</th></tr></thead><tbody>';
-          for (let moduleCode in modulesStructure) {
-            for (let subject of modulesStructure[moduleCode].subjects) {
-              if (hasTP(subject)) { const grade = notesBySubject[subject]?.['TP']; if (grade !== undefined) hasTPData = true; tpHtml += `<tr><td>${escapeHtml(displaySubjectName(subject))}</td><td>${grade !== undefined ? grade.toFixed(2) : ''}</td></tr>`; }
-            }
-          }
-          tpHtml += '</tbody></table>';
-          if (hasTPData) html += tpHtml;
+          let hasTPData = false, tpHtml = '<h4 class="section-subtitle"><i class="fas fa-flask"></i> Résultats TP</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note TP</th></tr></thead><tbody>';
+          for (let moduleCode in modulesStructure) for (let subject of modulesStructure[moduleCode].subjects) if (hasTP(subject)) { const grade = notesBySubject[subject]?.['TP']; if (grade !== undefined) hasTPData = true; tpHtml += `<tr><td>${escapeHtml(displaySubjectName(subject))}</td><td>${grade !== undefined ? grade.toFixed(2) : ''}</td></tr>`; }
+          tpHtml += '</tbody></table>'; if (hasTPData) html += tpHtml;
           
           let ccHtml = '<h4 class="section-subtitle"><i class="fas fa-pencil-alt"></i> Résultats Contrôle continu</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note CC</th></tr></thead><tbody>';
-          for (let moduleCode in modulesStructure) {
-            for (let subject of modulesStructure[moduleCode].subjects) { const grade = notesBySubject[subject]?.['Contrôle continu']; ccHtml += `<tr><td>${escapeHtml(displaySubjectName(subject))}</td><td>${grade !== undefined ? grade.toFixed(2) : ''}</td></tr>`; }
-          }
+          for (let moduleCode in modulesStructure) for (let subject of modulesStructure[moduleCode].subjects) { const grade = notesBySubject[subject]?.['Contrôle continu']; ccHtml += `<tr><td>${escapeHtml(displaySubjectName(subject))}</td><td>${grade !== undefined ? grade.toFixed(2) : ''}</td></tr>`; }
           ccHtml += '</tbody></table>'; html += ccHtml;
           
           let examHtml = '<h4 class="section-subtitle"><i class="fas fa-file-alt"></i> Résultats Examen</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note Examen</th></tr></thead><tbody>';
-          for (let moduleCode in modulesStructure) {
-            for (let subject of modulesStructure[moduleCode].subjects) { const grade = notesBySubject[subject]?.['Examen']; examHtml += `<tr><td>${escapeHtml(displaySubjectName(subject))}</td><td>${grade !== undefined ? grade.toFixed(2) : ''}</td></tr>`; }
-          }
+          for (let moduleCode in modulesStructure) for (let subject of modulesStructure[moduleCode].subjects) { const grade = notesBySubject[subject]?.['Examen']; examHtml += `<tr><td>${escapeHtml(displaySubjectName(subject))}</td><td>${grade !== undefined ? grade.toFixed(2) : ''}</td></tr>`; }
           examHtml += '</tbody></table>'; html += examHtml;
         }
         document.getElementById('studentResults').innerHTML = html;
         document.getElementById('pdfButtonContainer').innerHTML = '';
       }
-    } catch (error) {
-      console.error('Erreur:', error);
-      document.getElementById('studentResults').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-circle"></i><h3>Erreur de chargement</h3><p>Une erreur est survenue lors du chargement des résultats.</p></div>`;
-    }
+    } catch (error) { console.error('Erreur:', error); document.getElementById('studentResults').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-circle"></i><h3>Erreur de chargement</h3><p>Une erreur est survenue lors du chargement des résultats.</p></div>`; }
   }
   
   window.generatePDF = function() {
     if (!currentData || !currentData.results) { alert("Les résultats complets ne sont pas encore disponibles pour générer le PDF."); return; }
     
-    const results = currentData.results;
-    const studentName = currentData.name;
-    const currentYear = new Date().getFullYear();
-    const academicYear = `${currentYear-1}-${currentYear}`;
-    
+    const results = currentData.results, studentName = currentData.name;
+    const currentYear = new Date().getFullYear(), academicYear = `${currentYear-1}-${currentYear}`;
     let filiere = currentDept === 'TC' ? 'L1TC-L1 Licence TC' : 'L2PPV-L2 Licence PPV';
-    const showSRColumn = results.hasAnySR;
-    const colspanValue = showSRColumn ? 6 : 5;
+    const showSRColumn = results.hasAnySR, colspanValue = showSRColumn ? 6 : 5;
     
     let content = `
       <div style="padding: 15mm 10mm 10mm 10mm; font-family: 'Times New Roman', Times, serif; font-size: 11pt;">
         <div style="margin-bottom: 20px;">
           <div style="font-weight: bold; font-size: 12pt; margin-bottom: 5px;">Institut Supérieur d'Enseignement Technologique de Rosso</div>
-          <div style="display: flex; justify-content: space-between; margin-top: 8px;">
-            <span style="font-weight: bold; font-size: 14pt;">Résultats du ${currentSemester}</span>
-            <span style="font-weight: normal;">Année Universitaire : ${academicYear}</span>
-          </div>
+          <div style="display: flex; justify-content: space-between; margin-top: 8px;"><span style="font-weight: bold; font-size: 14pt;">Résultats du ${currentSemester}</span><span style="font-weight: normal;">Année Universitaire : ${academicYear}</span></div>
           <div style="margin-top: 5px;"><span style="font-weight: bold;">Filière :</span> ${filiere}</div>
         </div>
-        
         <table style="width:100%; border-collapse:collapse; border:1px solid #000; font-size:10pt; margin-top:10px;">
-          <thead>
-            <tr style="background:#e8f4fc;">
-              <th style="border:1px solid #000; padding:3px;">Numéro</th><th style="border:1px solid #000; padding:3px;">Nom et Prénom</th>
-              <th style="border:1px solid #000; padding:3px;">TP</th><th style="border:1px solid #000; padding:3px;">CC</th><th style="border:1px solid #000; padding:3px;">Examen</th>
-              ${showSRColumn ? '<th style="border:1px solid #000; padding:3px;">SR</th>' : ''}
-              <th style="border:1px solid #000; padding:3px;">NF°</th><th style="border:1px solid #000; padding:3px;">Crédit</th><th style="border:1px solid #000; padding:3px;">Obs</th>
-            </tr>
-          </thead>
+          <thead><tr style="background:#e8f4fc;"><th style="border:1px solid #000; padding:3px;">Numéro</th><th style="border:1px solid #000; padding:3px;">Nom et Prénom</th><th style="border:1px solid #000; padding:3px;">TP</th><th style="border:1px solid #000; padding:3px;">CC</th><th style="border:1px solid #000; padding:3px;">Examen</th>${showSRColumn ? '<th style="border:1px solid #000; padding:3px;">SR</th>' : ''}<th style="border:1px solid #000; padding:3px;">NF°</th><th style="border:1px solid #000; padding:3px;">Crédit</th><th style="border:1px solid #000; padding:3px;">Obs</th></tr></thead>
           <tbody>
-            <tr style="background:#f0f8ff;">
-              <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; border-left:1px solid #000; border-right:1px solid #000; padding:2px;">${escapeHtml(currentStudentId)}</td>
-              <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px; text-align:left;">${escapeHtml(studentName)}</td>
-              <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
-              <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
-              <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
-              ${showSRColumn ? '<td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>' : ''}
-              <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
-              <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
-              <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; border-right:1px solid #000; padding:2px;"></td>
-            </tr>
+            <tr style="background:#f0f8ff;"><td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; border-left:1px solid #000; border-right:1px solid #000; padding:2px;">${escapeHtml(currentStudentId)}</td><td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px; text-align:left;">${escapeHtml(studentName)}</td><td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td><td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td><td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>${showSRColumn ? '<td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>' : ''}<td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td><td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td><td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; border-right:1px solid #000; padding:2px;"></td></tr>
     `;
     
     for (let moduleCode in results.modules) {
       const module = results.modules[moduleCode];
-      content += `
-        <tr style="background:#d0e8f7;">
-          <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; border-left:1px solid #000; padding:2px;">${escapeHtml(moduleCode)}</td>
-          <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px; text-align:left;">${escapeHtml(module.name)}</td>
-          <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
-          <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
-          <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
-          ${showSRColumn ? '<td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>' : ''}
-          <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px; font-weight:bold;">${module.moyenne.toFixed(2)}</td>
-          <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;">${module.earnedCredits.toFixed(1)}</td>
-          <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; border-right:1px solid #000; padding:2px;">${module.status}</td>
-        </tr>
-      `;
+      content += `<tr style="background:#d0e8f7;"><td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; border-left:1px solid #000; padding:2px;">${escapeHtml(moduleCode)}</td><td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px; text-align:left;">${escapeHtml(module.name)}</td><td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td><td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td><td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>${showSRColumn ? '<td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>' : ''}<td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px; font-weight:bold;">${module.moyenne.toFixed(2)}</td><td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;">${module.earnedCredits.toFixed(1)}</td><td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; border-right:1px solid #000; padding:2px;">${module.status}</td></tr>`;
       
       for (let subject of module.subjects) {
         const grades = currentData.grades[subject.name] || {};
@@ -592,50 +451,16 @@
         const examDisplay = grades['Examen'] !== undefined ? grades['Examen'].toFixed(2) : '';
         const rattrapage = grades['Rattrapage'];
         const srDisplay = (rattrapage !== undefined && rattrapage > (grades['Examen'] || 0)) ? rattrapage.toFixed(2) : '';
-        const creditEarned = subject.status === 'C' ? subject.credit : 0;
         
-        content += `
-          <tr>
-            <td style="border:1px solid #000; padding:1px;"></td>
-            <td style="border:1px solid #000; padding:1px; text-align:left; padding-left:20px;">${escapeHtml(displaySubjectName(subject.name))}</td>
-            <td style="border:1px solid #000; padding:1px;">${tpDisplay}</td>
-            <td style="border:1px solid #000; padding:1px;">${ccDisplay}</td>
-            <td style="border:1px solid #000; padding:1px;">${examDisplay}</td>
-            ${showSRColumn ? `<td style="border:1px solid #000; padding:1px;">${srDisplay}</td>` : ''}
-            <td style="border:1px solid #000; padding:1px; font-weight:bold;">${subject.moyenne.toFixed(2)}</td>
-            <td style="border:1px solid #000; padding:1px;">${creditEarned.toFixed(1)}</td>
-            <td style="border:1px solid #000; padding:1px;">${subject.status}</td>
-          </tr>
-        `;
+        content += `<tr><td style="border:1px solid #000; padding:1px;"></td><td style="border:1px solid #000; padding:1px; text-align:left; padding-left:20px;">${escapeHtml(displaySubjectName(subject.name))}</td><td style="border:1px solid #000; padding:1px;">${tpDisplay}</td><td style="border:1px solid #000; padding:1px;">${ccDisplay}</td><td style="border:1px solid #000; padding:1px;">${examDisplay}</td>${showSRColumn ? `<td style="border:1px solid #000; padding:1px;">${srDisplay}</td>` : ''}<td style="border:1px solid #000; padding:1px; font-weight:bold;">${subject.moyenne.toFixed(2)}</td><td style="border:1px solid #000; padding:1px;">${subject.credit.toFixed(1)}</td><td style="border:1px solid #000; padding:1px;">${subject.status}</td></tr>`;
       }
     }
     
-    content += `
-            <tr class="moyenne-row">
-              <td colspan="${colspanValue}" style="border:none; padding:6px 4px 2px 4px; text-align:right; font-weight:bold;">Moyenne Semestre :</td>
-              <td style="border:none; padding:6px 4px 2px 4px; font-weight:bold;">${results.moyenneGenerale.toFixed(2)}</td>
-              <td style="border:none; padding:6px 4px 2px 4px;"></td>
-              <td style="border:none; padding:6px 4px 2px 4px; font-weight:bold;">${results.semestreStatus}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    `;
+    content += `<tr class="moyenne-row"><td colspan="${colspanValue}" style="border:none; padding:6px 4px 2px 4px; text-align:right; font-weight:bold;">Moyenne Semestre :</td><td style="border:none; padding:6px 4px 2px 4px; font-weight:bold;">${results.moyenneGenerale.toFixed(2)}</td><td style="border:none; padding:6px 4px 2px 4px;"></td><td style="border:none; padding:6px 4px 2px 4px; font-weight:bold;">${results.semestreStatus}</td></tr></tbody></table></div>`;
     
-    const element = document.createElement('div');
-    element.innerHTML = content;
-    document.body.appendChild(element);
-    
-    const opt = {
-      margin: [0, 5, 5, 5],
-      filename: `Releve_${currentStudentId}_${currentSemester}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, letterRendering: true, scrollY: 0 },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-    
-    html2pdf().set(opt).from(element).save().then(() => document.body.removeChild(element))
-      .catch(err => { console.error('Erreur PDF:', err); alert('Erreur lors de la génération du PDF.'); document.body.removeChild(element); });
+    const element = document.createElement('div'); element.innerHTML = content; document.body.appendChild(element);
+    const opt = { margin: [0, 5, 5, 5], filename: `Releve_${currentStudentId}_${currentSemester}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, letterRendering: true, scrollY: 0 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+    html2pdf().set(opt).from(element).save().then(() => document.body.removeChild(element)).catch(err => { console.error('Erreur PDF:', err); alert('Erreur lors de la génération du PDF.'); document.body.removeChild(element); });
   };
   
   loadAndDisplay();
