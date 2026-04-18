@@ -60,6 +60,102 @@
     padding:0 1rem; 
   }
   
+  /* Style pour l'annonce */
+  .annonce-container {
+    margin-bottom: 1rem;
+    padding: 0;
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .annonce-bloc {
+    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+    border-left: 6px solid #ffc107;
+    padding: 1rem 1.2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    box-shadow: var(--shadow);
+  }
+  .annonce-texte {
+    flex: 1;
+    font-size: 1rem;
+    color: #856404;
+  }
+  .annonce-icone {
+    font-size: 1.5rem;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+  }
+  .annonce-date {
+    font-size: 0.75rem;
+    color: #856404;
+    margin-top: 0.3rem;
+  }
+  .annonce-fermer {
+    background: transparent;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: #856404;
+    padding: 0.3rem 0.6rem;
+    border-radius: 50%;
+    transition: var(--transition);
+  }
+  .annonce-fermer:hover {
+    background: rgba(0,0,0,0.1);
+  }
+  .admin-annonce-btn {
+    background: #ffc107;
+    color: #333;
+    margin-left: 0.5rem;
+  }
+  .admin-annonce-btn:hover {
+    background: #e0a800;
+  }
+  
+  /* Modal pour l'admin */
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+  }
+  .modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: var(--radius);
+    max-width: 500px;
+    width: 90%;
+    box-shadow: var(--shadow);
+  }
+  .modal-content h3 {
+    margin-bottom: 1rem;
+    color: var(--primary);
+  }
+  .modal-content textarea {
+    width: 100%;
+    padding: 0.8rem;
+    border: 2px solid var(--primary-light);
+    border-radius: var(--radius);
+    font-size: 1rem;
+    font-family: inherit;
+    resize: vertical;
+  }
+  .modal-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+  }
+  
   .section-title { 
     padding:1.5rem 0 1rem; 
     font-size:1.4rem; 
@@ -194,6 +290,13 @@
   }
   .admin-btn.success:hover {
     background:#218838;
+  }
+  .admin-btn.warning {
+    background:#ffc107;
+    color:#333;
+  }
+  .admin-btn.warning:hover {
+    background:#e0a800;
   }
   
   .admin-panel {
@@ -398,6 +501,9 @@
 
 <div class="container">
   
+  <!-- ==================== ZONE D'AFFICHAGE DE L'ANNONCE ==================== -->
+  <div id="annonceContainer" class="annonce-container"></div>
+  
   <div class="result-card">
     <h2 class="section-title">
       <i class="fas fa-search"></i> 
@@ -481,6 +587,10 @@
             <i class="fas fa-trash-alt"></i> 
             Gérer les matières
           </button>
+          <button class="admin-btn warning" onclick="openAnnonceModal()">
+            <i class="fas fa-bullhorn"></i> 
+            Gérer l'annonce
+          </button>
         </div>
         
         <div id="importForm" style="display:none;">
@@ -561,6 +671,22 @@
           Déconnexion
         </button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal pour l'annonce -->
+<div id="annonceModal" class="modal">
+  <div class="modal-content">
+    <h3><i class="fas fa-bullhorn"></i> Publier une annonce</h3>
+    <label>Texte de l'annonce :</label>
+    <textarea id="annonceTexte" rows="3" placeholder="Ex: Les résultats du semestre 3 sont disponibles !"></textarea>
+    <p style="font-size:0.8rem; color:#666; margin-top:0.5rem;">
+      <i class="fas fa-info-circle"></i> L'annonce sera visible pendant 24 heures. Vous pouvez la supprimer à tout moment.
+    </p>
+    <div class="modal-buttons">
+      <button class="admin-btn" onclick="publierAnnonce()">Publier</button>
+      <button class="admin-btn secondary" onclick="fermerModalAnnonce()">Annuler</button>
     </div>
   </div>
 </div>
@@ -684,7 +810,7 @@
     }
   });
 
-  // Structure des modules pour l'affichage final (comme dans l'image)
+  // Structure des modules pour l'affichage final
   const MODULES_STRUCTURE = {
     TC: {
       S1: {
@@ -728,6 +854,101 @@
     }
   };
 
+  // ==================== GESTION DES ANNONCES ====================
+  const ANNONCE_STORAGE_KEY = 'iset_annonce';
+  
+  function getAnnonce() {
+    const stored = localStorage.getItem(ANNONCE_STORAGE_KEY);
+    if (!stored) return null;
+    try {
+      const annonce = JSON.parse(stored);
+      if (annonce.expiration && Date.now() > annonce.expiration) {
+        localStorage.removeItem(ANNONCE_STORAGE_KEY);
+        return null;
+      }
+      return annonce;
+    } catch(e) {
+      return null;
+    }
+  }
+  
+  function afficherAnnonce() {
+    const annonce = getAnnonce();
+    const container = document.getElementById('annonceContainer');
+    if (!annonce || !annonce.texte) {
+      container.innerHTML = '';
+      return;
+    }
+    
+    const dateExpiration = new Date(annonce.expiration);
+    const dateFormatted = dateExpiration.toLocaleString('fr-FR');
+    
+    container.innerHTML = `
+      <div class="annonce-bloc">
+        <div style="flex:1">
+          <span class="annonce-icone">📢</span>
+          <span class="annonce-texte"><strong>Annonce :</strong> ${annonce.texte.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</span>
+          <div class="annonce-date">⏱️ Visible jusqu'au ${dateFormatted}</div>
+        </div>
+        ${currentAdmin ? `<button class="annonce-fermer" onclick="supprimerAnnonce()" title="Supprimer l'annonce">✖</button>` : ''}
+      </div>
+    `;
+  }
+  
+  function publierAnnonce() {
+    const texte = document.getElementById('annonceTexte').value.trim();
+    if (!texte) {
+      alert('Veuillez écrire un texte pour l\'annonce');
+      return;
+    }
+    
+    const expiration = Date.now() + (24 * 60 * 60 * 1000); // 24 heures
+    const annonce = {
+      texte: texte,
+      expiration: expiration,
+      dateCreation: Date.now()
+    };
+    
+    localStorage.setItem(ANNONCE_STORAGE_KEY, JSON.stringify(annonce));
+    fermerModalAnnonce();
+    document.getElementById('annonceTexte').value = '';
+    afficherAnnonce();
+    
+    document.getElementById('adminMsg').textContent = '✅ Annonce publiée avec succès (visible 24h)';
+    document.getElementById('adminMsg').className = 'message success';
+    document.getElementById('adminMsg').style.display = 'block';
+    setTimeout(() => document.getElementById('adminMsg').style.display = 'none', 3000);
+  }
+  
+  function supprimerAnnonce() {
+    if (confirm('Voulez-vous vraiment supprimer cette annonce ?')) {
+      localStorage.removeItem(ANNONCE_STORAGE_KEY);
+      afficherAnnonce();
+      document.getElementById('adminMsg').textContent = '✅ Annonce supprimée';
+      document.getElementById('adminMsg').className = 'message success';
+      document.getElementById('adminMsg').style.display = 'block';
+      setTimeout(() => document.getElementById('adminMsg').style.display = 'none', 3000);
+    }
+  }
+  
+  function openAnnonceModal() {
+    document.getElementById('annonceModal').style.display = 'flex';
+  }
+  
+  function fermerModalAnnonce() {
+    document.getElementById('annonceModal').style.display = 'none';
+    document.getElementById('annonceTexte').value = '';
+  }
+  
+  // Fermer le modal en cliquant en dehors
+  window.onclick = function(event) {
+    const modal = document.getElementById('annonceModal');
+    if (event.target === modal) {
+      fermerModalAnnonce();
+    }
+  }
+
+  // ==================== FONCTIONS PRINCIPALES ====================
   window.searchStudentResult = async () => {
     const department = document.getElementById('resultDepartment').value;
     const semester = document.getElementById('semesterSelect').value;
@@ -755,7 +976,6 @@
     const studentData = snapshot.val();
     let studentName = '';
     
-    // Récupérer le nom de l'étudiant
     for (let key in studentData) {
       if (studentData[key].name) {
         studentName = studentData[key].name;
@@ -763,7 +983,6 @@
       }
     }
     
-    // Organiser les notes par matière et type
     const notesBySubject = {};
     for (let key in studentData) {
       const data = studentData[key];
@@ -773,8 +992,8 @@
       notesBySubject[data.subject][data.type] = data.grade;
     }
     
-    // Vérifier si toutes les notes sont complètes (TP, CC, Examen pour chaque matière)
     const requiredSubjects = SUBJECTS_BY_DEPT[department]?.[semester] || [];
+    
     let allNotesComplete = true;
     for (let subject of requiredSubjects) {
       const hasTPforSubject = hasTP(subject);
@@ -797,14 +1016,10 @@
     `;
     
     if (allNotesComplete) {
-      // ========== AFFICHAGE APRÈS CALCUL (TABLEAU FINAL COMME DANS L'IMAGE) ==========
-      // Calcul des moyennes des matières et des modules
+      // Calcul des moyennes
       const subjectAverages = {};
-      const moduleAverages = {};
-      const moduleStatus = {};
       const subjectStatus = {};
       
-      // Calcul des moyennes des matières
       for (let subject of requiredSubjects) {
         const notes = notesBySubject[subject] || {};
         const hasTPforSubject = hasTP(subject);
@@ -821,13 +1036,13 @@
           moyenne = (cc * 2 + finalExam * 3) / 5;
         }
         subjectAverages[subject] = moyenne;
-        
-        // Statut de la matière (simplifié pour l'affichage)
         subjectStatus[subject] = moyenne >= 10 ? 'C' : 'NC';
       }
       
-      // Calcul des moyennes des modules
+      const moduleAverages = {};
+      const moduleStatus = {};
       const modulesStructure = MODULES_STRUCTURE[department]?.[semester];
+      
       for (let moduleCode in modulesStructure) {
         const module = modulesStructure[moduleCode];
         let totalWeighted = 0;
@@ -840,7 +1055,6 @@
         const moduleMoyenne = totalCredits > 0 ? totalWeighted / totalCredits : 0;
         moduleAverages[moduleCode] = moduleMoyenne;
         
-        // Vérifier si toutes les matières du module sont C
         let allC = true;
         for (let subject of module.subjects) {
           if (subjectStatus[subject] !== 'C') allC = false;
@@ -848,7 +1062,6 @@
         moduleStatus[moduleCode] = allC && moduleMoyenne >= 10 ? 'V' : 'NV';
       }
       
-      // Calcul de la moyenne générale du semestre
       let totalWeightedGeneral = 0;
       let totalCreditsGeneral = 0;
       for (let subject of requiredSubjects) {
@@ -859,33 +1072,14 @@
       const generaleMoyenne = totalCreditsGeneral > 0 ? totalWeightedGeneral / totalCreditsGeneral : 0;
       const semestreStatus = generaleMoyenne >= 10 ? 'Validé' : 'Non Validé';
       
-      // Construction du tableau final
       html += '<div style="overflow-x:auto;"><table class="releve-table">';
-      html += '<thead><tr>';
-      html += '<th>Numéro</th><th>Nom et Prénom</th><th>TP</th><th>CC</th><th>Examen</th><th>NFe</th><th>Crédit</th><th>Observations</th>';
-      html += '</tr></thead><tbody>';
+      html += '<thead><tr><th>Numéro</th><th>Nom et Prénom</th><th>TP</th><th>CC</th><th>Examen</th><th>NFe</th><th>Crédit</th><th>Observations</th></tr></thead><tbody>';
       
-      // Ligne étudiant
-      html += `<tr class="student-info-row">
-        <td>${studentId}</td>
-        <td style="text-align:left; padding-left:15px;">${studentName}</td>
-        <td></td><td></td><td></td>
-        <td style="font-weight:bold;">Moy Sem: ${generaleMoyenne.toFixed(2)}</td>
-        <td></td>
-        <td class="${semestreStatus === 'Validé' ? 'status-V' : 'status-NV'}">${semestreStatus}</td>
-      </tr>`;
+      html += `<tr class="student-info-row"><td>${studentId}</td><td style="text-align:left; padding-left:15px;">${studentName}</td><td>-</td><td>-</td><td>-</td><td style="font-weight:bold;">Moy Sem: ${generaleMoyenne.toFixed(2)}</td><td>-</td><td class="${semestreStatus === 'Validé' ? 'status-V' : 'status-NV'}">${semestreStatus}</td></tr>`;
       
-      // Modules et matières
       for (let moduleCode in modulesStructure) {
         const module = modulesStructure[moduleCode];
-        html += `<tr class="module-row">
-          <td>${moduleCode}</td>
-          <td style="text-align:left; padding-left:15px;">${module.name}</td>
-          <td></td><td></td><td></td>
-          <td style="font-weight:bold;">${moduleAverages[moduleCode].toFixed(2)}</td>
-          <td>${module.credit}</td>
-          <td class="${moduleStatus[moduleCode] === 'V' ? 'status-V' : 'status-NV'}">${moduleStatus[moduleCode]}</td>
-        </tr>`;
+        html += `<tr class="module-row"><td>${moduleCode}</td><td style="text-align:left; padding-left:15px;">${module.name}</td><td>-</td><td>-</td><td>-</td><td style="font-weight:bold;">${moduleAverages[moduleCode].toFixed(2)}</td><td>${module.credit}</td><td class="${moduleStatus[moduleCode] === 'V' ? 'status-V' : 'status-NV'}">${moduleStatus[moduleCode]}</td></tr>`;
         
         for (let subject of module.subjects) {
           const notes = notesBySubject[subject] || {};
@@ -893,85 +1087,64 @@
           const credit = SUBJECT_CREDITS[department]?.[semester]?.[subject] || 3.0;
           const creditEarned = subjectStatus[subject] === 'C' ? credit : 0;
           
-          html += `<tr class="subject-row">
-            <td></td>
-            <td style="text-align:left; padding-left:40px;">${subject}</td>
-            <td>${hasTPforSubject ? (notes['TP'] !== undefined ? notes['TP'].toFixed(2) : '-') : '-'}</td>
-            <td>${notes['Contrôle continu'] !== undefined ? notes['Contrôle continu'].toFixed(2) : '-'}</td>
-            <td>${notes['Examen'] !== undefined ? notes['Examen'].toFixed(2) : '-'}</td>
-            <td style="font-weight:bold;">${subjectAverages[subject].toFixed(2)}</td>
-            <td>${creditEarned.toFixed(1)}</td>
-            <td class="${subjectStatus[subject] === 'C' ? 'status-C' : 'status-NC'}">${subjectStatus[subject]}</td>
-          </tr>`;
+          html += `<tr class="subject-row"><td>-</td><td style="text-align:left; padding-left:40px;">${subject}</td><td>${hasTPforSubject ? (notes['TP'] !== undefined ? notes['TP'].toFixed(2) : '-') : '-'}</td><td>${notes['Contrôle continu'] !== undefined ? notes['Contrôle continu'].toFixed(2) : '-'}</td><td>${notes['Examen'] !== undefined ? notes['Examen'].toFixed(2) : '-'}</td><td style="font-weight:bold;">${subjectAverages[subject].toFixed(2)}</td><td>${creditEarned.toFixed(1)}</td><td class="${subjectStatus[subject] === 'C' ? 'status-C' : 'status-NC'}">${subjectStatus[subject]}</td></tr>`;
         }
       }
       
       html += '</tbody></table></div>';
-      
-      // Lien PDF
-      html += `<div style="text-align:center;">
-        <a href="result.html?dept=${department}&sem=${semester}&id=${studentId}&name=${encodeURIComponent(studentName)}" class="pdf-link" target="_blank">
-          <i class="fas fa-file-pdf"></i> 📂 Télécharger mon relevé PDF
-        </a>
-      </div>`;
+      html += `<div style="text-align:center;"><a href="result.html?dept=${department}&sem=${semester}&id=${studentId}&name=${encodeURIComponent(studentName)}" class="pdf-link" target="_blank"><i class="fas fa-file-pdf"></i> 📂 Télécharger mon relevé PDF</a></div>`;
       
     } else {
-      // ========== AFFICHAGE AVANT CALCUL (TABLEAUX SÉPARÉS) ==========
+      // Affichage avant calcul
+      let hasAnyTP = false, hasAnyCC = false, hasAnyExam = false, hasAnyRattrapage = false;
       
-      // 1. Tableau des TP (uniquement les matières qui ont TP)
-      const tpSubjects = requiredSubjects.filter(s => hasTP(s));
-      if (tpSubjects.length > 0) {
-        html += `<h4 class="section-subtitle"><i class="fas fa-microchip"></i> Résultats TP</h4>`;
-        html += '<table class="simple-table"><thead><tr><th>Matière</th><th>Note TP</th></tr></thead><tbody>';
-        for (let subject of tpSubjects) {
+      for (let subject of requiredSubjects) {
+        if (notesBySubject[subject]?.['TP'] !== undefined) hasAnyTP = true;
+        if (notesBySubject[subject]?.['Contrôle continu'] !== undefined) hasAnyCC = true;
+        if (notesBySubject[subject]?.['Examen'] !== undefined) hasAnyExam = true;
+        if (notesBySubject[subject]?.['Rattrapage'] !== undefined) hasAnyRattrapage = true;
+      }
+      
+      if (hasAnyTP) {
+        html += `<h4 class="section-subtitle">Résultats TP</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note TP</th></tr></thead><tbody>`;
+        for (let subject of requiredSubjects) {
+          if (!hasTP(subject)) continue;
           const note = notesBySubject[subject]?.['TP'];
           html += `<tr><td>${subject}</td><td>${note !== undefined ? note.toFixed(2) : '-'}</td></tr>`;
         }
-        html += '</tbody></table>';
+        html += `</tbody></table>`;
       }
       
-      // 2. Tableau des CC (toutes les matières)
-      html += `<h4 class="section-subtitle"><i class="fas fa-pen"></i> Résultats Contrôle continu</h4>`;
-      html += '<table class="simple-table"><thead><tr><th>Matière</th><th>Note CC</th></tr></thead><tbody>';
-      for (let subject of requiredSubjects) {
-        const note = notesBySubject[subject]?.['Contrôle continu'];
-        html += `<tr><td>${subject}</td><td>${note !== undefined ? note.toFixed(2) : '-'}</td></tr>`;
-      }
-      html += '</tbody></table>';
-      
-      // 3. Tableau des Examens (toutes les matières)
-      html += `<h4 class="section-subtitle"><i class="fas fa-book"></i> Résultats Examen</h4>`;
-      html += '<table class="simple-table"><thead><tr><th>Matière</th><th>Note Examen</th></tr></thead><tbody>';
-      for (let subject of requiredSubjects) {
-        const note = notesBySubject[subject]?.['Examen'];
-        html += `<tr><td>${subject}</td><td>${note !== undefined ? note.toFixed(2) : '-'}</td></tr>`;
-      }
-      html += '</tbody></table>';
-      
-      // 4. Tableau des Rattrapages (si existants)
-      let hasRattrapage = false;
-      for (let subject of requiredSubjects) {
-        if (notesBySubject[subject]?.['Rattrapage'] !== undefined) {
-          hasRattrapage = true;
-          break;
+      if (hasAnyCC) {
+        html += `<h4 class="section-subtitle">Résultats Contrôle continu</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note CC</th></tr></thead><tbody>`;
+        for (let subject of requiredSubjects) {
+          const note = notesBySubject[subject]?.['Contrôle continu'];
+          html += `<tr><td>${subject}</td><td>${note !== undefined ? note.toFixed(2) : '-'}</td></tr>`;
         }
+        html += `</tbody></table>`;
       }
-      if (hasRattrapage) {
-        html += `<h4 class="section-subtitle"><i class="fas fa-repeat"></i> Résultats Rattrapage</h4>`;
-        html += '<table class="simple-table"><thead><tr><th>Matière</th><th>Note Rattrapage</th></tr></thead><tbody>';
+      
+      if (hasAnyExam) {
+        html += `<h4 class="section-subtitle">Résultats Examen</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note Examen</th></tr></thead><tbody>`;
+        for (let subject of requiredSubjects) {
+          const note = notesBySubject[subject]?.['Examen'];
+          html += `<tr><td>${subject}</td><td>${note !== undefined ? note.toFixed(2) : '-'}</td></tr>`;
+        }
+        html += `</tbody></table>`;
+      }
+      
+      if (hasAnyRattrapage) {
+        html += `<h4 class="section-subtitle">Résultats Rattrapage</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note Rattrapage</th></tr></thead><tbody>`;
         for (let subject of requiredSubjects) {
           const note = notesBySubject[subject]?.['Rattrapage'];
           if (note !== undefined) {
             html += `<tr><td>${subject}</td><td>${note.toFixed(2)}</td></tr>`;
           }
         }
-        html += '</tbody></table>';
+        html += `</tbody></table>`;
       }
       
-      // Message neutre gris
-      html += `<div class="neutral-message">
-        <i class="fas fa-info-circle"></i> Les résultats ne sont pas encore finalisés par le coordinateur.
-      </div>`;
+      html += `<div class="neutral-message"><i class="fas fa-info-circle"></i> Les résultats ne sont pas encore finalisés par le coordinateur.</div>`;
     }
     
     container.innerHTML = html;
@@ -987,6 +1160,7 @@
   window.hideAdminPanel = () => {
     document.getElementById('adminPanel').classList.remove('active');
     currentAdmin = null;
+    afficherAnnonce(); // Rafraîchir l'affichage (cache le bouton supprimer)
   };
 
   window.adminLogin = async () => {
@@ -1021,6 +1195,7 @@
       
       importSelect.addEventListener('change', updateSubjectsListForImport);
       updateSubjectsListForImport();
+      afficherAnnonce(); // Rafraîchir pour montrer le bouton supprimer si annonce existe
     } else {
       msgDiv.textContent = 'Mot de passe incorrect';
       msgDiv.style.display = 'block';
@@ -1033,6 +1208,7 @@
     document.getElementById('adminActions').style.display = 'none';
     document.getElementById('importForm').style.display = 'none';
     document.getElementById('manageSubjects').style.display = 'none';
+    afficherAnnonce(); // Rafraîchir pour cacher le bouton supprimer
   };
 
   window.showImportForm = () => {
@@ -1265,14 +1441,14 @@
       return;
     }
     
-    let html = `<table class="results-table"><thead><tr><th>Matière</th><th>Type</th><th style="text-align:center;">Étudiants</th><th style="text-align:center;">Action</th></tr></thead><tbody>`;
+    let html = `<table class="results-table"><thead><tr><th>Matière</th><th>Type</th><th>Étudiants</th><th>Action</th></tr></thead><tbody>`;
     
     for (let [key, data] of subjectsMap) {
-      html += `<tr><td><strong>${data.subject}</strong></td><td>${data.type}</td><td style="text-align:center;">${data.count}</td>
-        <td style="text-align:center;"><button class="admin-btn danger" style="padding:0.3rem 0.8rem;font-size:0.8rem;" onclick="deleteSubject('${semester}', '${data.subject}', '${data.type}')"><i class="fas fa-trash"></i> Supprimer</button></td></tr>`;
+      html += `<tr><td><strong>${data.subject}</strong></td><td>${data.type}</td><td>${data.count}</td>
+        <td><button class="admin-btn danger" style="padding:0.3rem 0.8rem;font-size:0.8rem;" onclick="deleteSubject('${semester}', '${data.subject}', '${data.type}')"><i class="fas fa-trash"></i> Supprimer</button></td></tr>`;
     }
     
-    html += '</tbody><table>';
+    html += '</tbody></table>';
     container.innerHTML = html;
   };
 
@@ -1298,6 +1474,9 @@
   document.getElementById('studentIdInput').addEventListener('keyup', e => {
     if (e.key === 'Enter') searchStudentResult();
   });
+  
+  // Initialisation : afficher l'annonce si elle existe
+  afficherAnnonce();
 </script>
 </body>
 </html>
