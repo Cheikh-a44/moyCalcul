@@ -332,6 +332,22 @@
     .results-table th, .results-table td { padding:0.6rem; }
     .search-box button { padding:0 1.2rem; }
   }
+  
+  .pdf-link {
+    display: inline-block;
+    margin-top: 1rem;
+    padding: 0.8rem 1.5rem;
+    background: #dc3545;
+    color: white;
+    text-decoration: none;
+    border-radius: var(--radius);
+    font-weight: bold;
+    transition: var(--transition);
+  }
+  .pdf-link:hover {
+    background: #c82333;
+    transform: translateY(-2px);
+  }
 </style>
 </head>
 <body>
@@ -552,7 +568,6 @@
     }
   };
 
-  // --- Matières par département et semestre ---
   const SUBJECTS_BY_DEPT = {
     TC: {
       S1: ["Anglais", "Français", "Math et Statistique", "Informatique", "Physique", "Chimie", "Biologie", "Micro et Génétique"],
@@ -566,18 +581,15 @@
     }
   };
 
-  // Matières qui n'ont PAS de TP (toutes les autres en ont)
   const SUBJECTS_WITHOUT_TP = [
     "Anglais", "Anglais 2", "Français", "Français 2", "Français s3",
     "Math et Statistique", "Économie", "Vulgarisation", "Technique d'irrigation et BEC"
   ];
 
-  // Fonction pour vérifier si une matière a des TP
   function hasTP(subjectName) {
     return !SUBJECTS_WITHOUT_TP.includes(subjectName);
   }
 
-  // Fonction pour mettre à jour la liste des matières en fonction du type d'évaluation
   function updateSubjectsForImportType() {
     if (!currentAdmin) return;
     const semester = document.getElementById('importSemester').value;
@@ -589,7 +601,6 @@
     
     let subjects = SUBJECTS_BY_DEPT[currentAdmin.type]?.[semester] || [];
     
-    // Si le type est "TP", filtrer uniquement les matières qui ont des TP
     if (evaluationType === "TP") {
       subjects = subjects.filter(subject => hasTP(subject));
     }
@@ -601,7 +612,6 @@
       subjectSelect.appendChild(option);
     });
     
-    // Si aucune matière n'est disponible, afficher un message
     if (subjects.length === 0) {
       const option = document.createElement('option');
       option.value = "";
@@ -620,7 +630,6 @@
 
   let currentAdmin = null;
 
-  // Mise à jour de la liste des matières en fonction du semestre sélectionné
   function updateSubjectsListForImport() {
     updateSubjectsForImportType();
   }
@@ -695,7 +704,14 @@
       html += `<tr><td><strong>${r.subject}</strong></td><td>${r.type}</td><td style="text-align:center;"><span class="grade-badge ${gradeClass}">${r.grade}/20</span></td></tr>`;
     });
     
-    html += '</tbody></table>';
+    // Ajouter un lien vers result.html pour générer le PDF
+    html += `</tbody></table>`;
+    html += `<div style="text-align:center; margin-top:1.5rem;">
+      <a href="result.html?dept=${department}&sem=${semester}&id=${studentId}&name=${encodeURIComponent(studentName)}" class="pdf-link" target="_blank">
+        <i class="fas fa-file-pdf"></i> Télécharger mon relevé PDF
+      </a>
+    </div>`;
+    
     container.innerHTML = html;
   };
 
@@ -741,9 +757,7 @@
         allowed.forEach(s => { select.innerHTML += `<option value="${s}">${s}</option>`; });
       });
       
-      // Ajouter un écouteur pour mettre à jour les matières quand le semestre change dans l'import
       importSelect.addEventListener('change', updateSubjectsListForImport);
-      // Initialiser la liste des matières si un semestre est déjà sélectionné
       updateSubjectsListForImport();
     } else {
       msgDiv.textContent = 'Mot de passe incorrect';
@@ -762,7 +776,6 @@
   window.showImportForm = () => {
     document.getElementById('importForm').style.display = 'block';
     document.getElementById('manageSubjects').style.display = 'none';
-    // Rafraîchir la liste des matières au cas où
     updateSubjectsListForImport();
   };
 
@@ -917,7 +930,6 @@
       return;
     }
     
-    // Vérification supplémentaire pour TP : s'assurer que la matière a bien des TP
     if (type === "TP" && !hasTP(subject)) {
       alert(`La matière "${subject}" ne possède pas de TP. Veuillez sélectionner une autre matière ou un autre type d'évaluation.`);
       return;
