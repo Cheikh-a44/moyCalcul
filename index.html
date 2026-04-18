@@ -241,7 +241,7 @@
   .admin-panel.active {
     display:block;
   }
-  .admin-panel h3 {
+  .admin-panel.h3 {
     color:var(--primary);
     margin-bottom:1.5rem;
     display:flex;
@@ -326,18 +326,11 @@
     transition: width 0.3s ease;
   }
   
-  @media (max-width:600px) {
-    header h1 { font-size:1.8rem; }
-    .results-table { font-size:0.9rem; }
-    .results-table th, .results-table td { padding:0.6rem; }
-    .search-box button { padding:0 1.2rem; }
-  }
-  
+  /* Style pour le lien PDF */
   .pdf-link {
     display: inline-block;
-    margin-top: 1rem;
     padding: 0.8rem 1.5rem;
-    background: #dc3545;
+    background: #28a745;
     color: white;
     text-decoration: none;
     border-radius: var(--radius);
@@ -345,8 +338,21 @@
     transition: var(--transition);
   }
   .pdf-link:hover {
-    background: #c82333;
+    background: #218838;
     transform: translateY(-2px);
+  }
+  .warning-message {
+    text-align: center;
+    margin-top: 1.5rem;
+    color: #dc3545;
+    font-weight: bold;
+  }
+  
+  @media (max-width:600px) {
+    header h1 { font-size:1.8rem; }
+    .results-table { font-size:0.9rem; }
+    .results-table th, .results-table td { padding:0.6rem; }
+    .search-box button { padding:0 1.2rem; }
   }
 </style>
 </head>
@@ -678,6 +684,15 @@
     const results = [];
     let studentName = '';
     
+    // Vérification si toutes les matières sont complètes
+    const requiredSubjects = SUBJECTS_BY_DEPT[department]?.[semester] || [];
+    const hasTPForSubject = {};
+    requiredSubjects.forEach(subj => {
+      hasTPForSubject[subj] = hasTP(subj);
+    });
+    
+    // Collecter les notes existantes
+    const existingNotes = {};
     for (let key in studentData) {
       const data = studentData[key];
       results.push({
@@ -686,6 +701,25 @@
         grade: data.grade
       });
       if (!studentName) studentName = data.name;
+      
+      if (!existingNotes[data.subject]) {
+        existingNotes[data.subject] = {};
+      }
+      existingNotes[data.subject][data.type] = data.grade;
+    }
+    
+    // Vérifier si toutes les notes requises sont présentes
+    let allNotesComplete = true;
+    for (let subject of requiredSubjects) {
+      const hasTP = hasTPForSubject[subject];
+      const examExists = existingNotes[subject] && existingNotes[subject]['Examen'] !== undefined;
+      const ccExists = existingNotes[subject] && existingNotes[subject]['Contrôle continu'] !== undefined;
+      const tpExists = !hasTP || (existingNotes[subject] && existingNotes[subject]['TP'] !== undefined);
+      
+      if (!examExists || !ccExists || !tpExists) {
+        allNotesComplete = false;
+        break;
+      }
     }
     
     let html = `
@@ -704,13 +738,20 @@
       html += `<tr><td><strong>${r.subject}</strong></td><td>${r.type}</td><td style="text-align:center;"><span class="grade-badge ${gradeClass}">${r.grade}/20</span></td></tr>`;
     });
     
-    // Ajouter un lien vers result.html pour générer le PDF
-    html += `</tbody></table>`;
-    html += `<div style="text-align:center; margin-top:1.5rem;">
-      <a href="result.html?dept=${department}&sem=${semester}&id=${studentId}&name=${encodeURIComponent(studentName)}" class="pdf-link" target="_blank">
-        <i class="fas fa-file-pdf"></i> Télécharger mon relevé PDF
-      </a>
-    </div>`;
+    html += '</tbody></table>';
+    
+    // ✅ إضافة رابط PDF باللون الأخضر فقط إذا كانت جميع المواد مكتملة
+    if (allNotesComplete) {
+      html += `<div style="text-align:center; margin-top:1.5rem;">
+        <a href="result.html?dept=${department}&sem=${semester}&id=${studentId}&name=${encodeURIComponent(studentName)}" class="pdf-link" target="_blank">
+          <i class="fas fa-file-pdf"></i> 📂 Télécharger mon relevé PDF
+        </a>
+      </div>`;
+    } else {
+      html += `<div class="warning-message">
+        <i class="fas fa-exclamation-triangle"></i> ⚠️ Les résultats ne sont pas encore complets. Le coordinateur doit finaliser les notes.
+      </div>`;
+    }
     
     container.innerHTML = html;
   };
