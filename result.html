@@ -33,7 +33,6 @@
     text-align:center; 
   }
   .container { max-width:1200px; margin:0 auto; padding:0 1rem; }
-  .section-title { padding:1.5rem 0 1rem; color:var(--primary); display:flex; align-items:center; gap:0.5rem; }
   .card {
     background:var(--white);
     border-radius:var(--radius);
@@ -72,6 +71,8 @@
     width:100%;
     border-collapse:collapse;
     margin:1rem 0;
+    overflow-x:auto;
+    display:block;
   }
   .notes-table th, .notes-table td {
     border:1px solid #ddd;
@@ -103,9 +104,40 @@
   .student-header { text-align:center; margin-bottom:1.5rem; padding-bottom:1rem; border-bottom:2px solid var(--primary-light); }
   .student-header i { font-size:3rem; color:var(--primary); margin-bottom:0.5rem; }
   
+  /* Tableau des résultats façon relevé */
+  .releve-table {
+    width:100%;
+    border-collapse:collapse;
+    margin:1rem 0;
+    font-size:14px;
+  }
+  .releve-table th, .releve-table td {
+    border:1px solid #ddd;
+    padding:10px 8px;
+    text-align:center;
+  }
+  .releve-table th {
+    background:var(--primary-light);
+    font-weight:bold;
+  }
+  .releve-table .module-row {
+    background:#e8f4fc;
+    font-weight:bold;
+  }
+  .releve-table .subject-row td:first-child {
+    padding-left:25px;
+    text-align:left;
+  }
+  .student-info-row {
+    background:#f0f8ff;
+    font-weight:bold;
+  }
+  
   @media (max-width:768px) {
     .notes-table { font-size:12px; }
     .notes-table input { width:55px; }
+    .releve-table { font-size:11px; }
+    .releve-table th, .releve-table td { padding:6px 4px; }
   }
 </style>
 </head>
@@ -237,19 +269,19 @@
     },
     PPV: {
       S3: { name: "Semestre 3", modules: {
-        M31: { name: "Langue et économie", credit: 6.0, subjects: [
+        M31: { name: "Module 31", credit: 6.0, subjects: [
           { code: "FRA3", name: "Français 3", credit: 3.0, hasTP: false },
           { code: "ECO", name: "Économie", credit: 3.0, hasTP: false }
         ]},
-        M32: { name: "Principes d'agronomie", credit: 8.0, subjects: [
-          { code: "AGRON", name: "Principes généraux d'agronomie", credit: 4.0, hasTP: true },
-          { code: "HORTI", name: "Principes généraux d'horticulture", credit: 4.0, hasTP: true }
+        M32: { name: "Module 32", credit: 8.0, subjects: [
+          { code: "AGRON", name: "I.Agronomie", credit: 4.0, hasTP: true },
+          { code: "HORTI", name: "I.Horticulture", credit: 4.0, hasTP: true }
         ]},
-        M33: { name: "Phytoprotection 1", credit: 8.0, subjects: [
+        M33: { name: "Module 33", credit: 8.0, subjects: [
           { code: "PEST", name: "Pesticides agricoles", credit: 4.0, hasTP: true },
-          { code: "ENTO", name: "Entomologie et Nématologie", credit: 4.0, hasTP: true }
+          { code: "ENTO", name: "Entomologie et Nemato", credit: 4.0, hasTP: true }
         ]},
-        M34: { name: "Sciences du sol et des plantes", credit: 8.0, subjects: [
+        M34: { name: "Module 34", credit: 8.0, subjects: [
           { code: "SOL", name: "Science des sols", credit: 4.0, hasTP: true },
           { code: "PLANT", name: "Science des plantes", credit: 4.0, hasTP: true }
         ]}
@@ -510,7 +542,7 @@
     
     const semesterConfig = SEMESTERS_CONFIG[currentAdmin][currentSemester];
     let html = '<h4 style="margin:1rem 0">Saisie des notes</h4>';
-    html += '<table class="notes-table"><thead><tr><th>Module</th><th>Matière</th><th>TP</th><th>CC (Devoir)</th><th>Examen</th><th>Rattrapage</th></tr></thead><tbody>';
+    html += '<div style="overflow-x:auto;"><table class="notes-table"><thead><tr><th>Module</th><th>Matière</th><th>TP</th><th>CC (Devoir)</th><th>Examen</th><th>Rattrapage</th></tr></thead><tbody>';
     
     let allFieldsFilled = true;
     
@@ -539,7 +571,7 @@
       }
     }
     
-    html += '</tbody></tr>';
+    html += '</tbody></table></div>';
     html += '<button class="admin-btn success" onclick="saveStudentGrades()"><i class="fas fa-save"></i> Enregistrer les notes</button>';
     document.getElementById('gradesContainer').innerHTML = html;
     
@@ -610,75 +642,116 @@
     if (currentStudentId) loadStudentGrades();
   }
   
-  // ==================== AFFICHAGE POUR ÉTUDIANT (avec vérification) ====================
+  // ==================== AFFICHAGE POUR ÉTUDIANT ====================
   function displayStudentResults(student, studentId) {
     const results = student.results;
     
-    // ✅ Vérification: Le PDF n'apparaît que si calculated === true
     if (!results || !student.calculated) {
-      document.getElementById('studentResults').innerHTML = `
-        <div class="empty-state">
-          <i class="fas fa-spinner fa-pulse"></i>
-          <h3>Résultats non disponibles</h3>
-          <p>Le coordinateur n'a pas encore calculé les moyennes pour ce semestre.</p>
-          <p style="margin-top:1rem; font-size:0.9rem;">Veuillez vérifier plus tard.</p>
+      // Affichage des notes brutes avant calcul
+      const semesterConfig = SEMESTERS_CONFIG[currentAdmin][currentSemester];
+      let html = `
+        <div class="student-header">
+          <i class="fas fa-user-graduate"></i>
+          <h3>${student.name}</h3>
+          <p>N° ${studentId} | ${currentAdmin} | ${SEMESTERS_CONFIG[currentAdmin][currentSemester].name}</p>
+        </div>
+        <div class="message info" style="display:block; text-align:center;">
+          <i class="fas fa-info-circle"></i> Les moyennes n'ont pas encore été calculées. Voici les notes saisies :
         </div>
       `;
+      
+      html += '<div style="overflow-x:auto;"><table class="releve-table"><thead><tr>';
+      html += '<th>Module</th><th>Matière</th><th>TP</th><th>CC</th><th>Examen</th><th>Rattrapage</th>';
+      html += '</tr></thead><tbody>';
+      
+      for (let moduleCode in semesterConfig.modules) {
+        const module = semesterConfig.modules[moduleCode];
+        let firstRow = true;
+        for (let subject of module.subjects) {
+          const grades = student.grades?.[subject.code] || {};
+          html += `<tr>
+            <td>${firstRow ? moduleCode + '<br>' + module.name : ''}</td>
+            <td style="text-align:left; padding-left:20px;">${subject.name}</td>
+            <td>${grades.tp !== undefined ? grades.tp.toFixed(2) : '-'}</td>
+            <td>${grades.cc !== undefined ? grades.cc.toFixed(2) : '-'}</td>
+            <td>${grades.examen !== undefined ? grades.examen.toFixed(2) : '-'}</td>
+            <td>${grades.rattrapage !== undefined ? grades.rattrapage.toFixed(2) : '-'}</td>
+          </tr>`;
+          firstRow = false;
+        }
+      }
+      
+      html += '</tbody></table></div>';
+      html += '<div class="warning-message" style="text-align:center; margin-top:1rem; color:#dc3545;"><i class="fas fa-exclamation-triangle"></i> ⚠️ Les résultats ne sont pas encore complets. Le coordinateur doit finaliser les notes.</div>';
+      
+      document.getElementById('studentResults').innerHTML = html;
       document.getElementById('pdfButtonContainer').innerHTML = '';
       return;
     }
     
-    // Affichage des résultats
+    // Affichage des résultats calculés façon relevé de notes
     let html = `
       <div class="student-header">
         <i class="fas fa-user-graduate"></i>
         <h3>${student.name}</h3>
         <p>N° ${studentId} | ${currentAdmin} | ${SEMESTERS_CONFIG[currentAdmin][currentSemester].name}</p>
       </div>
-      <div class="average-display">
-        <h3>Moyenne Générale</h3>
-        <div class="average-value">${results.moyenneGenerale.toFixed(2)} / 20</div>
-        <div class="${results.semestreStatus === 'Validé' ? 'status-C' : 'status-NC'}" style="display:inline-block; padding:0.5rem 1.5rem; margin-top:0.5rem; border-radius:25px; background:#f0f0f0;">
-          ${results.semestreStatus}
-        </div>
-      </div>
     `;
     
+    html += '<div style="overflow-x:auto;"><table class="releve-table">';
+    html += '<thead><tr>';
+    html += '<th>Numéro</th><th>Nom et Prénom</th><th>TP</th><th>CC</th><th>Examen</th><th>NFe</th><th>Crédit</th><th>Observations</th>';
+    html += '</thead><tbody>';
+    
+    // Ligne étudiant
+    html += `<tr class="student-info-row">
+      <td>${studentId}</td>
+      <td style="text-align:left; padding-left:15px;">${student.name}</td>
+      <td></td><td></td><td></td>
+      <td style="font-weight:bold;">Moy Sem: ${results.moyenneGenerale.toFixed(2)}</td>
+      <td></td>
+      <td class="${results.semestreStatus === 'Validé' ? 'status-V' : 'status-NV'}">${results.semestreStatus}</td>
+    </tr>`;
+    
+    // Modules et matières
     for (let moduleCode in results.modules) {
       const module = results.modules[moduleCode];
-      html += `
-        <table style="width:100%; border-collapse:collapse; margin-top:1.5rem;">
-          <thead><tr style="background:var(--primary-light);"><th colspan="4">${moduleCode} - ${module.name} (${module.credit} crédits)</th></tr></thead>
-          <thead><tr><th>Matière</th><th>Note finale</th><th>Crédit</th><th>Statut</th></tr></thead>
-          <tbody>
-      `;
+      
+      // Ligne du module
+      html += `<tr class="module-row">
+        <td>${moduleCode}</td>
+        <td style="text-align:left; padding-left:15px;">${module.name}</td>
+        <td></td><td></td><td></td>
+        <td style="font-weight:bold;">${module.moyenne.toFixed(2)}</td>
+        <td>${module.credit}</td>
+        <td class="${module.status === 'V' ? 'status-V' : 'status-NV'}">${module.status}</td>
+      </tr>`;
+      
+      // Matières
       for (let subject of module.subjects) {
-        html += `
-          <tr>
-            <td>${subject.name}</td>
-            <td style="text-align:center;"><strong>${subject.moyenne.toFixed(2)}</strong></td>
-            <td style="text-align:center;">${subject.credit}</td>
-            <td style="text-align:center;" class="${subject.status === 'C' ? 'status-C' : 'status-NC'}">${subject.status}</td>
-          </tr>
-        `;
+        const grades = student.grades?.[subject.code] || {};
+        const tpDisplay = subject.hasTP ? (grades.tp !== undefined ? grades.tp.toFixed(2) : '-') : '-';
+        html += `<tr class="subject-row">
+          <td></td>
+          <td style="text-align:left; padding-left:40px;">${subject.name}</td>
+          <td>${tpDisplay}</td>
+          <td>${grades.cc !== undefined ? grades.cc.toFixed(2) : '-'}</td>
+          <td>${grades.examen !== undefined ? grades.examen.toFixed(2) : '-'}</td>
+          <td style="font-weight:bold;">${subject.moyenne.toFixed(2)}</td>
+          <td>${subject.credit}</td>
+          <td class="${subject.status === 'C' ? 'status-C' : 'status-NC'}">${subject.status}</td>
+        </tr>`;
       }
-      html += `
-        <tr style="background:#e8f4fc; font-weight:bold;">
-          <td>Moyenne du module</td>
-          <td style="text-align:center;">${module.moyenne.toFixed(2)}</td>
-          <td style="text-align:center;">${module.credit}</td>
-          <td style="text-align:center;" class="${module.status === 'V' ? 'status-V' : 'status-NV'}">${module.status}</td>
-        </tr>
-      </tbody></table>
-      `;
     }
+    
+    html += '</tbody></table></div>';
     
     document.getElementById('studentResults').innerHTML = html;
     
-    // ✅ Le bouton PDF apparaît seulement si les résultats sont calculés
+    // Bouton PDF
     document.getElementById('pdfButtonContainer').innerHTML = `
       <button class="admin-btn success" onclick="generatePDF()">
-        <i class="fas fa-file-pdf"></i> Télécharger mon relevé PDF
+        <i class="fas fa-file-pdf"></i> 📂 Télécharger mon relevé PDF
       </button>
     `;
   }
@@ -695,61 +768,107 @@
     const semesterName = SEMESTERS_CONFIG[currentAdmin][currentSemester].name;
     
     let content = `
-      <div style="padding: 20mm; font-family: 'Times New Roman', Times, serif;">
-        <div style="text-align:center; margin-bottom:30px;">
+      <div style="padding: 15mm; font-family: 'Times New Roman', Times, serif; font-size:12px;">
+        <div style="text-align:center; margin-bottom:20px;">
           <h2>République Islamique de Mauritanie</h2>
           <h3>Ministère de l'Enseignement Supérieur et de la Recherche Scientifique</h3>
           <h3>Institut Supérieur d'Enseignement Technologique de Rosso</h3>
-          <hr style="margin:20px 0">
+          <hr style="margin:15px 0">
           <h1 style="color:#0077b6;">RELEVÉ DE NOTES</h1>
           <h3>${semesterName}</h3>
           <h3>Année académique 2024-2025</h3>
         </div>
         
-        <div style="margin-bottom:20px;">
-          <p><strong>Étudiant(e) :</strong> ${studentName}</p>
-          <p><strong>N° d'étudiant :</strong> ${studentId}</p>
-          <p><strong>Département :</strong> ${currentAdmin}</p>
-        </div>
+        <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
+          <tr><td style="padding:5px;"><strong>Étudiant(e) :</strong> ${studentName}</td>
+              <td style="padding:5px;"><strong>N° d'étudiant :</strong> ${studentId}</td>
+              <td style="padding:5px;"><strong>Département :</strong> ${currentAdmin}</td></tr>
+        </table>
+        
+        <table style="width:100%; border-collapse:collapse; border:1px solid #000;">
+          <thead>
+            <tr style="background:#caf0f8;">
+              <th style="border:1px solid #000; padding:8px; text-align:center;">Numéro</th>
+              <th style="border:1px solid #000; padding:8px; text-align:center;">Nom et Prénom</th>
+              <th style="border:1px solid #000; padding:8px; text-align:center;">TP</th>
+              <th style="border:1px solid #000; padding:8px; text-align:center;">CC</th>
+              <th style="border:1px solid #000; padding:8px; text-align:center;">Examen</th>
+              <th style="border:1px solid #000; padding:8px; text-align:center;">NFe</th>
+              <th style="border:1px solid #000; padding:8px; text-align:center;">Crédit</th>
+              <th style="border:1px solid #000; padding:8px; text-align:center;">Observations</th>
+            </tr>
+          </thead>
+          <tbody>
     `;
+    
+    // Ligne étudiant
+    content += `<tr style="background:#f0f8ff;">
+      <td style="border:1px solid #000; padding:8px; text-align:center;">${studentId}</td>
+      <td style="border:1px solid #000; padding:8px; text-align:left;">${studentName}</td>
+      <td style="border:1px solid #000; padding:8px;"></td>
+      <td style="border:1px solid #000; padding:8px;"></td>
+      <td style="border:1px solid #000; padding:8px;"></td>
+      <td style="border:1px solid #000; padding:8px; text-align:center; font-weight:bold;">Moy Sem: ${results.moyenneGenerale.toFixed(2)}</td>
+      <td style="border:1px solid #000; padding:8px;"></td>
+      <td style="border:1px solid #000; padding:8px; text-align:center; font-weight:bold;">${results.semestreStatus}</td>
+    </tr>`;
     
     for (let moduleCode in results.modules) {
       const module = results.modules[moduleCode];
-      content += `
-        <div style="margin:20px 0;">
-          <h4 style="background:#caf0f8; padding:8px;">${moduleCode} - ${module.name} (${module.credit} crédits)</h4>
-          <table style="width:100%; border-collapse:collapse;">
-            <thead><tr style="background:#f0f0f0;"><th style="border:1px solid #ddd; padding:8px; text-align:left;">Matière</th><th style="border:1px solid #ddd; padding:8px; text-align:center;">Note</th><th style="border:1px solid #ddd; padding:8px; text-align:center;">Statut</th></tr></thead>
-            <tbody>
-      `;
+      content += `<tr style="background:#e8f4fc;">
+        <td style="border:1px solid #000; padding:8px; text-align:center;">${moduleCode}</td>
+        <td style="border:1px solid #000; padding:8px; text-align:left;">${module.name}</td>
+        <td style="border:1px solid #000; padding:8px;"></td>
+        <td style="border:1px solid #000; padding:8px;"></td>
+        <td style="border:1px solid #000; padding:8px;"></td>
+        <td style="border:1px solid #000; padding:8px; text-align:center; font-weight:bold;">${module.moyenne.toFixed(2)}</td>
+        <td style="border:1px solid #000; padding:8px; text-align:center;">${module.credit}</td>
+        <td style="border:1px solid #000; padding:8px; text-align:center;">${module.status}</td>
+      </tr>`;
+      
       for (let subject of module.subjects) {
-        content += `<tr><td style="border:1px solid #ddd; padding:8px;">${subject.name}</td><td style="border:1px solid #ddd; padding:8px; text-align:center;">${subject.moyenne.toFixed(2)}/20</td><td style="border:1px solid #ddd; padding:8px; text-align:center;">${subject.status}</td></tr>`;
+        const grades = currentStudentData.grades?.[subject.code] || {};
+        const tpDisplay = subject.hasTP ? (grades.tp !== undefined ? grades.tp.toFixed(2) : '-') : '-';
+        content += `<tr>
+          <td style="border:1px solid #000; padding:8px;"></td>
+          <td style="border:1px solid #000; padding:8px; text-align:left; padding-left:20px;">${subject.name}</td>
+          <td style="border:1px solid #000; padding:8px; text-align:center;">${tpDisplay}</td>
+          <td style="border:1px solid #000; padding:8px; text-align:center;">${grades.cc !== undefined ? grades.cc.toFixed(2) : '-'}</td>
+          <td style="border:1px solid #000; padding:8px; text-align:center;">${grades.examen !== undefined ? grades.examen.toFixed(2) : '-'}</td>
+          <td style="border:1px solid #000; padding:8px; text-align:center; font-weight:bold;">${subject.moyenne.toFixed(2)}</td>
+          <td style="border:1px solid #000; padding:8px; text-align:center;">${subject.credit}</td>
+          <td style="border:1px solid #000; padding:8px; text-align:center;">${subject.status}</td>
+        </tr>`;
       }
-      content += `<tr style="background:#e8f4fc;"><td style="border:1px solid #ddd; padding:8px; font-weight:bold;">Moyenne du module</td><td style="border:1px solid #ddd; padding:8px; text-align:center; font-weight:bold;">${module.moyenne.toFixed(2)}/20</td><td style="border:1px solid #ddd; padding:8px; text-align:center; font-weight:bold;">${module.status}</td></tr>`;
-      content += `</tbody></table></div>`;
     }
     
     content += `
-      <div style="margin-top:30px; padding:15px; background:#caf0f8; text-align:center; border-radius:10px;">
-        <h3>Moyenne Générale du Semestre</h3>
-        <h1 style="font-size:2.5rem;">${results.moyenneGenerale.toFixed(2)} / 20</h1>
-        <h3 style="color:${results.semestreStatus === 'Validé' ? '#2d6a4f' : '#e63946'}">${results.semestreStatus}</h3>
-      </div>
-      
-      <div style="margin-top:50px;">
-        <p style="text-align:right;">Fait à Rosso, le ${new Date().toLocaleDateString('fr-FR')}</p>
-        <div style="text-align:right; margin-top:30px;">
-          <p>Le Chef du Service Scolarité</p>
-          <div style="border-top:1px solid #000; width:200px; margin-top:5px; margin-left:auto;"></div>
+          </tbody>
+        </table>
+        
+        <div style="margin-top:30px;">
+          <p style="text-align:right;">Fait à Rosso, le ${new Date().toLocaleDateString('fr-FR')}</p>
+          <div style="text-align:right; margin-top:30px;">
+            <p>Le Chef du Service Scolarité</p>
+            <div style="border-top:1px solid #000; width:200px; margin-top:5px; margin-left:auto;"></div>
+          </div>
         </div>
       </div>
-    </div>`;
+    `;
     
     const element = document.createElement('div');
     element.innerHTML = content;
     document.body.appendChild(element);
     
-    html2pdf().set({ margin: 0, filename: `Releve_${studentId}_${currentSemester}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(element).save().then(() => { document.body.removeChild(element); });
+    html2pdf().set({ 
+      margin: 0, 
+      filename: `Releve_${studentId}_${currentSemester}.pdf`, 
+      image: { type: 'jpeg', quality: 0.98 }, 
+      html2canvas: { scale: 2 }, 
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
+    }).from(element).save().then(() => { 
+      document.body.removeChild(element); 
+    });
   }
   
   // ==================== VÉRIFICATION DES PARAMÈTRES URL ====================
