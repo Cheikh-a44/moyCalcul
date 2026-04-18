@@ -168,11 +168,9 @@
 </footer>
 
 <script type="module">
-  // ==================== IMPORTS FIREBASE ====================
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getDatabase, ref, child, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-  // ==================== CONFIGURATION FIREBASE ====================
   const firebaseConfig = {
     apiKey: "AIzaSyDnrW6WnmbEFpbWzlW9IGglxAafajt2Kyo",
     authDomain: "iset-b9974.firebaseapp.com",
@@ -186,7 +184,6 @@
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
-  // ==================== CONFIGURATION DES DONNÉES ====================
   const SUBJECTS_WITHOUT_TP = [
     "Anglais", "Anglais_2", "Français", "Français_2", "Français_s3",
     "Math_et_Statistique", "Economie", "Vulgarisation", "Technique_d_irrigation_et_BEC"
@@ -219,9 +216,7 @@
         M42: { name: "Module 42", credit: 7.0, subjects: ["Technique_de_propagation", "Technique_d_irrigation_et_BEC"] },
         M43: { name: "Module 43", credit: 7.0, subjects: ["Ecophysiologie_et_Biochimie", "Fertilite_du_sol"] },
         M44: { name: "Module 44", credit: 6.0, subjects: ["Methodes_de_diagnostic", "Malherbologie"] }
-      },
-      S5: {},
-      S6: {}
+      }
     }
   };
 
@@ -278,6 +273,7 @@
     
     const subjectAverages = {};
     const subjectStatus = {};
+    const subjectHasSR = {}; // لتتبع المواد التي استخدمت فيها SR
     
     for (let subject of requiredSubjects) {
       const notes = notesBySubject[subject] || {};
@@ -286,7 +282,12 @@
       const cc = notes['Contrôle continu'] || 0;
       const tp = notes['TP'] || 0;
       const rattrapage = notes['Rattrapage'];
-      const finalExam = (rattrapage !== undefined && rattrapage > exam) ? rattrapage : exam;
+      
+      // تحديد ما إذا كان SR مستخدماً
+      const useSR = (rattrapage !== undefined && rattrapage > exam);
+      subjectHasSR[subject] = useSR;
+      
+      const finalExam = useSR ? rattrapage : exam;
       
       let moyenne;
       if (hasTPforSubject) {
@@ -330,6 +331,15 @@
     const generaleMoyenne = totalCreditsGeneral > 0 ? totalWeightedGeneral / totalCreditsGeneral : 0;
     const semestreStatus = generaleMoyenne >= 10 ? 'Validé' : 'Non Validé';
     
+    // التحقق من وجود أي مادة استخدمت SR
+    let hasAnySR = false;
+    for (let subject of requiredSubjects) {
+      if (subjectHasSR[subject]) {
+        hasAnySR = true;
+        break;
+      }
+    }
+    
     const modules = {};
     for (let moduleCode in modulesStructure) {
       const module = modulesStructure[moduleCode];
@@ -343,7 +353,8 @@
           credit: SUBJECT_CREDITS[dept]?.[semester]?.[s] || 3.0,
           moyenne: subjectAverages[s],
           status: subjectStatus[s],
-          hasTP: hasTP(s)
+          hasTP: hasTP(s),
+          useSR: subjectHasSR[s]
         }))
       };
     }
@@ -352,6 +363,7 @@
       moyenneGenerale: generaleMoyenne,
       semestreStatus: semestreStatus,
       modules: modules,
+      hasAnySR: hasAnySR,
       calculated: true
     };
   }
@@ -439,6 +451,9 @@
         const results = calculateResultsFromNotes(notesBySubject, dept, sem);
         currentData.results = results;
         
+        // تحديد إذا كان سيتم عرض عمود SR
+        const showSRColumn = results.hasAnySR;
+        
         let html = `
           <div class="student-header">
             <i class="fas fa-user-graduate"></i>
@@ -454,7 +469,7 @@
                   <th>TP</th>
                   <th>CC</th>
                   <th>Examen</th>
-                  <th>SR</th>
+                  ${showSRColumn ? '<th>SR</th>' : ''}
                   <th>NFe</th>
                   <th>Crédit</th>
                   <th>Obs</th>
@@ -464,8 +479,9 @@
                 <tr class="student-info-row">
                   <td>${escapeHtml(id)}</td>
                   <td style="text-align:left; padding-left:15px;">${escapeHtml(currentStudentName)}</td>
-                  <td>-</td><td>-</td><td>-</td><td>-</td>
-                  <td style="font-weight:bold;">Moy Sem: ${results.moyenneGenerale.toFixed(2)}</td>
+                  <td>-</td><td>-</td><td>-</td>
+                  ${showSRColumn ? '<td>-</td>' : ''}
+                  <td style="font-weight:bold;">-</td>
                   <td>-</td>
                   <td class="${results.semestreStatus === 'Validé' ? 'status-V' : 'status-NV'}">${results.semestreStatus === 'Validé' ? 'V' : 'NV'}</td>
                 </tr>
@@ -477,7 +493,8 @@
             <tr class="module-row">
               <td>${escapeHtml(moduleCode)}</td>
               <td style="text-align:left; padding-left:15px;">${escapeHtml(module.name)}</td>
-              <td>-</td><td>-</td><td>-</td><td>-</td>
+              <td>-</td><td>-</td><td>-</td>
+              ${showSRColumn ? '<td>-</td>' : ''}
               <td style="font-weight:bold;">${module.moyenne.toFixed(2)}</td>
               <td>${module.credit}</td>
               <td class="${module.status === 'V' ? 'status-V' : 'status-NV'}">${module.status}</td>
@@ -500,7 +517,7 @@
                 <td>${tpDisplay}</td>
                 <td>${ccDisplay}</td>
                 <td>${examDisplay}</td>
-                <td>${srDisplay}</td>
+                ${showSRColumn ? `<td>${srDisplay}</td>` : ''}
                 <td style="font-weight:bold;">${subject.moyenne.toFixed(2)}</td>
                 <td>${creditEarned.toFixed(1)}</td>
                 <td class="${subject.status === 'C' ? 'status-C' : 'status-NC'}">${subject.status}</td>
@@ -509,7 +526,14 @@
           }
         }
         
+        // إضافة سطر المعدل العام في الأسفل فقط
+        const colspanValue = showSRColumn ? 6 : 5;
         html += `
+                <tr style="background:#f0f8ff;">
+                  <td colspan="${colspanValue}" style="border:1px solid #ddd; padding:8px; text-align:right; font-weight:bold;">Moyenne Semestre :</td>
+                  <td style="border:1px solid #ddd; padding:8px; font-weight:bold;">${results.moyenneGenerale.toFixed(2)}</td>
+                  <td colspan="2" style="border:1px solid #ddd; padding:8px;"></td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -568,20 +592,6 @@
           }
           examHtml += '</tbody></table>';
           html += examHtml;
-          
-          let hasRattrapage = false;
-          let rattrapageHtml = '<h4 class="section-subtitle"><i class="fas fa-redo-alt"></i> Résultats Rattrapage</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note Rattrapage</th></tr></thead><tbody>';
-          for (let moduleCode in modulesStructure) {
-            for (let subject of modulesStructure[moduleCode].subjects) {
-              const grade = notesBySubject[subject]?.['Rattrapage'];
-              if (grade !== undefined) {
-                hasRattrapage = true;
-                rattrapageHtml += `<tr><td>${escapeHtml(displaySubjectName(subject))}</td><td>${grade.toFixed(2)}</td></tr>`;
-              }
-            }
-          }
-          rattrapageHtml += '</tbody></table>';
-          if (hasRattrapage) html += rattrapageHtml;
         }
         
         document.getElementById('studentResults').innerHTML = html;
@@ -600,7 +610,6 @@
     }
   }
   
-  // ==================== دالة توليد PDF المعدلة ====================
   window.generatePDF = function() {
     if (!currentData || !currentData.results) {
       alert("Les résultats complets ne sont pas encore disponibles pour générer le PDF.");
@@ -610,7 +619,6 @@
     const results = currentData.results;
     const studentName = currentData.name;
     
-    // تصحيح السنة الجامعية - نحن في 2026
     const currentYear = new Date().getFullYear();
     const academicYear = `${currentYear-1}-${currentYear}`;
     
@@ -621,11 +629,12 @@
       filiere = 'L2PPV-L2 Licence PPV';
     }
     
-    // محتوى PDF مع تصحيح الموضع ليكون في أعلى الصفحة
+    const showSRColumn = results.hasAnySR;
+    const colspanValue = showSRColumn ? 6 : 5;
+    
     let content = `
       <div style="padding: 15mm 10mm 10mm 10mm; font-family: 'Times New Roman', Times, serif; font-size: 11pt;">
         
-        <!-- رأس الصفحة -->
         <div style="margin-bottom: 20px;">
           <div style="font-weight: bold; font-size: 12pt; margin-bottom: 5px;">Institut Supérieur d'Enseignement Technologique de Rosso</div>
           <div style="display: flex; justify-content: space-between; margin-top: 8px;">
@@ -637,7 +646,6 @@
           </div>
         </div>
         
-        <!-- جدول النتائج -->
         <table style="width:100%; border-collapse:collapse; border:1px solid #000; font-size:10pt; margin-top:10px;">
           <thead>
             <tr style="background:#e8f4fc;">
@@ -646,7 +654,7 @@
               <th style="border:1px solid #000; padding:6px;">TP</th>
               <th style="border:1px solid #000; padding:6px;">CC</th>
               <th style="border:1px solid #000; padding:6px;">Examen</th>
-              <th style="border:1px solid #000; padding:6px;">SR</th>
+              ${showSRColumn ? '<th style="border:1px solid #000; padding:6px;">SR</th>' : ''}
               <th style="border:1px solid #000; padding:6px;">NF°</th>
               <th style="border:1px solid #000; padding:6px;">Crédit</th>
               <th style="border:1px solid #000; padding:6px;">Obs</th>
@@ -659,14 +667,13 @@
               <td style="border:1px solid #000; padding:6px;"></td>
               <td style="border:1px solid #000; padding:6px;"></td>
               <td style="border:1px solid #000; padding:6px;"></td>
+              ${showSRColumn ? '<td style="border:1px solid #000; padding:6px;"></td>' : ''}
               <td style="border:1px solid #000; padding:6px;"></td>
-              <td style="border:1px solid #000; padding:6px; font-weight:bold;">${results.moyenneGenerale.toFixed(2)}</td>
               <td style="border:1px solid #000; padding:6px;"></td>
               <td style="border:1px solid #000; padding:6px; font-weight:bold;">${results.semestreStatus === 'Validé' ? 'V' : 'NV'}</td>
             </tr>
     `;
     
-    // إضافة جميع الموديولات والمواد
     for (let moduleCode in results.modules) {
       const module = results.modules[moduleCode];
       content += `
@@ -676,7 +683,7 @@
           <td style="border:1px solid #000; padding:6px;"></td>
           <td style="border:1px solid #000; padding:6px;"></td>
           <td style="border:1px solid #000; padding:6px;"></td>
-          <td style="border:1px solid #000; padding:6px;"></td>
+          ${showSRColumn ? '<td style="border:1px solid #000; padding:6px;"></td>' : ''}
           <td style="border:1px solid #000; padding:6px; font-weight:bold;">${module.moyenne.toFixed(2)}</td>
           <td style="border:1px solid #000; padding:6px;">${module.credit}</td>
           <td style="border:1px solid #000; padding:6px;">${module.status}</td>
@@ -699,7 +706,7 @@
             <td style="border:1px solid #000; padding:6px;">${tpDisplay}</td>
             <td style="border:1px solid #000; padding:6px;">${ccDisplay}</td>
             <td style="border:1px solid #000; padding:6px;">${examDisplay}</td>
-            <td style="border:1px solid #000; padding:6px;">${srDisplay}</td>
+            ${showSRColumn ? `<td style="border:1px solid #000; padding:6px;">${srDisplay}</td>` : ''}
             <td style="border:1px solid #000; padding:6px; font-weight:bold;">${subject.moyenne.toFixed(2)}</td>
             <td style="border:1px solid #000; padding:6px;">${creditEarned.toFixed(1)}</td>
             <td style="border:1px solid #000; padding:6px;">${subject.status}</td>
@@ -708,10 +715,10 @@
       }
     }
     
-    // سطر المعدل العام
+    // سطر المعدل العام في الأسفل فقط
     content += `
             <tr style="background:#f0f8ff;">
-              <td colspan="6" style="border:1px solid #000; padding:6px; text-align:right; font-weight:bold;">Moyenne Semestre :</td>
+              <td colspan="${colspanValue}" style="border:1px solid #000; padding:6px; text-align:right; font-weight:bold;">Moyenne Semestre :</td>
               <td style="border:1px solid #000; padding:6px; font-weight:bold;">${results.moyenneGenerale.toFixed(2)}</td>
               <td colspan="2" style="border:1px solid #000; padding:6px;"></td>
             </tr>
