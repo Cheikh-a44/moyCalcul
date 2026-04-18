@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gestion des Résultats - ISET Rosso</title>
+<title>Relevé de Notes - ISET Rosso</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
@@ -42,138 +42,91 @@
   }
   .admin-btn {
     padding:0.8rem 1.5rem;
-    background:var(--primary);
-    color:white;
-    border:none;
+    background:#f0f0f0;
+    color:#333;
+    border:1px solid #ccc;
     border-radius:var(--radius);
     font-size:1rem;
     font-weight:600;
     cursor:pointer;
     margin:0.3rem;
+    transition:all 0.3s ease;
   }
-  .admin-btn:hover { background:var(--primary-dark); }
-  .admin-btn.success { background:#28a745; }
-  .admin-btn.warning { background:#ffc107; color:#333; }
-  .admin-btn.danger { background:#dc3545; }
-  .admin-btn.secondary { background:#6c757d; }
-  
-  .form-group { margin-bottom:1.2rem; }
-  .form-group label { display:block; font-weight:600; margin-bottom:0.3rem; }
-  .form-group select, .form-group input {
-    width:100%;
-    padding:0.8rem;
-    border:2px solid var(--primary-light);
-    border-radius:var(--radius);
-    font-size:1rem;
-  }
-  
-  .notes-table {
-    width:100%;
-    border-collapse:collapse;
-    margin:1rem 0;
-    overflow-x:auto;
-    display:block;
-  }
-  .notes-table th, .notes-table td {
-    border:1px solid #ddd;
-    padding:8px;
-    text-align:center;
-  }
-  .notes-table th { background:var(--primary-light); }
-  .notes-table input { width:80px; padding:5px; text-align:center; border:1px solid #ccc; border-radius:4px; }
-  .module-row { background:#e8f4fc !important; font-weight:bold; }
-  
-  .status-C { color:#27ae60; font-weight:bold; }
-  .status-NC { color:#e74c3c; font-weight:bold; }
-  .status-V { color:#27ae60; font-weight:bold; }
-  .status-NV { color:#e74c3c; font-weight:bold; }
-  
-  .average-display { text-align:center; padding:1rem; background:var(--primary-light); border-radius:var(--radius); margin:1rem 0; }
-  .average-value { font-size:2rem; font-weight:bold; color:var(--primary); }
-  
-  .message { padding:0.8rem 1rem; border-radius:var(--radius); margin-bottom:1rem; display:none; }
-  .message.success { background:#d4edda; color:#155724; }
-  .message.error { background:#f8d7da; color:#721c24; }
-  .message.info { background:#cce5ff; color:#004085; }
-  
-  .footer { text-align:center; padding:2rem; color:var(--text-light); font-size:0.9rem; }
-  
-  .empty-state { text-align:center; padding:3rem 1rem; color:var(--text-light); }
-  .empty-state i { font-size:4rem; margin-bottom:1rem; color:var(--primary-light); }
+  .admin-btn:hover { background:#e0e0e0; transform:translateY(-1px); }
+  .admin-btn.success { background:#d4edda; border-color:#28a745; color:#155724; }
   
   .student-header { text-align:center; margin-bottom:1.5rem; padding-bottom:1rem; border-bottom:2px solid var(--primary-light); }
   .student-header i { font-size:3rem; color:var(--primary); margin-bottom:0.5rem; }
   
-  /* Tableau des résultats façon relevé */
   .releve-table {
-    width:100%;
-    border-collapse:collapse;
-    margin:1rem 0;
-    font-size:14px;
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 13px;
   }
   .releve-table th, .releve-table td {
-    border:1px solid #ddd;
-    padding:10px 8px;
-    text-align:center;
+    border: 1px solid #ddd;
+    padding: 8px 6px;
+    text-align: center;
   }
   .releve-table th {
-    background:var(--primary-light);
-    font-weight:bold;
+    background: var(--primary-light);
+    font-weight: bold;
   }
   .releve-table .module-row {
-    background:#e8f4fc;
-    font-weight:bold;
+    background: #e8f4fc;
+    font-weight: bold;
   }
   .releve-table .subject-row td:first-child {
-    padding-left:25px;
-    text-align:left;
+    text-align: left;
+    padding-left: 25px;
   }
-  .student-info-row {
-    background:#f0f8ff;
-    font-weight:bold;
+  .status-C, .status-V { color: #27ae60; font-weight: bold; }
+  .status-NC, .status-NV { color: #e74c3c; font-weight: bold; }
+  .student-info-row { background: #f0f8ff; font-weight: bold; }
+  
+  .empty-state { text-align:center; padding:3rem 1rem; color:var(--text-light); }
+  .empty-state i { font-size:4rem; margin-bottom:1rem; color:var(--primary-light); }
+  
+  .neutral-message {
+    text-align: center;
+    margin-top: 1rem;
+    padding: 0.8rem;
+    background: #e9ecef;
+    color: #6c757d;
+    border-radius: var(--radius);
+    font-weight: normal;
   }
   
-  /* Tableaux séparés pour avant calcul */
   .simple-table {
-    width:100%;
-    border-collapse:collapse;
-    margin:1rem 0;
-    font-size:14px;
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 14px;
   }
   .simple-table th, .simple-table td {
-    border:1px solid #ddd;
-    padding:8px;
-    text-align:center;
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
   }
   .simple-table th {
-    background:var(--primary-light);
-    font-weight:bold;
+    background: var(--primary-light);
+    font-weight: bold;
   }
   .simple-table td:first-child {
-    text-align:left;
+    text-align: left;
   }
   .section-subtitle {
-    font-size:1.1rem;
-    color:var(--primary);
-    margin:1rem 0 0.5rem 0;
-    padding-bottom:0.3rem;
-    border-bottom:2px solid var(--primary-light);
-  }
-  .neutral-message {
-    text-align:center;
-    margin-top:1rem;
-    padding:0.8rem;
-    background:#e9ecef;
-    color:#6c757d;
-    border-radius:var(--radius);
-    font-weight:normal;
+    font-size: 1.1rem;
+    color: var(--primary);
+    margin: 1rem 0 0.5rem 0;
+    padding-bottom: 0.3rem;
+    border-bottom: 2px solid var(--primary-light);
   }
   
   @media (max-width:768px) {
-    .notes-table { font-size:12px; }
-    .notes-table input { width:55px; }
-    .releve-table { font-size:11px; }
-    .releve-table th, .releve-table td { padding:6px 4px; }
+    .releve-table { font-size: 11px; }
+    .releve-table th, .releve-table td { padding: 6px 4px; }
   }
 </style>
 </head>
@@ -181,89 +134,24 @@
 
 <header>
   <div class="container">
-    <h1><i class="fas fa-graduation-cap"></i> Gestion des Résultats - ISET Rosso</h1>
-    <p>Espace Coordinateur - Saisie et calcul des notes</p>
+    <h1><i class="fas fa-graduation-cap"></i> ISET Rosso - Relevé de Notes</h1>
+    <p>Document officiel des résultats académiques</p>
   </div>
 </header>
 
 <div class="container">
-  <!-- Zone de connexion coordinateur -->
-  <div class="card" id="loginCard">
-    <h3><i class="fas fa-lock"></i> Accès Coordinateur</h3>
-    <div id="loginMsg" class="message error"></div>
-    <div class="form-group">
-      <label>Département</label>
-      <select id="adminDept">
-        <option value="TC">TC (Tronc Commun)</option>
-        <option value="PPV">PPV (Production Végétale)</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>Mot de passe</label>
-      <input type="password" id="adminPwd" placeholder="Mot de passe">
-    </div>
-    <button class="admin-btn" onclick="adminLogin()">Connexion</button>
-  </div>
-  
-  <!-- Zone de gestion (après connexion) -->
-  <div id="adminPanel" style="display:none;">
-    <div class="card">
-      <h3><i class="fas fa-user-shield"></i> Panneau Coordinateur - <span id="deptName"></span></h3>
-      <div id="adminMsg" class="message success"></div>
-      
-      <div class="form-group">
-        <label>Semestre</label>
-        <select id="semesterSelect" onchange="loadStudentsList()">
-          <option value="">-- Choisir --</option>
-        </select>
-      </div>
-      
-      <div class="form-group">
-        <label>Étudiant</label>
-        <select id="studentSelect" onchange="loadStudentGrades()">
-          <option value="">-- Choisir --</option>
-        </select>
-        <button class="admin-btn secondary" onclick="showAddStudent()" style="margin-top:0.5rem">
-          <i class="fas fa-plus"></i> Nouvel étudiant
-        </button>
-      </div>
-      
-      <div id="addStudentForm" style="display:none; margin-top:1rem; padding:1rem; background:#f5f5f5; border-radius:8px;">
-        <div class="form-group"><label>Matricule</label><input type="text" id="newStudentId" placeholder="Ex: 24001581"></div>
-        <div class="form-group"><label>Nom complet</label><input type="text" id="newStudentName" placeholder="Nom et Prénom"></div>
-        <button class="admin-btn success" onclick="addNewStudent()">Ajouter</button>
-        <button class="admin-btn secondary" onclick="hideAddStudent()">Annuler</button>
-      </div>
-      
-      <div id="gradesContainer"></div>
-      
-      <div style="text-align:center; margin-top:1rem;">
-        <button class="admin-btn warning" id="calculateBtn" onclick="calculateAllAverages()" style="display:none;">
-          <i class="fas fa-calculator"></i> Calculer toutes les moyennes
-        </button>
-      </div>
-      
-      <button class="admin-btn secondary" onclick="adminLogout()" style="margin-top:1rem;">
-        <i class="fas fa-sign-out-alt"></i> Déconnexion
-      </button>
-    </div>
-  </div>
-  
-  <!-- Zone d'affichage des résultats pour les étudiants -->
-  <div id="studentView" style="display:none;" class="card">
+  <div id="studentView" class="card">
     <div id="studentResults"></div>
     <div id="pdfButtonContainer" style="text-align:center; margin-top:1.5rem;"></div>
   </div>
 </div>
 
-<footer class="footer">
+<footer class="footer" style="text-align:center; padding:2rem; color:#666;">
   <p>© 2024 ISET Rosso - Institut Supérieur d'Enseignement Technologique</p>
 </footer>
 
 <script>
   // ==================== CONFIGURATION ====================
-  const ADMIN_PASSWORDS = { TC: "tc2024", PPV: "ppv2024" };
-  
   const SEMESTERS_CONFIG = {
     TC: {
       S1: { name: "Semestre 1", modules: {
@@ -341,474 +229,93 @@
       }}
     }
   };
-  
-  // Stockage
+
+  // المواد التي ليس لها TP
+  const SUBJECTS_WITHOUT_TP = [
+    "Anglais", "Anglais 2", "Français", "Français 2", "Français 3",
+    "Math et Statistique", "Économie", "Vulgarisation", "Technique d'irrigation et BEC"
+  ];
+
+  function hasTP(subjectName) { return !SUBJECTS_WITHOUT_TP.includes(subjectName); }
+
+  function displaySubjectName(name) {
+    return name;
+  }
+
+  // تخزين البيانات
   let allStudents = JSON.parse(localStorage.getItem('iset_local_students')) || {};
-  let currentAdmin = null;
-  let currentSemester = null;
-  let currentStudentId = null;
   let currentStudentData = null;
-  
-  function saveToLocalStorage() { localStorage.setItem('iset_local_students', JSON.stringify(allStudents)); }
-  
-  // ==================== CALCUL DES MOYENNES ====================
-  function calculateSubjectGrade(subject, grades) {
-    const hasTP = subject.hasTP;
-    const exam = grades.examen || 0;
-    const rattrapage = grades.rattrapage;
-    const finalExam = (rattrapage !== undefined && rattrapage > exam) ? rattrapage : exam;
-    
-    if (hasTP) {
-      const tp = grades.tp || 0;
-      const cc = grades.cc || 0;
-      return (tp * 1 + cc * 2 + finalExam * 3) / 6;
-    } else {
-      const cc = grades.cc || 0;
-      return (cc * 2 + finalExam * 3) / 5;
-    }
-  }
-  
-  function calculateAllResults(student, semesterConfig) {
-    const modules = semesterConfig.modules;
-    const subjectGrades = {};
-    
-    // Calcul des notes de chaque matière
-    for (let moduleCode in modules) {
-      for (let subject of modules[moduleCode].subjects) {
-        const grades = student.grades?.[subject.code] || {};
-        const moyenne = calculateSubjectGrade(subject, grades);
-        subjectGrades[subject.code] = { moyenne, status: null };
-      }
-    }
-    
-    // Détermination du statut de chaque matière
-    for (let moduleCode in modules) {
-      const module = modules[moduleCode];
-      const subjects = module.subjects;
-      
-      if (subjects.length === 1) {
-        const subj = subjects[0];
-        const moyenne = subjectGrades[subj.code].moyenne;
-        subjectGrades[subj.code].status = moyenne >= 10 ? 'C' : 'NC';
-      } else {
-        const s1 = subjects[0], s2 = subjects[1];
-        const m1 = subjectGrades[s1.code].moyenne;
-        const m2 = subjectGrades[s2.code].moyenne;
-        
-        if (m1 < 7 || m2 < 7) {
-          subjectGrades[s1.code].status = m1 < 7 ? 'NC' : (m1 >= 10 ? 'C' : 'NC');
-          subjectGrades[s2.code].status = m2 < 7 ? 'NC' : (m2 >= 10 ? 'C' : 'NC');
-        } else {
-          const credit1 = s1.credit, credit2 = s2.credit;
-          const moduleMoyenne = (m1 * credit1 + m2 * credit2) / (credit1 + credit2);
-          
-          if (m1 >= 10 && m2 >= 10) {
-            subjectGrades[s1.code].status = 'C';
-            subjectGrades[s2.code].status = 'C';
-          } else if (m1 >= 10 && m2 < 10) {
-            if (m2 >= 7 && moduleMoyenne >= 10) {
-              subjectGrades[s1.code].status = 'C';
-              subjectGrades[s2.code].status = 'C';
-            } else {
-              subjectGrades[s1.code].status = 'C';
-              subjectGrades[s2.code].status = 'NC';
-            }
-          } else if (m1 < 10 && m2 >= 10) {
-            if (m1 >= 7 && moduleMoyenne >= 10) {
-              subjectGrades[s1.code].status = 'C';
-              subjectGrades[s2.code].status = 'C';
-            } else {
-              subjectGrades[s1.code].status = 'NC';
-              subjectGrades[s2.code].status = 'C';
-            }
-          } else {
-            subjectGrades[s1.code].status = moduleMoyenne >= 10 ? 'C' : 'NC';
-            subjectGrades[s2.code].status = moduleMoyenne >= 10 ? 'C' : 'NC';
-          }
-        }
-      }
-    }
-    
-    // Calcul des modules
-    const moduleResults = {};
-    let totalWeighted = 0, totalCredits = 0;
-    let modulesNV = [];
-    
-    for (let moduleCode in modules) {
-      const module = modules[moduleCode];
-      let moduleWeighted = 0, moduleCredits = 0;
-      
-      for (let subject of module.subjects) {
-        const moyenne = subjectGrades[subject.code].moyenne;
-        moduleWeighted += moyenne * subject.credit;
-        moduleCredits += subject.credit;
-      }
-      
-      const moduleMoyenne = moduleWeighted / moduleCredits;
-      let hasNC = false;
-      for (let subject of module.subjects) {
-        if (subjectGrades[subject.code].status === 'NC') hasNC = true;
-      }
-      
-      let moduleStatus = hasNC ? 'NV' : (moduleMoyenne >= 10 ? 'V' : 'NV');
-      
-      moduleResults[moduleCode] = {
-        name: module.name, moyenne: moduleMoyenne, status: moduleStatus, credit: module.credit,
-        subjects: module.subjects.map(s => ({
-          code: s.code, name: s.name, credit: s.credit,
-          moyenne: subjectGrades[s.code].moyenne, status: subjectGrades[s.code].status
-        }))
-      };
-      
-      if (moduleStatus === 'NV') modulesNV.push({ code: moduleCode, moyenne: moduleMoyenne });
-      
-      totalWeighted += moduleMoyenne * module.credit;
-      totalCredits += module.credit;
-    }
-    
-    const generaleMoyenne = totalWeighted / totalCredits;
-    
-    // Compensation par moyenne générale
-    let allNVBetween9and10 = true;
-    for (let nv of modulesNV) {
-      if (nv.moyenne < 9) { allNVBetween9and10 = false; break; }
-    }
-    
-    if (allNVBetween9and10 && modulesNV.length > 0 && generaleMoyenne >= 10) {
-      for (let nv of modulesNV) {
-        moduleResults[nv.code].status = 'V';
-        for (let subject of moduleResults[nv.code].subjects) subject.status = 'C';
-      }
-    }
-    
-    // Re-vérifier: si un module a une matière NC → NV
-    for (let moduleCode in moduleResults) {
-      let hasNC = false;
-      for (let subject of moduleResults[moduleCode].subjects) {
-        if (subject.status === 'NC') hasNC = true;
-      }
-      if (hasNC) moduleResults[moduleCode].status = 'NV';
-    }
-    
-    return {
-      moyenneGenerale: generaleMoyenne,
-      semestreStatus: generaleMoyenne >= 10 ? 'Validé' : 'Non Validé',
-      modules: moduleResults,
-      calculated: true
-    };
-  }
-  
-  // ==================== FONCTIONS COORDINATEUR ====================
-  function adminLogin() {
-    const dept = document.getElementById('adminDept').value;
-    const pwd = document.getElementById('adminPwd').value;
-    if (ADMIN_PASSWORDS[dept] === pwd) {
-      currentAdmin = dept;
-      document.getElementById('loginCard').style.display = 'none';
-      document.getElementById('adminPanel').style.display = 'block';
-      document.getElementById('deptName').textContent = dept;
-      document.getElementById('adminPwd').value = '';
-      
-      const semesterSelect = document.getElementById('semesterSelect');
-      semesterSelect.innerHTML = '<option value="">-- Choisir --</option>';
-      for (let key in SEMESTERS_CONFIG[dept]) {
-        semesterSelect.innerHTML += `<option value="${key}">${SEMESTERS_CONFIG[dept][key].name}</option>`;
-      }
-    } else {
-      document.getElementById('loginMsg').textContent = 'Mot de passe incorrect';
-      document.getElementById('loginMsg').style.display = 'block';
-      setTimeout(() => document.getElementById('loginMsg').style.display = 'none', 3000);
-    }
-  }
-  
-  function adminLogout() {
-    currentAdmin = null;
-    document.getElementById('loginCard').style.display = 'block';
-    document.getElementById('adminPanel').style.display = 'none';
-    document.getElementById('studentView').style.display = 'none';
-  }
-  
-  function loadStudentsList() {
-    currentSemester = document.getElementById('semesterSelect').value;
-    if (!currentSemester) return;
-    
-    const prefix = `${currentAdmin}_${currentSemester}_`;
-    const students = Object.keys(allStudents).filter(k => k.startsWith(prefix));
-    const select = document.getElementById('studentSelect');
-    select.innerHTML = '<option value="">-- Choisir --</option>';
-    students.forEach(key => {
-      const id = key.replace(prefix, '');
-      select.innerHTML += `<option value="${id}">${id} - ${allStudents[key].name || 'Sans nom'}</option>`;
-    });
-  }
-  
-  function showAddStudent() {
-    document.getElementById('addStudentForm').style.display = 'block';
-  }
-  
-  function hideAddStudent() {
-    document.getElementById('addStudentForm').style.display = 'none';
-    document.getElementById('newStudentId').value = '';
-    document.getElementById('newStudentName').value = '';
-  }
-  
-  function addNewStudent() {
-    const id = document.getElementById('newStudentId').value.trim();
-    const name = document.getElementById('newStudentName').value.trim();
-    if (!id || !name) { alert('Veuillez remplir tous les champs'); return; }
-    
-    const key = `${currentAdmin}_${currentSemester}_${id}`;
-    if (allStudents[key]) { alert('Cet étudiant existe déjà'); return; }
-    
-    allStudents[key] = { name: name, grades: {}, calculated: false };
-    saveToLocalStorage();
-    hideAddStudent();
-    loadStudentsList();
-    document.getElementById('studentSelect').value = id;
-    loadStudentGrades();
-  }
-  
-  function loadStudentGrades() {
-    currentStudentId = document.getElementById('studentSelect').value;
-    if (!currentStudentId) return;
-    
-    const key = `${currentAdmin}_${currentSemester}_${currentStudentId}`;
-    currentStudentData = allStudents[key];
-    if (!currentStudentData) return;
-    
-    const semesterConfig = SEMESTERS_CONFIG[currentAdmin][currentSemester];
-    let html = '<h4 style="margin:1rem 0">Saisie des notes</h4>';
-    html += '<div style="overflow-x:auto;"><table class="notes-table"><thead><tr><th>Module</th><th>Matière</th><th>TP</th><th>CC (Devoir)</th><th>Examen</th><th>Rattrapage</th></tr></thead><tbody>';
-    
-    let allFieldsFilled = true;
-    
-    for (let moduleCode in semesterConfig.modules) {
-      const module = semesterConfig.modules[moduleCode];
-      let firstRow = true;
-      for (let subject of module.subjects) {
-        const grades = currentStudentData.grades?.[subject.code] || {};
-        const tpVal = grades.tp || '';
-        const ccVal = grades.cc || '';
-        const examVal = grades.examen || '';
-        const rattVal = grades.rattrapage || '';
-        
-        if (subject.hasTP && (!tpVal || !ccVal || !examVal)) allFieldsFilled = false;
-        if (!subject.hasTP && (!ccVal || !examVal)) allFieldsFilled = false;
-        
-        html += `<tr>
-          <td>${firstRow ? moduleCode + '<br>' + module.name : ''}</td>
-          <td>${subject.name}${!subject.hasTP ? '<br><small>(sans TP)</small>' : ''}</td>
-          <td><input type="number" step="0.01" min="0" max="20" id="tp_${subject.code}" value="${tpVal}" ${!subject.hasTP ? 'disabled' : ''} style="width:70px"></td>
-          <td><input type="number" step="0.01" min="0" max="20" id="cc_${subject.code}" value="${ccVal}" style="width:70px"></td>
-          <td><input type="number" step="0.01" min="0" max="20" id="exam_${subject.code}" value="${examVal}" style="width:70px"></td>
-          <td><input type="number" step="0.01" min="0" max="20" id="ratt_${subject.code}" value="${rattVal}" style="width:70px"></td>
-        </tr>`;
-        firstRow = false;
-      }
-    }
-    
-    html += '</tbody></table></div>';
-    html += '<button class="admin-btn success" onclick="saveStudentGrades()"><i class="fas fa-save"></i> Enregistrer les notes</button>';
-    document.getElementById('gradesContainer').innerHTML = html;
-    
-    const calculateBtn = document.getElementById('calculateBtn');
-    if (allFieldsFilled && currentStudentData.grades && Object.keys(currentStudentData.grades).length > 0) {
-      calculateBtn.style.display = 'inline-block';
-    } else {
-      calculateBtn.style.display = 'none';
-    }
-  }
-  
-  function saveStudentGrades() {
-    const semesterConfig = SEMESTERS_CONFIG[currentAdmin][currentSemester];
-    const newGrades = {};
-    
-    for (let moduleCode in semesterConfig.modules) {
-      for (let subject of semesterConfig.modules[moduleCode].subjects) {
-        const tp = document.getElementById(`tp_${subject.code}`)?.value;
-        const cc = document.getElementById(`cc_${subject.code}`)?.value;
-        const examen = document.getElementById(`exam_${subject.code}`)?.value;
-        const rattrapage = document.getElementById(`ratt_${subject.code}`)?.value;
-        
-        newGrades[subject.code] = {
-          tp: tp ? parseFloat(tp) : undefined,
-          cc: cc ? parseFloat(cc) : undefined,
-          examen: examen ? parseFloat(examen) : undefined,
-          rattrapage: rattrapage ? parseFloat(rattrapage) : undefined
-        };
-      }
-    }
-    
-    currentStudentData.grades = newGrades;
-    currentStudentData.calculated = false;
-    saveToLocalStorage();
-    
-    document.getElementById('adminMsg').textContent = 'Notes enregistrées avec succès';
-    document.getElementById('adminMsg').className = 'message success';
-    document.getElementById('adminMsg').style.display = 'block';
-    setTimeout(() => document.getElementById('adminMsg').style.display = 'none', 3000);
-    
-    loadStudentGrades();
-  }
-  
-  function calculateAllAverages() {
-    const prefix = `${currentAdmin}_${currentSemester}_`;
-    let count = 0;
-    
-    for (let key in allStudents) {
-      if (key.startsWith(prefix)) {
-        const student = allStudents[key];
-        if (student.grades && Object.keys(student.grades).length > 0) {
-          const semesterConfig = SEMESTERS_CONFIG[currentAdmin][currentSemester];
-          const results = calculateAllResults(student, semesterConfig);
-          student.results = results;
-          student.calculated = true;
-          count++;
-        }
-      }
-    }
-    
-    saveToLocalStorage();
-    
-    document.getElementById('adminMsg').textContent = `${count} étudiant(s) calculé(s) avec succès`;
-    document.getElementById('adminMsg').className = 'message success';
-    document.getElementById('adminMsg').style.display = 'block';
-    setTimeout(() => document.getElementById('adminMsg').style.display = 'none', 3000);
-    
-    if (currentStudentId) loadStudentGrades();
-  }
-  
-  // ==================== AFFICHAGE POUR ÉTUDIANT ====================
-  function displayStudentResults(student, studentId) {
+  let currentStudentId = null;
+  let currentDept = null;
+  let currentSemester = null;
+
+  // دالة عرض النتائج
+  function displayStudentResults(student, studentId, dept, semester) {
     const results = student.results;
+    const semesterConfig = SEMESTERS_CONFIG[dept][semester];
     
+    // ✅ إذا كانت النتائج غير محسوبة أو لا توجد
     if (!results || !student.calculated) {
-      // Affichage des notes brutes avant calcul (tableaux séparés)
-      const semesterConfig = SEMESTERS_CONFIG[currentAdmin][currentSemester];
-      const requiredSubjects = [];
-      for (let moduleCode in semesterConfig.modules) {
-        for (let subject of semesterConfig.modules[moduleCode].subjects) {
-          if (!requiredSubjects.includes(subject.name)) {
-            requiredSubjects.push(subject.name);
-          }
-        }
-      }
-      
+      // عرض الجداول المنفصلة (TP, CC, Examen)
       let html = `
         <div class="student-header">
           <i class="fas fa-user-graduate"></i>
-          <h3>${student.name}</h3>
-          <p>N° ${studentId} | ${currentAdmin} | ${SEMESTERS_CONFIG[currentAdmin][currentSemester].name}</p>
+          <h3>${student.name || 'Étudiant'}</h3>
+          <p>N° ${studentId} | ${dept} | ${semesterConfig.name}</p>
         </div>
-        <div class="message info" style="display:block; text-align:center;">
-          <i class="fas fa-info-circle"></i> Les moyennes n'ont pas encore été calculées. Voici les notes saisies :
+        <div class="neutral-message">
+          <i class="fas fa-info-circle"></i> Les résultats n'ont pas encore été calculés par le coordinateur.
         </div>
       `;
       
-      // 1. Tableau des TP
-      const tpSubjects = requiredSubjects.filter(s => {
-        for (let moduleCode in semesterConfig.modules) {
-          for (let subject of semesterConfig.modules[moduleCode].subjects) {
-            if (subject.name === s && subject.hasTP) return true;
+      // جدول TP
+      let hasTPData = false;
+      let tpHtml = '<h4 class="section-subtitle">Résultats TP</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note TP</th></tr></thead><tbody>';
+      for (let moduleCode in semesterConfig.modules) {
+        for (let subject of semesterConfig.modules[moduleCode].subjects) {
+          if (subject.hasTP) {
+            const grade = student.grades?.[subject.code]?.tp;
+            if (grade !== undefined) hasTPData = true;
+            tpHtml += `<tr><td>${subject.name}</td><td>${grade !== undefined ? grade.toFixed(2) : '-'}</td></tr>`;
           }
-        }
-        return false;
-      });
-      
-      if (tpSubjects.length > 0) {
-        html += `<h4 class="section-subtitle"><i class="fas fa-microchip"></i> Résultats TP</h4>`;
-        html += '<table class="simple-table"><thead><tr><th>Matière</th><th>Note TP</th></tr></thead><tbody>';
-        for (let subject of tpSubjects) {
-          let code = null;
-          for (let moduleCode in semesterConfig.modules) {
-            for (let subj of semesterConfig.modules[moduleCode].subjects) {
-              if (subj.name === subject) code = subj.code;
-            }
-          }
-          const note = student.grades?.[code]?.tp;
-          html += `<tr><td>${subject}</td><td>${note !== undefined ? note.toFixed(2) : '-'}</td></tr>`;
-        }
-        html += '</tbody></table>';
-      }
-      
-      // 2. Tableau des CC
-      html += `<h4 class="section-subtitle"><i class="fas fa-pen"></i> Résultats Contrôle continu</h4>`;
-      html += '<table class="simple-table"><thead><tr><th>Matière</th><th>Note CC</th></tr></thead><tbody>';
-      for (let subject of requiredSubjects) {
-        let code = null;
-        for (let moduleCode in semesterConfig.modules) {
-          for (let subj of semesterConfig.modules[moduleCode].subjects) {
-            if (subj.name === subject) code = subj.code;
-          }
-        }
-        const note = student.grades?.[code]?.cc;
-        html += `<tr><td>${subject}</td><td>${note !== undefined ? note.toFixed(2) : '-'}</td></tr>`;
-      }
-      html += '</tbody></table>';
-      
-      // 3. Tableau des Examens
-      html += `<h4 class="section-subtitle"><i class="fas fa-book"></i> Résultats Examen</h4>`;
-      html += '<table class="simple-table"><thead><tr><th>Matière</th><th>Note Examen</th></tr></thead><tbody>';
-      for (let subject of requiredSubjects) {
-        let code = null;
-        for (let moduleCode in semesterConfig.modules) {
-          for (let subj of semesterConfig.modules[moduleCode].subjects) {
-            if (subj.name === subject) code = subj.code;
-          }
-        }
-        const note = student.grades?.[code]?.examen;
-        html += `<tr><td>${subject}</td><td>${note !== undefined ? note.toFixed(2) : '-'}</td></tr>`;
-      }
-      html += '</tbody></table>';
-      
-      // 4. Tableau des Rattrapages
-      let hasRattrapage = false;
-      for (let subject of requiredSubjects) {
-        let code = null;
-        for (let moduleCode in semesterConfig.modules) {
-          for (let subj of semesterConfig.modules[moduleCode].subjects) {
-            if (subj.name === subject) code = subj.code;
-          }
-        }
-        if (student.grades?.[code]?.rattrapage !== undefined) {
-          hasRattrapage = true;
-          break;
         }
       }
+      tpHtml += '</tbody>赶';
+      if (hasTPData) html += tpHtml;
       
-      if (hasRattrapage) {
-        html += `<h4 class="section-subtitle"><i class="fas fa-repeat"></i> Résultats Rattrapage</h4>`;
-        html += '<table class="simple-table"><thead><tr><th>Matière</th><th>Note Rattrapage</th></tr></thead><tbody>';
-        for (let subject of requiredSubjects) {
-          let code = null;
-          for (let moduleCode in semesterConfig.modules) {
-            for (let subj of semesterConfig.modules[moduleCode].subjects) {
-              if (subj.name === subject) code = subj.code;
-            }
-          }
-          const note = student.grades?.[code]?.rattrapage;
-          if (note !== undefined) {
-            html += `<tr><td>${subject}</td><td>${note.toFixed(2)}</td></tr>`;
-          }
+      // جدول CC
+      let ccHtml = '<h4 class="section-subtitle">Résultats Contrôle continu</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note CC</th></tr></thead><tbody>';
+      for (let moduleCode in semesterConfig.modules) {
+        for (let subject of semesterConfig.modules[moduleCode].subjects) {
+          const grade = student.grades?.[subject.code]?.cc;
+          ccHtml += `<tr><td>${subject.name}</td><td>${grade !== undefined ? grade.toFixed(2) : '-'}</td></tr>`;
         }
-        html += '</tbody></table>';
       }
+      ccHtml += '</tbody>赶';
+      html += ccHtml;
       
-      html += `<div class="neutral-message">
-        <i class="fas fa-info-circle"></i> Les résultats ne sont pas encore finalisés par le coordinateur.
-      </div>`;
+      // جدول Examen
+      let examHtml = '<h4 class="section-subtitle">Résultats Examen</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note Examen</th></tr></thead><tbody>';
+      for (let moduleCode in semesterConfig.modules) {
+        for (let subject of semesterConfig.modules[moduleCode].subjects) {
+          const grade = student.grades?.[subject.code]?.examen;
+          examHtml += `<tr><td>${subject.name}</td><td>${grade !== undefined ? grade.toFixed(2) : '-'}</td></tr>`;
+        }
+      }
+      examHtml += '</tbody>赶';
+      html += examHtml;
       
       document.getElementById('studentResults').innerHTML = html;
       document.getElementById('pdfButtonContainer').innerHTML = '';
       return;
     }
     
-    // ========== AFFICHAGE APRÈS CALCUL (TABLEAU FINAL COMME DANS L'IMAGE) ==========
+    // ✅ إذا كانت النتائج محسوبة - عرض الجدول النهائي
     let html = `
       <div class="student-header">
         <i class="fas fa-user-graduate"></i>
-        <h3>${student.name}</h3>
-        <p>N° ${studentId} | ${currentAdmin} | ${SEMESTERS_CONFIG[currentAdmin][currentSemester].name}</p>
+        <h3>${student.name || 'Étudiant'}</h3>
+        <p>N° ${studentId} | ${dept} | ${semesterConfig.name}</p>
       </div>
     `;
     
@@ -821,9 +328,9 @@
     html += `<tr class="student-info-row">
       <td>${studentId}</td>
       <td style="text-align:left; padding-left:15px;">${student.name}</td>
-      <td></td><td></td><td></td>
+      <td style="text-align:center;">-</td><td style="text-align:center;">-</td><td style="text-align:center;">-</td>
       <td style="font-weight:bold;">Moy Sem: ${results.moyenneGenerale.toFixed(2)}</td>
-      <td></td>
+      <td style="text-align:center;">-</td>
       <td class="${results.semestreStatus === 'Validé' ? 'status-V' : 'status-NV'}">${results.semestreStatus}</td>
     </tr>`;
     
@@ -831,30 +338,28 @@
     for (let moduleCode in results.modules) {
       const module = results.modules[moduleCode];
       
-      // Ligne du module
       html += `<tr class="module-row">
         <td>${moduleCode}</td>
         <td style="text-align:left; padding-left:15px;">${module.name}</td>
-        <td></td><td></td><td></td>
+        <td style="text-align:center;">-</td><td style="text-align:center;">-</td><td style="text-align:center;">-</td>
         <td style="font-weight:bold;">${module.moyenne.toFixed(2)}</td>
-        <td>${module.credit}</td>
+        <td style="text-align:center;">${module.credit}</td>
         <td class="${module.status === 'V' ? 'status-V' : 'status-NV'}">${module.status}</td>
       </tr>`;
       
-      // Matières
       for (let subject of module.subjects) {
         const grades = student.grades?.[subject.code] || {};
         const tpDisplay = subject.hasTP ? (grades.tp !== undefined ? grades.tp.toFixed(2) : '-') : '-';
         const creditEarned = subject.status === 'C' ? subject.credit : 0;
         
         html += `<tr class="subject-row">
-          <td></td>
+          <td style="text-align:center;">-</td>
           <td style="text-align:left; padding-left:40px;">${subject.name}</td>
-          <td>${tpDisplay}</td>
-          <td>${grades.cc !== undefined ? grades.cc.toFixed(2) : '-'}</td>
-          <td>${grades.examen !== undefined ? grades.examen.toFixed(2) : '-'}</td>
+          <td style="text-align:center;">${tpDisplay}</td>
+          <td style="text-align:center;">${grades.cc !== undefined ? grades.cc.toFixed(2) : '-'}</td>
+          <td style="text-align:center;">${grades.examen !== undefined ? grades.examen.toFixed(2) : '-'}</td>
           <td style="font-weight:bold;">${subject.moyenne.toFixed(2)}</td>
-          <td>${creditEarned.toFixed(1)}</td>
+          <td style="text-align:center;">${creditEarned.toFixed(1)}</td>
           <td class="${subject.status === 'C' ? 'status-C' : 'status-NC'}">${subject.status}</td>
         </tr>`;
       }
@@ -864,7 +369,7 @@
     
     document.getElementById('studentResults').innerHTML = html;
     
-    // Bouton PDF
+    // زر PDF
     document.getElementById('pdfButtonContainer').innerHTML = `
       <button class="admin-btn success" onclick="generatePDF()">
         <i class="fas fa-file-pdf"></i> 📂 Télécharger mon relevé PDF
@@ -873,15 +378,14 @@
   }
   
   function generatePDF() {
-    const results = currentStudentData?.results;
-    if (!results || !currentStudentData?.calculated) {
-      alert("Les résultats ne sont pas encore disponibles. Veuillez contacter le coordinateur.");
+    const student = currentStudentData;
+    const results = student?.results;
+    if (!results || !student?.calculated) {
+      alert("Les résultats ne sont pas encore disponibles.");
       return;
     }
     
-    const studentId = currentStudentId;
-    const studentName = currentStudentData.name;
-    const semesterName = SEMESTERS_CONFIG[currentAdmin][currentSemester].name;
+    const semesterName = SEMESTERS_CONFIG[currentDept][currentSemester].name;
     
     let content = `
       <div style="padding: 15mm; font-family: 'Times New Roman', Times, serif; font-size:12px;">
@@ -896,68 +400,63 @@
         </div>
         
         <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
-          <tr><td style="padding:5px;"><strong>Étudiant(e) :</strong> ${studentName}</td>
-              <td style="padding:5px;"><strong>N° d'étudiant :</strong> ${studentId}</td>
-              <td style="padding:5px;"><strong>Département :</strong> ${currentAdmin}</td>
+          <tr><td style="padding:5px;"><strong>Étudiant(e) :</strong> ${student.name}</td>
+              <td style="padding:5px;"><strong>N° d'étudiant :</strong> ${currentStudentId}</td>
+              <td style="padding:5px;"><strong>Département :</strong> ${currentDept}</td>
           </tr>
         </table>
         
         <table style="width:100%; border-collapse:collapse; border:1px solid #000;">
           <thead>
             <tr style="background:#caf0f8;">
-              <th style="border:1px solid #000; padding:8px; text-align:center;">Numéro</th>
-              <th style="border:1px solid #000; padding:8px; text-align:center;">Nom et Prénom</th>
-              <th style="border:1px solid #000; padding:8px; text-align:center;">TP</th>
-              <th style="border:1px solid #000; padding:8px; text-align:center;">CC</th>
-              <th style="border:1px solid #000; padding:8px; text-align:center;">Examen</th>
-              <th style="border:1px solid #000; padding:8px; text-align:center;">NFe</th>
-              <th style="border:1px solid #000; padding:8px; text-align:center;">Crédit</th>
-              <th style="border:1px solid #000; padding:8px; text-align:center;">Observations</th>
+              <th style="border:1px solid #000; padding:8px;">Numéro</th>
+              <th style="border:1px solid #000; padding:8px;">Nom et Prénom</th>
+              <th style="border:1px solid #000; padding:8px;">TP</th>
+              <th style="border:1px solid #000; padding:8px;">CC</th>
+              <th style="border:1px solid #000; padding:8px;">Examen</th>
+              <th style="border:1px solid #000; padding:8px;">NFe</th>
+              <th style="border:1px solid #000; padding:8px;">Crédit</th>
+              <th style="border:1px solid #000; padding:8px;">Observations</th>
             </tr>
           </thead>
           <tbody>
     `;
     
-    // Ligne étudiant
     content += `<tr style="background:#f0f8ff;">
-      <td style="border:1px solid #000; padding:8px; text-align:center;">${studentId}</td>
-      <td style="border:1px solid #000; padding:8px; text-align:left;">${studentName}</td>
-      <td style="border:1px solid #000; padding:8px;"></td>
-      <td style="border:1px solid #000; padding:8px;"></td>
-      <td style="border:1px solid #000; padding:8px;"></td>
-      <td style="border:1px solid #000; padding:8px; text-align:center; font-weight:bold;">Moy Sem: ${results.moyenneGenerale.toFixed(2)}</td>
-      <td style="border:1px solid #000; padding:8px;"></td>
-      <td style="border:1px solid #000; padding:8px; text-align:center; font-weight:bold;">${results.semestreStatus}</td>
+      <td style="border:1px solid #000; padding:8px;">${currentStudentId}</td>
+      <td style="border:1px solid #000; padding:8px; text-align:left;">${student.name}</td>
+      <td style="border:1px solid #000; padding:8px;">-</td><td style="border:1px solid #000; padding:8px;">-</td><td style="border:1px solid #000; padding:8px;">-</td>
+      <td style="border:1px solid #000; padding:8px; font-weight:bold;">Moy Sem: ${results.moyenneGenerale.toFixed(2)}</td>
+      <td style="border:1px solid #000; padding:8px;">-</td>
+      <td style="border:1px solid #000; padding:8px; font-weight:bold;">${results.semestreStatus}</td>
     </tr>`;
     
     for (let moduleCode in results.modules) {
       const module = results.modules[moduleCode];
       content += `<tr style="background:#e8f4fc;">
-        <td style="border:1px solid #000; padding:8px; text-align:center;">${moduleCode}</td>
+        <td style="border:1px solid #000; padding:8px;">${moduleCode}</td>
         <td style="border:1px solid #000; padding:8px; text-align:left;">${module.name}</td>
-        <td style="border:1px solid #000; padding:8px;"></td>
-        <td style="border:1px solid #000; padding:8px;"></td>
-        <td style="border:1px solid #000; padding:8px;"></td>
-        <td style="border:1px solid #000; padding:8px; text-align:center; font-weight:bold;">${module.moyenne.toFixed(2)}</td>
-        <td style="border:1px solid #000; padding:8px; text-align:center;">${module.credit}</td>
-        <td style="border:1px solid #000; padding:8px; text-align:center;">${module.status}</td>
+        <td style="border:1px solid #000; padding:8px;">-</td><td style="border:1px solid #000; padding:8px;">-</td><td style="border:1px solid #000; padding:8px;">-</td>
+        <td style="border:1px solid #000; padding:8px; font-weight:bold;">${module.moyenne.toFixed(2)}</td>
+        <td style="border:1px solid #000; padding:8px;">${module.credit}</td>
+        <td style="border:1px solid #000; padding:8px;">${module.status}</td>
       </tr>`;
       
       for (let subject of module.subjects) {
-        const grades = currentStudentData.grades?.[subject.code] || {};
+        const grades = student.grades?.[subject.code] || {};
         const tpDisplay = subject.hasTP ? (grades.tp !== undefined ? grades.tp.toFixed(2) : '-') : '-';
         const creditEarned = subject.status === 'C' ? subject.credit : 0;
         
         content += `<tr>
-          <td style="border:1px solid #000; padding:8px;"></td>
+          <td style="border:1px solid #000; padding:8px;">-</td>
           <td style="border:1px solid #000; padding:8px; text-align:left; padding-left:20px;">${subject.name}</td>
-          <td style="border:1px solid #000; padding:8px; text-align:center;">${tpDisplay}</td>
-          <td style="border:1px solid #000; padding:8px; text-align:center;">${grades.cc !== undefined ? grades.cc.toFixed(2) : '-'}</td>
-          <td style="border:1px solid #000; padding:8px; text-align:center;">${grades.examen !== undefined ? grades.examen.toFixed(2) : '-'}</td>
-          <td style="border:1px solid #000; padding:8px; text-align:center; font-weight:bold;">${subject.moyenne.toFixed(2)}</td>
-          <td style="border:1px solid #000; padding:8px; text-align:center;">${creditEarned.toFixed(1)}</td>
-          <td style="border:1px solid #000; padding:8px; text-align:center;">${subject.status}</td>
-        </table>`;
+          <td style="border:1px solid #000; padding:8px;">${tpDisplay}</td>
+          <td style="border:1px solid #000; padding:8px;">${grades.cc !== undefined ? grades.cc.toFixed(2) : '-'}</td>
+          <td style="border:1px solid #000; padding:8px;">${grades.examen !== undefined ? grades.examen.toFixed(2) : '-'}</td>
+          <td style="border:1px solid #000; padding:8px; font-weight:bold;">${subject.moyenne.toFixed(2)}</td>
+          <td style="border:1px solid #000; padding:8px;">${creditEarned.toFixed(1)}</td>
+          <td style="border:1px solid #000; padding:8px;">${subject.status}</td>
+        </tr>`;
       }
     }
     
@@ -981,7 +480,7 @@
     
     html2pdf().set({ 
       margin: 0, 
-      filename: `Releve_${studentId}_${currentSemester}.pdf`, 
+      filename: `Releve_${currentStudentId}_${currentSemester}.pdf`, 
       image: { type: 'jpeg', quality: 0.98 }, 
       html2canvas: { scale: 2 }, 
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
@@ -990,7 +489,7 @@
     });
   }
   
-  // ==================== VÉRIFICATION DES PARAMÈTRES URL ====================
+  // ==================== تحميل البيانات من الرابط ====================
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.has('dept') && urlParams.has('sem') && urlParams.has('id')) {
     const dept = urlParams.get('dept');
@@ -998,30 +497,30 @@
     const id = urlParams.get('id');
     const name = urlParams.get('name');
     
-    document.getElementById('loginCard').style.display = 'none';
-    document.getElementById('adminPanel').style.display = 'none';
-    document.getElementById('studentView').style.display = 'block';
-    
     const key = `${dept}_${sem}_${id}`;
-    const student = allStudents[key];
+    let student = allStudents[key];
     
-    if (student) {
-      currentAdmin = dept;
-      currentSemester = sem;
-      currentStudentId = id;
-      currentStudentData = student;
-      displayStudentResults(student, id);
-    } else {
-      // Créer un étudiant temporaire si nécessaire
-      const tempStudent = { name: name || 'Étudiant', grades: {}, calculated: false };
-      allStudents[key] = tempStudent;
-      saveToLocalStorage();
-      currentAdmin = dept;
-      currentSemester = sem;
-      currentStudentId = id;
-      currentStudentData = tempStudent;
-      displayStudentResults(tempStudent, id);
+    // إذا لم يكن الطالب موجوداً، ننشئه
+    if (!student) {
+      student = { name: name || 'Étudiant', grades: {}, calculated: false };
+      allStudents[key] = student;
+      localStorage.setItem('iset_local_students', JSON.stringify(allStudents));
     }
+    
+    currentStudentData = student;
+    currentStudentId = id;
+    currentDept = dept;
+    currentSemester = sem;
+    
+    displayStudentResults(student, id, dept, sem);
+  } else {
+    document.getElementById('studentResults').innerHTML = `
+      <div class="empty-state">
+        <i class="fas fa-exclamation-triangle"></i>
+        <h3>Lien invalide</h3>
+        <p>Veuillez utiliser le lien fourni par l'administration.</p>
+      </div>
+    `;
   }
 </script>
 </body>
