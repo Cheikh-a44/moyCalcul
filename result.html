@@ -79,7 +79,6 @@
     text-align: center;
   }
   
-  /* صف الموديل - بدون حدود داخلية */
   .releve-table .module-row {
     background: #d0e8f7;
     font-weight: bold;
@@ -92,7 +91,6 @@
   .releve-table .module-row td:first-child { border-left: 1px solid #aaa; }
   .releve-table .module-row td:last-child { border-right: 1px solid #aaa; }
   
-  /* صف الطالب - بدون حدود داخلية */
   .releve-table .student-info-row {
     background: #f0f8ff;
     font-weight: bold;
@@ -116,13 +114,12 @@
   .status-C, .status-V { color: #27ae60; font-weight: bold; }
   .status-NC, .status-NV { color: #e74c3c; font-weight: bold; }
   
-  /* صف المعدل - بدون أي حدود */
   .moyenne-row {
     background: transparent;
   }
   .moyenne-row td {
     border: none !important;
-    padding: 8px 4px 2px 4px;
+    padding: 6px 4px 2px 4px;
     background: transparent;
   }
   
@@ -178,7 +175,7 @@
   
   @media (max-width:768px) {
     .releve-table { font-size: 10px; }
-    .releve-table th, .releve-table td { padding: 2px 3px; }
+    .releve-table th, .releve-table td { padding: 1px 3px; }
   }
 </style>
 </head>
@@ -429,7 +426,7 @@
               <tbody>
                 <tr class="student-info-row">
                   <td>${escapeHtml(id)}</td><td style="text-align:left; padding-left:15px;">${escapeHtml(currentStudentName)}</td>
-                  <td>-</td><td>-</td><td>-</td>${showSRColumn ? '<td>-</td>' : ''}<td>-</td><td>-</td><td>-</td>
+                  <td></td><td></td><td></td>${showSRColumn ? '<td></td>' : ''}<td></td><td></td><td></td>
                 </tr>
         `;
         
@@ -438,7 +435,7 @@
           html += `
             <tr class="module-row">
               <td>${escapeHtml(moduleCode)}</td><td style="text-align:left; padding-left:15px;">${escapeHtml(module.name)}</td>
-              <td>-</td><td>-</td><td>-</td>${showSRColumn ? '<td>-</td>' : ''}
+              <td></td><td></td><td></td>${showSRColumn ? '<td></td>' : ''}
               <td style="font-weight:bold;">${module.moyenne.toFixed(2)}</td><td>${module.earnedCredits.toFixed(1)}</td>
               <td class="${module.status === 'V' ? 'status-V' : 'status-NV'}">${module.status}</td>
             </tr>
@@ -446,16 +443,16 @@
           
           for (let subject of module.subjects) {
             const grades = notesBySubject[subject.name] || {};
-            const tpDisplay = subject.hasTP ? (grades['TP'] !== undefined ? grades['TP'].toFixed(2) : '-') : '-';
-            const ccDisplay = grades['Contrôle continu'] !== undefined ? grades['Contrôle continu'].toFixed(2) : '-';
-            const examDisplay = grades['Examen'] !== undefined ? grades['Examen'].toFixed(2) : '-';
+            const tpDisplay = subject.hasTP ? (grades['TP'] !== undefined ? grades['TP'].toFixed(2) : '') : '';
+            const ccDisplay = grades['Contrôle continu'] !== undefined ? grades['Contrôle continu'].toFixed(2) : '';
+            const examDisplay = grades['Examen'] !== undefined ? grades['Examen'].toFixed(2) : '';
             const rattrapage = grades['Rattrapage'];
-            const srDisplay = (rattrapage !== undefined && rattrapage > (grades['Examen'] || 0)) ? rattrapage.toFixed(2) : '-';
+            const srDisplay = (rattrapage !== undefined && rattrapage > (grades['Examen'] || 0)) ? rattrapage.toFixed(2) : '';
             const creditEarned = subject.status === 'C' ? subject.credit : 0;
             
             html += `
               <tr class="subject-row">
-                <td>-</td><td style="text-align:left; padding-left:30px;">${escapeHtml(displaySubjectName(subject.name))}</td>
+                <td></td><td style="text-align:left; padding-left:30px;">${escapeHtml(displaySubjectName(subject.name))}</td>
                 <td>${tpDisplay}</td><td>${ccDisplay}</td><td>${examDisplay}</td>${showSRColumn ? `<td>${srDisplay}</td>` : ''}
                 <td style="font-weight:bold;">${subject.moyenne.toFixed(2)}</td><td>${creditEarned.toFixed(1)}</td>
                 <td class="${subject.status === 'C' ? 'status-C' : 'status-NC'}">${subject.status}</td>
@@ -491,7 +488,7 @@
           let tpHtml = '<h4 class="section-subtitle"><i class="fas fa-flask"></i> Résultats TP</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note TP</th></tr></thead><tbody>';
           for (let moduleCode in modulesStructure) {
             for (let subject of modulesStructure[moduleCode].subjects) {
-              if (hasTP(subject)) { const grade = notesBySubject[subject]?.['TP']; if (grade !== undefined) hasTPData = true; tpHtml += `<tr><td>${escapeHtml(displaySubjectName(subject))}</td><td>${grade !== undefined ? grade.toFixed(2) : '-'}</td></tr>`; }
+              if (hasTP(subject)) { const grade = notesBySubject[subject]?.['TP']; if (grade !== undefined) hasTPData = true; tpHtml += `<tr><td>${escapeHtml(displaySubjectName(subject))}</td><td>${grade !== undefined ? grade.toFixed(2) : ''}</td></tr>`; }
             }
           }
           tpHtml += '</tbody></table>';
@@ -499,13 +496,13 @@
           
           let ccHtml = '<h4 class="section-subtitle"><i class="fas fa-pencil-alt"></i> Résultats Contrôle continu</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note CC</th></tr></thead><tbody>';
           for (let moduleCode in modulesStructure) {
-            for (let subject of modulesStructure[moduleCode].subjects) { const grade = notesBySubject[subject]?.['Contrôle continu']; ccHtml += `<tr><td>${escapeHtml(displaySubjectName(subject))}</td><td>${grade !== undefined ? grade.toFixed(2) : '-'}</td></tr>`; }
+            for (let subject of modulesStructure[moduleCode].subjects) { const grade = notesBySubject[subject]?.['Contrôle continu']; ccHtml += `<tr><td>${escapeHtml(displaySubjectName(subject))}</td><td>${grade !== undefined ? grade.toFixed(2) : ''}</td></tr>`; }
           }
           ccHtml += '</tbody></table>'; html += ccHtml;
           
           let examHtml = '<h4 class="section-subtitle"><i class="fas fa-file-alt"></i> Résultats Examen</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note Examen</th></tr></thead><tbody>';
           for (let moduleCode in modulesStructure) {
-            for (let subject of modulesStructure[moduleCode].subjects) { const grade = notesBySubject[subject]?.['Examen']; examHtml += `<tr><td>${escapeHtml(displaySubjectName(subject))}</td><td>${grade !== undefined ? grade.toFixed(2) : '-'}</td></tr>`; }
+            for (let subject of modulesStructure[moduleCode].subjects) { const grade = notesBySubject[subject]?.['Examen']; examHtml += `<tr><td>${escapeHtml(displaySubjectName(subject))}</td><td>${grade !== undefined ? grade.toFixed(2) : ''}</td></tr>`; }
           }
           examHtml += '</tbody></table>'; html += examHtml;
         }
@@ -544,19 +541,23 @@
         <table style="width:100%; border-collapse:collapse; border:1px solid #000; font-size:10pt; margin-top:10px;">
           <thead>
             <tr style="background:#e8f4fc;">
-              <th style="border:1px solid #000; padding:4px;">Numéro</th><th style="border:1px solid #000; padding:4px;">Nom et Prénom</th>
-              <th style="border:1px solid #000; padding:4px;">TP</th><th style="border:1px solid #000; padding:4px;">CC</th><th style="border:1px solid #000; padding:4px;">Examen</th>
-              ${showSRColumn ? '<th style="border:1px solid #000; padding:4px;">SR</th>' : ''}
-              <th style="border:1px solid #000; padding:4px;">NF°</th><th style="border:1px solid #000; padding:4px;">Crédit</th><th style="border:1px solid #000; padding:4px;">Obs</th>
+              <th style="border:1px solid #000; padding:3px;">Numéro</th><th style="border:1px solid #000; padding:3px;">Nom et Prénom</th>
+              <th style="border:1px solid #000; padding:3px;">TP</th><th style="border:1px solid #000; padding:3px;">CC</th><th style="border:1px solid #000; padding:3px;">Examen</th>
+              ${showSRColumn ? '<th style="border:1px solid #000; padding:3px;">SR</th>' : ''}
+              <th style="border:1px solid #000; padding:3px;">NF°</th><th style="border:1px solid #000; padding:3px;">Crédit</th><th style="border:1px solid #000; padding:3px;">Obs</th>
             </tr>
           </thead>
           <tbody>
             <tr style="background:#f0f8ff;">
-              <td style="border:1px solid #000; padding:3px;">${escapeHtml(currentStudentId)}</td>
-              <td style="border:1px solid #000; padding:3px; text-align:left;">${escapeHtml(studentName)}</td>
-              <td style="border:1px solid #000; padding:3px;"></td><td style="border:1px solid #000; padding:3px;"></td><td style="border:1px solid #000; padding:3px;"></td>
-              ${showSRColumn ? '<td style="border:1px solid #000; padding:3px;"></td>' : ''}
-              <td style="border:1px solid #000; padding:3px;"></td><td style="border:1px solid #000; padding:3px;"></td><td style="border:1px solid #000; padding:3px;"></td>
+              <td style="border:none; border-left:1px solid #000; border-right:1px solid #000; padding:2px;">${escapeHtml(currentStudentId)}</td>
+              <td style="border:none; border-left:1px solid #000; border-right:1px solid #000; padding:2px; text-align:left;">${escapeHtml(studentName)}</td>
+              <td style="border:none; border-left:1px solid #000; border-right:1px solid #000; padding:2px;"></td>
+              <td style="border:none; border-left:1px solid #000; border-right:1px solid #000; padding:2px;"></td>
+              <td style="border:none; border-left:1px solid #000; border-right:1px solid #000; padding:2px;"></td>
+              ${showSRColumn ? '<td style="border:none; border-left:1px solid #000; border-right:1px solid #000; padding:2px;"></td>' : ''}
+              <td style="border:none; border-left:1px solid #000; border-right:1px solid #000; padding:2px;"></td>
+              <td style="border:none; border-left:1px solid #000; border-right:1px solid #000; padding:2px;"></td>
+              <td style="border:none; border-left:1px solid #000; border-right:1px solid #000; padding:2px;"></td>
             </tr>
     `;
     
@@ -564,13 +565,15 @@
       const module = results.modules[moduleCode];
       content += `
         <tr style="background:#d0e8f7;">
-          <td style="border:1px solid #000; padding:3px;">${escapeHtml(moduleCode)}</td>
-          <td style="border:1px solid #000; padding:3px; text-align:left;">${escapeHtml(module.name)}</td>
-          <td style="border:1px solid #000; padding:3px;"></td><td style="border:1px solid #000; padding:3px;"></td><td style="border:1px solid #000; padding:3px;"></td>
-          ${showSRColumn ? '<td style="border:1px solid #000; padding:3px;"></td>' : ''}
-          <td style="border:1px solid #000; padding:3px; font-weight:bold;">${module.moyenne.toFixed(2)}</td>
-          <td style="border:1px solid #000; padding:3px;">${module.earnedCredits.toFixed(1)}</td>
-          <td style="border:1px solid #000; padding:3px;">${module.status}</td>
+          <td style="border:none; border-left:1px solid #000; border-right:1px solid #000; padding:2px;">${escapeHtml(moduleCode)}</td>
+          <td style="border:none; border-left:1px solid #000; border-right:1px solid #000; padding:2px; text-align:left;">${escapeHtml(module.name)}</td>
+          <td style="border:none; border-left:1px solid #000; border-right:1px solid #000; padding:2px;"></td>
+          <td style="border:none; border-left:1px solid #000; border-right:1px solid #000; padding:2px;"></td>
+          <td style="border:none; border-left:1px solid #000; border-right:1px solid #000; padding:2px;"></td>
+          ${showSRColumn ? '<td style="border:none; border-left:1px solid #000; border-right:1px solid #000; padding:2px;"></td>' : ''}
+          <td style="border:none; border-left:1px solid #000; border-right:1px solid #000; padding:2px; font-weight:bold;">${module.moyenne.toFixed(2)}</td>
+          <td style="border:none; border-left:1px solid #000; border-right:1px solid #000; padding:2px;">${module.earnedCredits.toFixed(1)}</td>
+          <td style="border:none; border-left:1px solid #000; border-right:1px solid #000; padding:2px;">${module.status}</td>
         </tr>
       `;
       
@@ -585,13 +588,15 @@
         
         content += `
           <tr>
-            <td style="border:1px solid #000; padding:2px;"></td>
-            <td style="border:1px solid #000; padding:2px; text-align:left; padding-left:20px;">${escapeHtml(displaySubjectName(subject.name))}</td>
-            <td style="border:1px solid #000; padding:2px;">${tpDisplay}</td><td style="border:1px solid #000; padding:2px;">${ccDisplay}</td><td style="border:1px solid #000; padding:2px;">${examDisplay}</td>
-            ${showSRColumn ? `<td style="border:1px solid #000; padding:2px;">${srDisplay}</td>` : ''}
-            <td style="border:1px solid #000; padding:2px; font-weight:bold;">${subject.moyenne.toFixed(2)}</td>
-            <td style="border:1px solid #000; padding:2px;">${creditEarned.toFixed(1)}</td>
-            <td style="border:1px solid #000; padding:2px;">${subject.status}</td>
+            <td style="border:1px solid #000; padding:1px;"></td>
+            <td style="border:1px solid #000; padding:1px; text-align:left; padding-left:20px;">${escapeHtml(displaySubjectName(subject.name))}</td>
+            <td style="border:1px solid #000; padding:1px;">${tpDisplay}</td>
+            <td style="border:1px solid #000; padding:1px;">${ccDisplay}</td>
+            <td style="border:1px solid #000; padding:1px;">${examDisplay}</td>
+            ${showSRColumn ? `<td style="border:1px solid #000; padding:1px;">${srDisplay}</td>` : ''}
+            <td style="border:1px solid #000; padding:1px; font-weight:bold;">${subject.moyenne.toFixed(2)}</td>
+            <td style="border:1px solid #000; padding:1px;">${creditEarned.toFixed(1)}</td>
+            <td style="border:1px solid #000; padding:1px;">${subject.status}</td>
           </tr>
         `;
       }
@@ -599,10 +604,10 @@
     
     content += `
             <tr style="background:transparent;">
-              <td colspan="${colspanValue}" style="border:none; padding:8px 4px 2px 4px; text-align:right; font-weight:bold;">Moyenne Semestre :</td>
-              <td style="border:none; padding:8px 4px 2px 4px; font-weight:bold;">${results.moyenneGenerale.toFixed(2)}</td>
-              <td style="border:none; padding:8px 4px 2px 4px;"></td>
-              <td style="border:none; padding:8px 4px 2px 4px; font-weight:bold;">${results.semestreStatus}</td>
+              <td colspan="${colspanValue}" style="border:none; padding:6px 4px 2px 4px; text-align:right; font-weight:bold;">Moyenne Semestre :</td>
+              <td style="border:none; padding:6px 4px 2px 4px; font-weight:bold;">${results.moyenneGenerale.toFixed(2)}</td>
+              <td style="border:none; padding:6px 4px 2px 4px;"></td>
+              <td style="border:none; padding:6px 4px 2px 4px; font-weight:bold;">${results.semestreStatus}</td>
             </tr>
           </tbody>
         </table>
