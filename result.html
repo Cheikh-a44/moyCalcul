@@ -93,8 +93,15 @@
   .message { padding:0.8rem 1rem; border-radius:var(--radius); margin-bottom:1rem; display:none; }
   .message.success { background:#d4edda; color:#155724; }
   .message.error { background:#f8d7da; color:#721c24; }
+  .message.info { background:#cce5ff; color:#004085; }
   
   .footer { text-align:center; padding:2rem; color:var(--text-light); font-size:0.9rem; }
+  
+  .empty-state { text-align:center; padding:3rem 1rem; color:var(--text-light); }
+  .empty-state i { font-size:4rem; margin-bottom:1rem; color:var(--primary-light); }
+  
+  .student-header { text-align:center; margin-bottom:1.5rem; padding-bottom:1rem; border-bottom:2px solid var(--primary-light); }
+  .student-header i { font-size:3rem; color:var(--primary); margin-bottom:0.5rem; }
   
   @media (max-width:768px) {
     .notes-table { font-size:12px; }
@@ -177,11 +184,7 @@
   <!-- Zone d'affichage des résultats pour les étudiants -->
   <div id="studentView" style="display:none;" class="card">
     <div id="studentResults"></div>
-    <div style="text-align:center; margin-top:1rem;">
-      <button class="admin-btn success" onclick="generatePDF()">
-        <i class="fas fa-file-pdf"></i> Télécharger mon relevé PDF
-      </button>
-    </div>
+    <div id="pdfButtonContainer" style="text-align:center; margin-top:1.5rem;"></div>
   </div>
 </div>
 
@@ -536,7 +539,7 @@
       }
     }
     
-    html += '</tbody></table>';
+    html += '</tbody></tr>';
     html += '<button class="admin-btn success" onclick="saveStudentGrades()"><i class="fas fa-save"></i> Enregistrer les notes</button>';
     document.getElementById('gradesContainer').innerHTML = html;
     
@@ -607,14 +610,28 @@
     if (currentStudentId) loadStudentGrades();
   }
   
-  // ==================== AFFICHAGE POUR ÉTUDIANT ====================
+  // ==================== AFFICHAGE POUR ÉTUDIANT (avec vérification) ====================
   function displayStudentResults(student, studentId) {
     const results = student.results;
-    if (!results) return;
     
+    // ✅ Vérification: Le PDF n'apparaît que si calculated === true
+    if (!results || !student.calculated) {
+      document.getElementById('studentResults').innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-spinner fa-pulse"></i>
+          <h3>Résultats non disponibles</h3>
+          <p>Le coordinateur n'a pas encore calculé les moyennes pour ce semestre.</p>
+          <p style="margin-top:1rem; font-size:0.9rem;">Veuillez vérifier plus tard.</p>
+        </div>
+      `;
+      document.getElementById('pdfButtonContainer').innerHTML = '';
+      return;
+    }
+    
+    // Affichage des résultats
     let html = `
-      <div class="student-header" style="text-align:center; margin-bottom:1.5rem;">
-        <i class="fas fa-user-graduate" style="font-size:3rem; color:var(--primary);"></i>
+      <div class="student-header">
+        <i class="fas fa-user-graduate"></i>
         <h3>${student.name}</h3>
         <p>N° ${studentId} | ${currentAdmin} | ${SEMESTERS_CONFIG[currentAdmin][currentSemester].name}</p>
       </div>
@@ -657,11 +674,21 @@
     }
     
     document.getElementById('studentResults').innerHTML = html;
+    
+    // ✅ Le bouton PDF apparaît seulement si les résultats sont calculés
+    document.getElementById('pdfButtonContainer').innerHTML = `
+      <button class="admin-btn success" onclick="generatePDF()">
+        <i class="fas fa-file-pdf"></i> Télécharger mon relevé PDF
+      </button>
+    `;
   }
   
   function generatePDF() {
     const results = currentStudentData?.results;
-    if (!results) return;
+    if (!results || !currentStudentData?.calculated) {
+      alert("Les résultats ne sont pas encore disponibles. Veuillez contacter le coordinateur.");
+      return;
+    }
     
     const studentId = currentStudentId;
     const studentName = currentStudentData.name;
@@ -725,7 +752,7 @@
     html2pdf().set({ margin: 0, filename: `Releve_${studentId}_${currentSemester}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(element).save().then(() => { document.body.removeChild(element); });
   }
   
-  // Vérifier les paramètres URL pour affichage étudiant
+  // ==================== VÉRIFICATION DES PARAMÈTRES URL ====================
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.has('dept') && urlParams.has('sem') && urlParams.has('id')) {
     const dept = urlParams.get('dept');
@@ -739,14 +766,22 @@
     
     const key = `${dept}_${sem}_${id}`;
     const student = allStudents[key];
-    if (student && student.results) {
+    
+    if (student) {
       currentAdmin = dept;
       currentSemester = sem;
       currentStudentId = id;
       currentStudentData = student;
       displayStudentResults(student, id);
     } else {
-      document.getElementById('studentResults').innerHTML = '<div class="empty-state"><i class="fas fa-user-graduate"></i><h3>Aucun résultat disponible</h3><p>Les résultats n\'ont pas encore été calculés par le coordinateur.</p></div>';
+      document.getElementById('studentResults').innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-user-graduate"></i>
+          <h3>Aucun résultat trouvé</h3>
+          <p>Aucun étudiant avec ce numéro n'a été trouvé dans le système.</p>
+        </div>
+      `;
+      document.getElementById('pdfButtonContainer').innerHTML = '';
     }
   }
 </script>
