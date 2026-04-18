@@ -575,7 +575,7 @@
           <div class="form-group"><label>Fichier à importer</label><input type="file" id="importFile" accept=".xlsx, .xls, .csv, .txt, .pdf, .jpg, .jpeg, .png"></div>
           <div id="ocrProgress" style="display:none;"><div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div><p id="progressText" style="text-align:center;">Analyse de l'image...</p></div>
           <button class="admin-btn success" onclick="processImport()">Importer</button>
-          <button class="admin-btn secondary" onclick="hideImportForm()">Annuler</button>
+          <button class="admin-btn secondary" onclick="hideImportForm()">Fermer</button>
         </div>
         
         <div id="manageSubjects" style="display:none;">
@@ -794,7 +794,7 @@
       const semestreStatus = generaleMoyenne >= 10 ? 'Validé' : 'Non Validé';
       
       html += '<div style="overflow-x:auto;"><table class="releve-table"><thead><tr><th>Numéro</th><th>Nom et Prénom</th><th>TP</th><th>CC</th><th>Examen</th><th>NFe</th><th>Crédit</th><th>Observations</th></tr></thead><tbody>';
-      html += `<tr class="student-info-row"><td>${studentId}</td><td style="text-align:left; padding-left:15px;">${studentName}</td><td>-</td><td style="text-align:center;">-</td><td style="text-align:center;">-</td><td style="font-weight:bold;">Moy Sem: ${generaleMoyenne.toFixed(2)}</td><td style="text-align:center;">-</td><td class="${semestreStatus === 'Validé' ? 'status-V' : 'status-NV'}">${semestreStatus}</td></tr>`;
+      html += `<tr class="student-info-row"><td>${studentId}</td><td style="text-align:left; padding-left:15px;">${studentName}</td><td style="text-align:center;">-</td><td style="text-align:center;">-</td><td style="text-align:center;">-</td><td style="font-weight:bold;">Moy Sem: ${generaleMoyenne.toFixed(2)}</td><td style="text-align:center;">-</td><td class="${semestreStatus === 'Validé' ? 'status-V' : 'status-NV'}">${semestreStatus}</td></tr>`;
       
       for (let moduleCode in modulesStructure) {
         const module = modulesStructure[moduleCode];
@@ -920,7 +920,7 @@
     throw new Error('Format non supporté');
   }
   
-  // ==================== استيراد الملفات مع تجنب التكرار ====================
+  // ==================== استيراد الملفات مع تجنب التكرار وعدم إغلاق النموذج ====================
   window.processImport = async () => {
     const semester = document.getElementById('importSemester').value;
     const type = document.getElementById('importType').value;
@@ -950,7 +950,7 @@
       const prefix = `${currentAdmin.type}/${semester}`;
       const snapshot = await get(child(ref(db), prefix));
       
-      const existingStudents = new Set(); // مجموعة لتخزين المعرفات الموجودة
+      const existingStudents = new Set();
       
       if (snapshot.exists()) {
         const allStudents = snapshot.val();
@@ -990,27 +990,33 @@
         // ✅ 3. التحقق من عدم وجود الطالب مسبقاً
         if (existingStudents.has(studentId)) {
           duplicateCount++;
-          continue; // تخطي هذا الطالب (مكرر)
+          continue;
         }
         
         // ✅ 4. إضافة الطالب الجديد فقط
         const path = `results/${currentAdmin.type}/${semester}/${studentId}/${cleanSubject}_${type}`;
         await set(ref(db, path), { grade, name: studentName, subject: subject, type, dateAdded: Date.now() });
         importCount++;
-        existingStudents.add(studentId); // إضافة المعرف لتجنب التكرار داخل نفس الملف
+        existingStudents.add(studentId);
       }
       
-      // ✅ 5. عرض تقرير مفصل
+      // ✅ 5. عرض تقرير مفصل (دون إغلاق النموذج)
       let message = `✅ ${importCount} nouveaux étudiants ajoutés pour "${displaySubjectName(subject)}" (${type})`;
       if (duplicateCount > 0) message += `\n⚠️ ${duplicateCount} étudiants déjà existants (ignorés)`;
       if (errorCount > 0) message += `\n❌ ${errorCount} lignes avec erreur (ignorées)`;
       
       msgDiv.textContent = message;
       msgDiv.className = 'message success';
-      document.getElementById('importSubject').value = '';
+      
+      // ✅ فقط مسح حقل الملف، وليس إخفاء النموذج
       fileInput.value = '';
-      hideImportForm();
-      setTimeout(() => msgDiv.style.display = 'none', 5000);
+      
+      // ✅ إعادة تعيين الرسالة بعد 5 ثوانٍ
+      setTimeout(() => {
+        if (msgDiv.style.display === 'block') {
+          msgDiv.style.display = 'none';
+        }
+      }, 5000);
       
     } catch (error) {
       console.error('Erreur:', error);
@@ -1028,7 +1034,7 @@
     if (subjectsMap.size === 0) { container.innerHTML = '<p style="text-align:center;color:var(--text-light);">Aucune matière dans ce semestre</p>'; return; }
     let html = `<table class="results-table"><thead><tr><th>Matière</th><th>Type</th><th>Étudiants</th><th>Action</th></tr></thead><tbody>`;
     for (let [key, data] of subjectsMap) { html += `<tr><td><strong>${displaySubjectName(data.subject)}</strong></td><td>${data.type}</td><td style="text-align:center;">${data.count}</td><td style="text-align:center;"><button class="admin-btn danger" style="padding:0.3rem 0.8rem;font-size:0.8rem;" onclick="deleteSubject('${semester}', '${data.subject}', '${data.type}')"><i class="fas fa-trash"></i> Supprimer</button></td></tr>`; }
-    html += '</tbody></tr>'; container.innerHTML = html;
+    html += '</tbody></table>'; container.innerHTML = html;
   };
   
   window.deleteSubject = async (semester, subject, type) => {
