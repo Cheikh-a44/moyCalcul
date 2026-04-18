@@ -55,7 +55,7 @@
     margin:0 auto; 
   }
   .container { 
-    max-width:900px; 
+    max-width:1000px; 
     margin:0 auto; 
     padding:0 1rem; 
   }
@@ -128,40 +128,6 @@
   .student-header p {
     color:var(--text-light);
     font-size:0.9rem;
-  }
-  
-  .results-table {
-    width:100%;
-    border-collapse:collapse;
-  }
-  .results-table th {
-    background:var(--primary-light);
-    padding:0.8rem;
-    text-align:left;
-    color:var(--primary-dark);
-    font-weight:600;
-  }
-  .results-table td {
-    padding:0.8rem;
-    border-bottom:1px solid #eee;
-  }
-  .results-table tr:last-child td {
-    border-bottom:none;
-  }
-  
-  .grade-badge {
-    font-weight:bold;
-    padding:0.2rem 0.8rem;
-    border-radius:20px;
-    display:inline-block;
-  }
-  .grade-success {
-    color:#2d6a4f;
-    background:#d4edda;
-  }
-  .grade-fail {
-    color:#e63946;
-    background:#f8d7da;
   }
   
   .empty-state { 
@@ -241,7 +207,7 @@
   .admin-panel.active {
     display:block;
   }
-  .admin-panel.h3 {
+  .admin-panel h3 {
     color:var(--primary);
     margin-bottom:1.5rem;
     display:flex;
@@ -336,22 +302,84 @@
     border-radius: var(--radius);
     font-weight: bold;
     transition: var(--transition);
+    margin-top: 1rem;
   }
   .pdf-link:hover {
     background: #218838;
     transform: translateY(-2px);
   }
-  .warning-message {
+  
+  /* Message neutre gris */
+  .neutral-message {
     text-align: center;
-    margin-top: 1.5rem;
-    color: #dc3545;
+    margin-top: 1rem;
+    padding: 0.8rem;
+    background: #e9ecef;
+    color: #6c757d;
+    border-radius: var(--radius);
+    font-weight: normal;
+  }
+  
+  /* Tableaux séparés pour TP, CC, Examen */
+  .simple-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 14px;
+  }
+  .simple-table th, .simple-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+  }
+  .simple-table th {
+    background: var(--primary-light);
     font-weight: bold;
+  }
+  .simple-table td:first-child {
+    text-align: left;
+  }
+  
+  /* Tableau final façon relevé de notes */
+  .releve-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 13px;
+  }
+  .releve-table th, .releve-table td {
+    border: 1px solid #ddd;
+    padding: 8px 6px;
+    text-align: center;
+  }
+  .releve-table th {
+    background: var(--primary-light);
+    font-weight: bold;
+  }
+  .releve-table .module-row {
+    background: #e8f4fc;
+    font-weight: bold;
+  }
+  .releve-table .subject-row td:first-child {
+    text-align: left;
+    padding-left: 25px;
+  }
+  .status-C, .status-V { color: #27ae60; font-weight: bold; }
+  .status-NC, .status-NV { color: #e74c3c; font-weight: bold; }
+  
+  .section-subtitle {
+    font-size: 1.1rem;
+    color: var(--primary);
+    margin: 1rem 0 0.5rem 0;
+    padding-bottom: 0.3rem;
+    border-bottom: 2px solid var(--primary-light);
   }
   
   @media (max-width:600px) {
     header h1 { font-size:1.8rem; }
-    .results-table { font-size:0.9rem; }
-    .results-table th, .results-table td { padding:0.6rem; }
+    .releve-table { font-size: 11px; }
+    .releve-table th, .releve-table td { padding: 5px 3px; }
+    .simple-table { font-size: 12px; }
     .search-box button { padding:0 1.2rem; }
   }
 </style>
@@ -580,7 +608,7 @@
       S2: ["Anglais 2", "Français 2", "PPV", "TIC", "PSA", "STA", "GAB", "GEM"]
     },
     PPV: {
-      S3: ["Français s3", "Économie", "Horticulture", "Agronomie", "Entomologie .Nemat", "Pesticides agricoles", "Science des sols", "Science des plantes"],
+      S3: ["Français s3", "Économie", "I.Agronomie", "I.Horticulture", "Pesticides agricoles", "Entomologie et Nemato", "Science des sols", "Science des plantes"],
       S4: ["Vulgarisation", "Technique de propagation", "Technique d'irrigation et BEC", "Ecophysiologie et Biochimie", "Fertilité du sol", "Méthodes de diagnostic", "Malherbologie"],
       S5: [],
       S6: []
@@ -656,6 +684,50 @@
     }
   });
 
+  // Structure des modules pour l'affichage final (comme dans l'image)
+  const MODULES_STRUCTURE = {
+    TC: {
+      S1: {
+        M11: { name: "Module 11", credit: 6.0, subjects: ["Anglais", "Français"] },
+        M12: { name: "Module 12", credit: 8.0, subjects: ["Informatique", "Math et Statistique"] },
+        M13: { name: "Module 13", credit: 8.0, subjects: ["Physique", "Chimie"] },
+        M14: { name: "Module 14", credit: 8.0, subjects: ["Biologie", "Micro et Génétique"] }
+      },
+      S2: {
+        M21: { name: "Module 21", credit: 6.0, subjects: ["Anglais 2", "Français 2"] },
+        M22: { name: "Module 22", credit: 6.0, subjects: ["TIC", "PPV"] },
+        M23: { name: "Module 23", credit: 6.0, subjects: ["PSA", "STA"] },
+        M24: { name: "Module 24", credit: 6.0, subjects: ["GEM", "GAB"] }
+      }
+    },
+    PPV: {
+      S3: {
+        M31: { name: "Module 31", credit: 6.0, subjects: ["Français s3", "Économie"] },
+        M32: { name: "Module 32", credit: 8.0, subjects: ["I.Agronomie", "I.Horticulture"] },
+        M33: { name: "Module 33", credit: 8.0, subjects: ["Pesticides agricoles", "Entomologie et Nemato"] },
+        M34: { name: "Module 34", credit: 8.0, subjects: ["Science des sols", "Science des plantes"] }
+      },
+      S4: {
+        M41: { name: "Module 41", credit: 3.0, subjects: ["Vulgarisation"] },
+        M42: { name: "Module 42", credit: 7.0, subjects: ["Technique de propagation", "Technique d'irrigation et BEC"] },
+        M43: { name: "Module 43", credit: 7.0, subjects: ["Ecophysiologie et Biochimie", "Fertilité du sol"] },
+        M44: { name: "Module 44", credit: 6.0, subjects: ["Méthodes de diagnostic", "Malherbologie"] }
+      }
+    }
+  };
+
+  // Credits des matières
+  const SUBJECT_CREDITS = {
+    TC: {
+      S1: { "Anglais": 3.0, "Français": 3.0, "Informatique": 3.0, "Math et Statistique": 5.0, "Physique": 4.0, "Chimie": 4.0, "Biologie": 4.0, "Micro et Génétique": 4.0 },
+      S2: { "Anglais 2": 3.0, "Français 2": 3.0, "TIC": 3.0, "PPV": 3.0, "PSA": 3.0, "STA": 3.0, "GEM": 3.0, "GAB": 3.0 }
+    },
+    PPV: {
+      S3: { "Français s3": 3.0, "Économie": 3.0, "I.Agronomie": 4.0, "I.Horticulture": 4.0, "Pesticides agricoles": 4.0, "Entomologie et Nemato": 4.0, "Science des sols": 4.0, "Science des plantes": 4.0 },
+      S4: { "Vulgarisation": 3.0, "Technique de propagation": 4.0, "Technique d'irrigation et BEC": 3.0, "Ecophysiologie et Biochimie": 4.0, "Fertilité du sol": 3.0, "Méthodes de diagnostic": 3.0, "Malherbologie": 3.0 }
+    }
+  };
+
   window.searchStudentResult = async () => {
     const department = document.getElementById('resultDepartment').value;
     const semester = document.getElementById('semesterSelect').value;
@@ -681,40 +753,34 @@
     }
     
     const studentData = snapshot.val();
-    const results = [];
     let studentName = '';
     
-    // Vérification si toutes les matières sont complètes
-    const requiredSubjects = SUBJECTS_BY_DEPT[department]?.[semester] || [];
-    const hasTPForSubject = {};
-    requiredSubjects.forEach(subj => {
-      hasTPForSubject[subj] = hasTP(subj);
-    });
-    
-    // Collecter les notes existantes
-    const existingNotes = {};
+    // Récupérer le nom de l'étudiant
     for (let key in studentData) {
-      const data = studentData[key];
-      results.push({
-        subject: data.subject,
-        type: data.type,
-        grade: data.grade
-      });
-      if (!studentName) studentName = data.name;
-      
-      if (!existingNotes[data.subject]) {
-        existingNotes[data.subject] = {};
+      if (studentData[key].name) {
+        studentName = studentData[key].name;
+        break;
       }
-      existingNotes[data.subject][data.type] = data.grade;
     }
     
-    // Vérifier si toutes les notes requises sont présentes
+    // Organiser les notes par matière et type
+    const notesBySubject = {};
+    for (let key in studentData) {
+      const data = studentData[key];
+      if (!notesBySubject[data.subject]) {
+        notesBySubject[data.subject] = {};
+      }
+      notesBySubject[data.subject][data.type] = data.grade;
+    }
+    
+    // Vérifier si toutes les notes sont complètes (TP, CC, Examen pour chaque matière)
+    const requiredSubjects = SUBJECTS_BY_DEPT[department]?.[semester] || [];
     let allNotesComplete = true;
     for (let subject of requiredSubjects) {
-      const hasTP = hasTPForSubject[subject];
-      const examExists = existingNotes[subject] && existingNotes[subject]['Examen'] !== undefined;
-      const ccExists = existingNotes[subject] && existingNotes[subject]['Contrôle continu'] !== undefined;
-      const tpExists = !hasTP || (existingNotes[subject] && existingNotes[subject]['TP'] !== undefined);
+      const hasTPforSubject = hasTP(subject);
+      const examExists = notesBySubject[subject] && notesBySubject[subject]['Examen'] !== undefined;
+      const ccExists = notesBySubject[subject] && notesBySubject[subject]['Contrôle continu'] !== undefined;
+      const tpExists = !hasTPforSubject || (notesBySubject[subject] && notesBySubject[subject]['TP'] !== undefined);
       
       if (!examExists || !ccExists || !tpExists) {
         allNotesComplete = false;
@@ -728,28 +794,183 @@
         <h3>${studentName || 'Étudiant'}</h3>
         <p>N° ${studentId} | ${department} | ${semester}</p>
       </div>
-      <table class="results-table">
-        <thead><tr><th>Matière</th><th>Type</th><th style="text-align:center;">Note</th></tr></thead>
-        <tbody>
     `;
     
-    results.forEach(r => {
-      const gradeClass = r.grade >= 10 ? 'grade-success' : 'grade-fail';
-      html += `<tr><td><strong>${r.subject}</strong></td><td>${r.type}</td><td style="text-align:center;"><span class="grade-badge ${gradeClass}">${r.grade}/20</span></td></tr>`;
-    });
-    
-    html += '</tbody></table>';
-    
-    // ✅ إضافة رابط PDF باللون الأخضر فقط إذا كانت جميع المواد مكتملة
     if (allNotesComplete) {
-      html += `<div style="text-align:center; margin-top:1.5rem;">
+      // ========== AFFICHAGE APRÈS CALCUL (TABLEAU FINAL COMME DANS L'IMAGE) ==========
+      // Calcul des moyennes des matières et des modules
+      const subjectAverages = {};
+      const moduleAverages = {};
+      const moduleStatus = {};
+      const subjectStatus = {};
+      
+      // Calcul des moyennes des matières
+      for (let subject of requiredSubjects) {
+        const notes = notesBySubject[subject] || {};
+        const hasTPforSubject = hasTP(subject);
+        const exam = notes['Examen'] || 0;
+        const cc = notes['Contrôle continu'] || 0;
+        const tp = notes['TP'] || 0;
+        const rattrapage = notes['Rattrapage'];
+        const finalExam = (rattrapage !== undefined && rattrapage > exam) ? rattrapage : exam;
+        
+        let moyenne;
+        if (hasTPforSubject) {
+          moyenne = (tp * 1 + cc * 2 + finalExam * 3) / 6;
+        } else {
+          moyenne = (cc * 2 + finalExam * 3) / 5;
+        }
+        subjectAverages[subject] = moyenne;
+        
+        // Statut de la matière (simplifié pour l'affichage)
+        subjectStatus[subject] = moyenne >= 10 ? 'C' : 'NC';
+      }
+      
+      // Calcul des moyennes des modules
+      const modulesStructure = MODULES_STRUCTURE[department]?.[semester];
+      for (let moduleCode in modulesStructure) {
+        const module = modulesStructure[moduleCode];
+        let totalWeighted = 0;
+        let totalCredits = 0;
+        for (let subject of module.subjects) {
+          const credit = SUBJECT_CREDITS[department]?.[semester]?.[subject] || 3.0;
+          totalWeighted += (subjectAverages[subject] || 0) * credit;
+          totalCredits += credit;
+        }
+        const moduleMoyenne = totalCredits > 0 ? totalWeighted / totalCredits : 0;
+        moduleAverages[moduleCode] = moduleMoyenne;
+        
+        // Vérifier si toutes les matières du module sont C
+        let allC = true;
+        for (let subject of module.subjects) {
+          if (subjectStatus[subject] !== 'C') allC = false;
+        }
+        moduleStatus[moduleCode] = allC && moduleMoyenne >= 10 ? 'V' : 'NV';
+      }
+      
+      // Calcul de la moyenne générale du semestre
+      let totalWeightedGeneral = 0;
+      let totalCreditsGeneral = 0;
+      for (let subject of requiredSubjects) {
+        const credit = SUBJECT_CREDITS[department]?.[semester]?.[subject] || 3.0;
+        totalWeightedGeneral += (subjectAverages[subject] || 0) * credit;
+        totalCreditsGeneral += credit;
+      }
+      const generaleMoyenne = totalCreditsGeneral > 0 ? totalWeightedGeneral / totalCreditsGeneral : 0;
+      const semestreStatus = generaleMoyenne >= 10 ? 'Validé' : 'Non Validé';
+      
+      // Construction du tableau final
+      html += '<div style="overflow-x:auto;"><table class="releve-table">';
+      html += '<thead><tr>';
+      html += '<th>Numéro</th><th>Nom et Prénom</th><th>TP</th><th>CC</th><th>Examen</th><th>NFe</th><th>Crédit</th><th>Observations</th>';
+      html += '</tr></thead><tbody>';
+      
+      // Ligne étudiant
+      html += `<tr class="student-info-row">
+        <td>${studentId}</td>
+        <td style="text-align:left; padding-left:15px;">${studentName}</td>
+        <td></td><td></td><td></td>
+        <td style="font-weight:bold;">Moy Sem: ${generaleMoyenne.toFixed(2)}</td>
+        <td></td>
+        <td class="${semestreStatus === 'Validé' ? 'status-V' : 'status-NV'}">${semestreStatus}</td>
+      </tr>`;
+      
+      // Modules et matières
+      for (let moduleCode in modulesStructure) {
+        const module = modulesStructure[moduleCode];
+        html += `<tr class="module-row">
+          <td>${moduleCode}</td>
+          <td style="text-align:left; padding-left:15px;">${module.name}</td>
+          <td></td><td></td><td></td>
+          <td style="font-weight:bold;">${moduleAverages[moduleCode].toFixed(2)}</td>
+          <td>${module.credit}</td>
+          <td class="${moduleStatus[moduleCode] === 'V' ? 'status-V' : 'status-NV'}">${moduleStatus[moduleCode]}</td>
+        </tr>`;
+        
+        for (let subject of module.subjects) {
+          const notes = notesBySubject[subject] || {};
+          const hasTPforSubject = hasTP(subject);
+          const credit = SUBJECT_CREDITS[department]?.[semester]?.[subject] || 3.0;
+          const creditEarned = subjectStatus[subject] === 'C' ? credit : 0;
+          
+          html += `<tr class="subject-row">
+            <td></td>
+            <td style="text-align:left; padding-left:40px;">${subject}</td>
+            <td>${hasTPforSubject ? (notes['TP'] !== undefined ? notes['TP'].toFixed(2) : '-') : '-'}</td>
+            <td>${notes['Contrôle continu'] !== undefined ? notes['Contrôle continu'].toFixed(2) : '-'}</td>
+            <td>${notes['Examen'] !== undefined ? notes['Examen'].toFixed(2) : '-'}</td>
+            <td style="font-weight:bold;">${subjectAverages[subject].toFixed(2)}</td>
+            <td>${creditEarned.toFixed(1)}</td>
+            <td class="${subjectStatus[subject] === 'C' ? 'status-C' : 'status-NC'}">${subjectStatus[subject]}</td>
+          </tr>`;
+        }
+      }
+      
+      html += '</tbody></table></div>';
+      
+      // Lien PDF
+      html += `<div style="text-align:center;">
         <a href="result.html?dept=${department}&sem=${semester}&id=${studentId}&name=${encodeURIComponent(studentName)}" class="pdf-link" target="_blank">
           <i class="fas fa-file-pdf"></i> 📂 Télécharger mon relevé PDF
         </a>
       </div>`;
+      
     } else {
-      html += `<div class="warning-message">
-        <i class="fas fa-exclamation-triangle"></i> ⚠️ Les résultats ne sont pas encore complets. Le coordinateur doit finaliser les notes.
+      // ========== AFFICHAGE AVANT CALCUL (TABLEAUX SÉPARÉS) ==========
+      
+      // 1. Tableau des TP (uniquement les matières qui ont TP)
+      const tpSubjects = requiredSubjects.filter(s => hasTP(s));
+      if (tpSubjects.length > 0) {
+        html += `<h4 class="section-subtitle"><i class="fas fa-microchip"></i> Résultats TP</h4>`;
+        html += '<table class="simple-table"><thead><tr><th>Matière</th><th>Note TP</th></tr></thead><tbody>';
+        for (let subject of tpSubjects) {
+          const note = notesBySubject[subject]?.['TP'];
+          html += `<tr><td>${subject}</td><td>${note !== undefined ? note.toFixed(2) : '-'}</td></tr>`;
+        }
+        html += '</tbody></table>';
+      }
+      
+      // 2. Tableau des CC (toutes les matières)
+      html += `<h4 class="section-subtitle"><i class="fas fa-pen"></i> Résultats Contrôle continu</h4>`;
+      html += '<table class="simple-table"><thead><tr><th>Matière</th><th>Note CC</th></tr></thead><tbody>';
+      for (let subject of requiredSubjects) {
+        const note = notesBySubject[subject]?.['Contrôle continu'];
+        html += `<tr><td>${subject}</td><td>${note !== undefined ? note.toFixed(2) : '-'}</td></tr>`;
+      }
+      html += '</tbody></table>';
+      
+      // 3. Tableau des Examens (toutes les matières)
+      html += `<h4 class="section-subtitle"><i class="fas fa-book"></i> Résultats Examen</h4>`;
+      html += '<table class="simple-table"><thead><tr><th>Matière</th><th>Note Examen</th></tr></thead><tbody>';
+      for (let subject of requiredSubjects) {
+        const note = notesBySubject[subject]?.['Examen'];
+        html += `<tr><td>${subject}</td><td>${note !== undefined ? note.toFixed(2) : '-'}</td></tr>`;
+      }
+      html += '</tbody></table>';
+      
+      // 4. Tableau des Rattrapages (si existants)
+      let hasRattrapage = false;
+      for (let subject of requiredSubjects) {
+        if (notesBySubject[subject]?.['Rattrapage'] !== undefined) {
+          hasRattrapage = true;
+          break;
+        }
+      }
+      if (hasRattrapage) {
+        html += `<h4 class="section-subtitle"><i class="fas fa-repeat"></i> Résultats Rattrapage</h4>`;
+        html += '<table class="simple-table"><thead><tr><th>Matière</th><th>Note Rattrapage</th></tr></thead><tbody>';
+        for (let subject of requiredSubjects) {
+          const note = notesBySubject[subject]?.['Rattrapage'];
+          if (note !== undefined) {
+            html += `<tr><td>${subject}</td><td>${note.toFixed(2)}</td></tr>`;
+          }
+        }
+        html += '</tbody></table>';
+      }
+      
+      // Message neutre gris
+      html += `<div class="neutral-message">
+        <i class="fas fa-info-circle"></i> Les résultats ne sont pas encore finalisés par le coordinateur.
       </div>`;
     }
     
@@ -1051,7 +1272,7 @@
         <td style="text-align:center;"><button class="admin-btn danger" style="padding:0.3rem 0.8rem;font-size:0.8rem;" onclick="deleteSubject('${semester}', '${data.subject}', '${data.type}')"><i class="fas fa-trash"></i> Supprimer</button></td></tr>`;
     }
     
-    html += '</tbody></table>';
+    html += '</tbody><table>';
     container.innerHTML = html;
   };
 
