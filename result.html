@@ -74,34 +74,44 @@
     font-weight: bold;
   }
   .releve-table td {
-    border: 1px solid #aaa;
     padding: 2px 4px;
     text-align: center;
   }
   
-  .releve-table .module-row {
-    background: #d0e8f7;
-    font-weight: bold;
+  /* صفوف عادية - بحدود */
+  .releve-table tbody tr:not(.module-row):not(.student-info-row):not(.moyenne-row) td {
+    border: 1px solid #aaa;
   }
-  .releve-table .module-row td {
-    border-left: none;
-    border-right: none;
-    padding: 2px 4px;
-  }
-  .releve-table .module-row td:first-child { border-left: 1px solid #aaa; }
-  .releve-table .module-row td:last-child { border-right: 1px solid #aaa; }
   
+  /* صف الطالب - بدون حدود داخلية */
   .releve-table .student-info-row {
     background: #f0f8ff;
     font-weight: bold;
   }
   .releve-table .student-info-row td {
+    border-top: 1px solid #aaa;
+    border-bottom: 1px solid #aaa;
     border-left: none;
     border-right: none;
     padding: 2px 4px;
   }
   .releve-table .student-info-row td:first-child { border-left: 1px solid #aaa; }
   .releve-table .student-info-row td:last-child { border-right: 1px solid #aaa; }
+  
+  /* صف الموديل - بدون حدود داخلية */
+  .releve-table .module-row {
+    background: #d0e8f7;
+    font-weight: bold;
+  }
+  .releve-table .module-row td {
+    border-top: 1px solid #aaa;
+    border-bottom: 1px solid #aaa;
+    border-left: none;
+    border-right: none;
+    padding: 2px 4px;
+  }
+  .releve-table .module-row td:first-child { border-left: 1px solid #aaa; }
+  .releve-table .module-row td:last-child { border-right: 1px solid #aaa; }
   
   .releve-table .subject-row td:first-child {
     text-align: left;
@@ -114,9 +124,7 @@
   .status-C, .status-V { color: #27ae60; font-weight: bold; }
   .status-NC, .status-NV { color: #e74c3c; font-weight: bold; }
   
-  .moyenne-row {
-    background: transparent;
-  }
+  /* صف المعدل - بدون أي حدود */
   .moyenne-row td {
     border: none !important;
     padding: 6px 4px 2px 4px;
@@ -549,15 +557,15 @@
           </thead>
           <tbody>
             <tr style="background:#f0f8ff;">
-              <td style="border:none; border-left:1px solid #000; border-right:1px solid #000; padding:2px;">${escapeHtml(currentStudentId)}</td>
-              <td style="border:none; border-left:1px solid #000; border-right:1px solid #000; padding:2px; text-align:left;">${escapeHtml(studentName)}</td>
-              <td style="border:none; border-left:1px solid #000; border-right:1px solid #000; padding:2px;"></td>
-              <td style="border:none; border-left:1px solid #000; border-right:1px solid #000; padding:2px;"></td>
-              <td style="border:none; border-left:1px solid #000; border-right:1px solid #000; padding:2px;"></td>
-              ${showSRColumn ? '<td style="border:none; border-left:1px solid #000; border-right:1px solid #000; padding:2px;"></td>' : ''}
-              <td style="border:none; border-left:1px solid #000; border-right:1px solid #000; padding:2px;"></td>
-              <td style="border:none; border-left:1px solid #000; border-right:1px solid #000; padding:2px;"></td>
-              <td style="border:none; border-left:1px solid #000; border-right:1px solid #000; padding:2px;"></td>
+              <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; border-left:1px solid #000; border-right:1px solid #000; padding:2px;">${escapeHtml(currentStudentId)}</td>
+              <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px; text-align:left;">${escapeHtml(studentName)}</td>
+              <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
+              <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
+              <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
+              ${showSRColumn ? '<td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>' : ''}
+              <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
+              <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
+              <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; border-right:1px solid #000; padding:2px;"></td>
             </tr>
     `;
     
@@ -565,15 +573,15 @@
       const module = results.modules[moduleCode];
       content += `
         <tr style="background:#d0e8f7;">
-          <td style="border:none; border-left:1px solid #000; border-right:1px solid #000; padding:2px;">${escapeHtml(moduleCode)}</td>
-          <td style="border:none; border-left:1px solid #000; border-right:1px solid #000; padding:2px; text-align:left;">${escapeHtml(module.name)}</td>
-          <td style="border:none; border-left:1px solid #000; border-right:1px solid #000; padding:2px;"></td>
-          <td style="border:none; border-left:1px solid #000; border-right:1px solid #000; padding:2px;"></td>
-          <td style="border:none; border-left:1px solid #000; border-right:1px solid #000; padding:2px;"></td>
-          ${showSRColumn ? '<td style="border:none; border-left:1px solid #000; border-right:1px solid #000; padding:2px;"></td>' : ''}
-          <td style="border:none; border-left:1px solid #000; border-right:1px solid #000; padding:2px; font-weight:bold;">${module.moyenne.toFixed(2)}</td>
-          <td style="border:none; border-left:1px solid #000; border-right:1px solid #000; padding:2px;">${module.earnedCredits.toFixed(1)}</td>
-          <td style="border:none; border-left:1px solid #000; border-right:1px solid #000; padding:2px;">${module.status}</td>
+          <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; border-left:1px solid #000; padding:2px;">${escapeHtml(moduleCode)}</td>
+          <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px; text-align:left;">${escapeHtml(module.name)}</td>
+          <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
+          <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
+          <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
+          ${showSRColumn ? '<td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>' : ''}
+          <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px; font-weight:bold;">${module.moyenne.toFixed(2)}</td>
+          <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;">${module.earnedCredits.toFixed(1)}</td>
+          <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; border-right:1px solid #000; padding:2px;">${module.status}</td>
         </tr>
       `;
       
@@ -603,7 +611,7 @@
     }
     
     content += `
-            <tr style="background:transparent;">
+            <tr class="moyenne-row">
               <td colspan="${colspanValue}" style="border:none; padding:6px 4px 2px 4px; text-align:right; font-weight:bold;">Moyenne Semestre :</td>
               <td style="border:none; padding:6px 4px 2px 4px; font-weight:bold;">${results.moyenneGenerale.toFixed(2)}</td>
               <td style="border:none; padding:6px 4px 2px 4px;"></td>
