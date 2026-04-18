@@ -106,14 +106,6 @@
   .annonce-fermer:hover {
     background: rgba(0,0,0,0.1);
   }
-  .admin-annonce-btn {
-    background: #ffc107;
-    color: #333;
-    margin-left: 0.5rem;
-  }
-  .admin-annonce-btn:hover {
-    background: #e0a800;
-  }
   
   /* Modal pour l'admin */
   .modal {
@@ -258,11 +250,12 @@
     border-top:2px dashed var(--primary-light);
   }
   
+  /* أزرار عادية بدون ألوان زاهية */
   .admin-btn {
     padding:0.8rem 1.5rem;
-    background:var(--primary);
-    color:white;
-    border:none;
+    background:#f0f0f0;
+    color:#333;
+    border:1px solid #ccc;
     border-radius:var(--radius);
     font-size:1rem;
     font-weight:600;
@@ -271,32 +264,36 @@
     margin:0.3rem;
   }
   .admin-btn:hover {
-    background:var(--primary-dark);
+    background:#e0e0e0;
+    transform:translateY(-1px);
   }
   .admin-btn.secondary {
-    background:#6c757d;
-  }
-  .admin-btn.secondary:hover {
-    background:#5a6268;
+    background:#e9ecef;
+    border-color:#adb5bd;
   }
   .admin-btn.danger {
-    background:#dc3545;
+    background:#f8d7da;
+    border-color:#dc3545;
+    color:#721c24;
   }
   .admin-btn.danger:hover {
-    background:#c82333;
+    background:#f5c6cb;
   }
   .admin-btn.success {
-    background:#28a745;
+    background:#d4edda;
+    border-color:#28a745;
+    color:#155724;
   }
   .admin-btn.success:hover {
-    background:#218838;
+    background:#c3e6cb;
   }
   .admin-btn.warning {
-    background:#ffc107;
-    color:#333;
+    background:#fff3cd;
+    border-color:#ffc107;
+    color:#856404;
   }
   .admin-btn.warning:hover {
-    background:#e0a800;
+    background:#ffeaa7;
   }
   
   .admin-panel {
@@ -855,15 +852,66 @@
   };
 
   // ==================== GESTION DES ANNONCES ====================
-  const ANNONCE_STORAGE_KEY = 'iset_annonce';
+  window.openAnnonceModal = function() {
+    const modal = document.getElementById('annonceModal');
+    if (modal) {
+      modal.style.display = 'flex';
+    }
+  }
+  
+  window.fermerModalAnnonce = function() {
+    const modal = document.getElementById('annonceModal');
+    if (modal) {
+      modal.style.display = 'none';
+    }
+    const textarea = document.getElementById('annonceTexte');
+    if (textarea) textarea.value = '';
+  }
+  
+  window.publierAnnonce = function() {
+    const texte = document.getElementById('annonceTexte').value.trim();
+    if (!texte) {
+      alert('Veuillez écrire un texte pour l\'annonce');
+      return;
+    }
+    
+    const expiration = Date.now() + (24 * 60 * 60 * 1000);
+    const annonce = {
+      texte: texte,
+      expiration: expiration,
+      dateCreation: Date.now()
+    };
+    
+    localStorage.setItem('iset_annonce', JSON.stringify(annonce));
+    fermerModalAnnonce();
+    afficherAnnonce();
+    
+    const msgDiv = document.getElementById('adminMessage');
+    msgDiv.textContent = '✅ Annonce publiée avec succès (visible 24h)';
+    msgDiv.className = 'message success';
+    msgDiv.style.display = 'block';
+    setTimeout(() => msgDiv.style.display = 'none', 3000);
+  }
+  
+  window.supprimerAnnonce = function() {
+    if (confirm('Voulez-vous vraiment supprimer cette annonce ?')) {
+      localStorage.removeItem('iset_annonce');
+      afficherAnnonce();
+      const msgDiv = document.getElementById('adminMessage');
+      msgDiv.textContent = '✅ Annonce supprimée';
+      msgDiv.className = 'message success';
+      msgDiv.style.display = 'block';
+      setTimeout(() => msgDiv.style.display = 'none', 3000);
+    }
+  }
   
   function getAnnonce() {
-    const stored = localStorage.getItem(ANNONCE_STORAGE_KEY);
+    const stored = localStorage.getItem('iset_annonce');
     if (!stored) return null;
     try {
       const annonce = JSON.parse(stored);
       if (annonce.expiration && Date.now() > annonce.expiration) {
-        localStorage.removeItem(ANNONCE_STORAGE_KEY);
+        localStorage.removeItem('iset_annonce');
         return null;
       }
       return annonce;
@@ -875,6 +923,8 @@
   function afficherAnnonce() {
     const annonce = getAnnonce();
     const container = document.getElementById('annonceContainer');
+    if (!container) return;
+    
     if (!annonce || !annonce.texte) {
       container.innerHTML = '';
       return;
@@ -882,6 +932,7 @@
     
     const dateExpiration = new Date(annonce.expiration);
     const dateFormatted = dateExpiration.toLocaleString('fr-FR');
+    const isAdmin = (currentAdmin !== null);
     
     container.innerHTML = `
       <div class="annonce-bloc">
@@ -890,62 +941,9 @@
           <span class="annonce-texte"><strong>Annonce :</strong> ${annonce.texte.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</span>
           <div class="annonce-date">⏱️ Visible jusqu'au ${dateFormatted}</div>
         </div>
-        ${currentAdmin ? `<button class="annonce-fermer" onclick="supprimerAnnonce()" title="Supprimer l'annonce">✖</button>` : ''}
+        ${isAdmin ? `<button class="annonce-fermer" onclick="supprimerAnnonce()" title="Supprimer l'annonce">✖</button>` : ''}
       </div>
     `;
-  }
-  
-  function publierAnnonce() {
-    const texte = document.getElementById('annonceTexte').value.trim();
-    if (!texte) {
-      alert('Veuillez écrire un texte pour l\'annonce');
-      return;
-    }
-    
-    const expiration = Date.now() + (24 * 60 * 60 * 1000); // 24 heures
-    const annonce = {
-      texte: texte,
-      expiration: expiration,
-      dateCreation: Date.now()
-    };
-    
-    localStorage.setItem(ANNONCE_STORAGE_KEY, JSON.stringify(annonce));
-    fermerModalAnnonce();
-    document.getElementById('annonceTexte').value = '';
-    afficherAnnonce();
-    
-    document.getElementById('adminMsg').textContent = '✅ Annonce publiée avec succès (visible 24h)';
-    document.getElementById('adminMsg').className = 'message success';
-    document.getElementById('adminMsg').style.display = 'block';
-    setTimeout(() => document.getElementById('adminMsg').style.display = 'none', 3000);
-  }
-  
-  function supprimerAnnonce() {
-    if (confirm('Voulez-vous vraiment supprimer cette annonce ?')) {
-      localStorage.removeItem(ANNONCE_STORAGE_KEY);
-      afficherAnnonce();
-      document.getElementById('adminMsg').textContent = '✅ Annonce supprimée';
-      document.getElementById('adminMsg').className = 'message success';
-      document.getElementById('adminMsg').style.display = 'block';
-      setTimeout(() => document.getElementById('adminMsg').style.display = 'none', 3000);
-    }
-  }
-  
-  function openAnnonceModal() {
-    document.getElementById('annonceModal').style.display = 'flex';
-  }
-  
-  function fermerModalAnnonce() {
-    document.getElementById('annonceModal').style.display = 'none';
-    document.getElementById('annonceTexte').value = '';
-  }
-  
-  // Fermer le modal en cliquant en dehors
-  window.onclick = function(event) {
-    const modal = document.getElementById('annonceModal');
-    if (event.target === modal) {
-      fermerModalAnnonce();
-    }
   }
 
   // ==================== FONCTIONS PRINCIPALES ====================
@@ -1075,11 +1073,11 @@
       html += '<div style="overflow-x:auto;"><table class="releve-table">';
       html += '<thead><tr><th>Numéro</th><th>Nom et Prénom</th><th>TP</th><th>CC</th><th>Examen</th><th>NFe</th><th>Crédit</th><th>Observations</th></tr></thead><tbody>';
       
-      html += `<tr class="student-info-row"><td>${studentId}</td><td style="text-align:left; padding-left:15px;">${studentName}</td><td>-</td><td>-</td><td>-</td><td style="font-weight:bold;">Moy Sem: ${generaleMoyenne.toFixed(2)}</td><td>-</td><td class="${semestreStatus === 'Validé' ? 'status-V' : 'status-NV'}">${semestreStatus}</td></tr>`;
+      html += `<tr class="student-info-row"><td>${studentId}</td><td style="text-align:left; padding-left:15px;">${studentName}</td><td>-</td><td style="text-align:center;">-</td><td style="text-align:center;">-</td><td style="font-weight:bold;">Moy Sem: ${generaleMoyenne.toFixed(2)}</td><td style="text-align:center;">-</td><td class="${semestreStatus === 'Validé' ? 'status-V' : 'status-NV'}">${semestreStatus}</td></tr>`;
       
       for (let moduleCode in modulesStructure) {
         const module = modulesStructure[moduleCode];
-        html += `<tr class="module-row"><td>${moduleCode}</td><td style="text-align:left; padding-left:15px;">${module.name}</td><td>-</td><td>-</td><td>-</td><td style="font-weight:bold;">${moduleAverages[moduleCode].toFixed(2)}</td><td>${module.credit}</td><td class="${moduleStatus[moduleCode] === 'V' ? 'status-V' : 'status-NV'}">${moduleStatus[moduleCode]}</td></tr>`;
+        html += `<tr class="module-row"><td>${moduleCode}</td><td style="text-align:left; padding-left:15px;">${module.name}</td><td style="text-align:center;">-</td><td style="text-align:center;">-</td><td style="text-align:center;">-</td><td style="font-weight:bold;">${moduleAverages[moduleCode].toFixed(2)}</td><td style="text-align:center;">${module.credit}</td><td class="${moduleStatus[moduleCode] === 'V' ? 'status-V' : 'status-NV'}">${moduleStatus[moduleCode]}</td></tr>`;
         
         for (let subject of module.subjects) {
           const notes = notesBySubject[subject] || {};
@@ -1087,7 +1085,7 @@
           const credit = SUBJECT_CREDITS[department]?.[semester]?.[subject] || 3.0;
           const creditEarned = subjectStatus[subject] === 'C' ? credit : 0;
           
-          html += `<tr class="subject-row"><td>-</td><td style="text-align:left; padding-left:40px;">${subject}</td><td>${hasTPforSubject ? (notes['TP'] !== undefined ? notes['TP'].toFixed(2) : '-') : '-'}</td><td>${notes['Contrôle continu'] !== undefined ? notes['Contrôle continu'].toFixed(2) : '-'}</td><td>${notes['Examen'] !== undefined ? notes['Examen'].toFixed(2) : '-'}</td><td style="font-weight:bold;">${subjectAverages[subject].toFixed(2)}</td><td>${creditEarned.toFixed(1)}</td><td class="${subjectStatus[subject] === 'C' ? 'status-C' : 'status-NC'}">${subjectStatus[subject]}</td></tr>`;
+          html += `<tr class="subject-row"><td>-</td><td style="text-align:left; padding-left:40px;">${subject}</td><td style="text-align:center;">${hasTPforSubject ? (notes['TP'] !== undefined ? notes['TP'].toFixed(2) : '-') : '-'}</td><td style="text-align:center;">${notes['Contrôle continu'] !== undefined ? notes['Contrôle continu'].toFixed(2) : '-'}</td><td style="text-align:center;">${notes['Examen'] !== undefined ? notes['Examen'].toFixed(2) : '-'}</td><td style="font-weight:bold;">${subjectAverages[subject].toFixed(2)}</td><td style="text-align:center;">${creditEarned.toFixed(1)}</td><td class="${subjectStatus[subject] === 'C' ? 'status-C' : 'status-NC'}">${subjectStatus[subject]}</td></tr>`;
         }
       }
       
@@ -1110,7 +1108,7 @@
         for (let subject of requiredSubjects) {
           if (!hasTP(subject)) continue;
           const note = notesBySubject[subject]?.['TP'];
-          html += `<tr><td>${subject}</td><td>${note !== undefined ? note.toFixed(2) : '-'}</td></tr>`;
+          html += `<tr><td>${subject}</td><td style="text-align:center;">${note !== undefined ? note.toFixed(2) : '-'}</td></tr>`;
         }
         html += `</tbody></table>`;
       }
@@ -1119,7 +1117,7 @@
         html += `<h4 class="section-subtitle">Résultats Contrôle continu</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note CC</th></tr></thead><tbody>`;
         for (let subject of requiredSubjects) {
           const note = notesBySubject[subject]?.['Contrôle continu'];
-          html += `<tr><td>${subject}</td><td>${note !== undefined ? note.toFixed(2) : '-'}</td></tr>`;
+          html += `<tr><td>${subject}</td><td style="text-align:center;">${note !== undefined ? note.toFixed(2) : '-'}</td></tr>`;
         }
         html += `</tbody></table>`;
       }
@@ -1128,7 +1126,7 @@
         html += `<h4 class="section-subtitle">Résultats Examen</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note Examen</th></tr></thead><tbody>`;
         for (let subject of requiredSubjects) {
           const note = notesBySubject[subject]?.['Examen'];
-          html += `<tr><td>${subject}</td><td>${note !== undefined ? note.toFixed(2) : '-'}</td></tr>`;
+          html += `<tr><td>${subject}</td><td style="text-align:center;">${note !== undefined ? note.toFixed(2) : '-'}</td></tr>`;
         }
         html += `</tbody></table>`;
       }
@@ -1138,7 +1136,7 @@
         for (let subject of requiredSubjects) {
           const note = notesBySubject[subject]?.['Rattrapage'];
           if (note !== undefined) {
-            html += `<tr><td>${subject}</td><td>${note.toFixed(2)}</td></tr>`;
+            html += `<tr><td>${subject}</td><td style="text-align:center;">${note.toFixed(2)}</td></tr>`;
           }
         }
         html += `</tbody></table>`;
@@ -1160,7 +1158,7 @@
   window.hideAdminPanel = () => {
     document.getElementById('adminPanel').classList.remove('active');
     currentAdmin = null;
-    afficherAnnonce(); // Rafraîchir l'affichage (cache le bouton supprimer)
+    afficherAnnonce();
   };
 
   window.adminLogin = async () => {
@@ -1195,7 +1193,7 @@
       
       importSelect.addEventListener('change', updateSubjectsListForImport);
       updateSubjectsListForImport();
-      afficherAnnonce(); // Rafraîchir pour montrer le bouton supprimer si annonce existe
+      afficherAnnonce();
     } else {
       msgDiv.textContent = 'Mot de passe incorrect';
       msgDiv.style.display = 'block';
@@ -1208,7 +1206,7 @@
     document.getElementById('adminActions').style.display = 'none';
     document.getElementById('importForm').style.display = 'none';
     document.getElementById('manageSubjects').style.display = 'none';
-    afficherAnnonce(); // Rafraîchir pour cacher le bouton supprimer
+    afficherAnnonce();
   };
 
   window.showImportForm = () => {
@@ -1444,8 +1442,8 @@
     let html = `<table class="results-table"><thead><tr><th>Matière</th><th>Type</th><th>Étudiants</th><th>Action</th></tr></thead><tbody>`;
     
     for (let [key, data] of subjectsMap) {
-      html += `<tr><td><strong>${data.subject}</strong></td><td>${data.type}</td><td>${data.count}</td>
-        <td><button class="admin-btn danger" style="padding:0.3rem 0.8rem;font-size:0.8rem;" onclick="deleteSubject('${semester}', '${data.subject}', '${data.type}')"><i class="fas fa-trash"></i> Supprimer</button></td></tr>`;
+      html += `<tr><td><strong>${data.subject}</strong></td><td>${data.type}</td><td style="text-align:center;">${data.count}</td>
+        <td style="text-align:center;"><button class="admin-btn danger" style="padding:0.3rem 0.8rem;font-size:0.8rem;" onclick="deleteSubject('${semester}', '${data.subject}', '${data.type}')"><i class="fas fa-trash"></i> Supprimer</button></td></tr>`;
     }
     
     html += '</tbody></table>';
