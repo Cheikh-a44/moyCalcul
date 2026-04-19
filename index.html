@@ -8,6 +8,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<!-- مكتبة قراءة ملفات ODS -->
+<script src="https://cdn.jsdelivr.net/npm/@tafuta/ods-reader@1.0.0/dist/ods-reader.min.js"></script>
 <style>
   :root {
     --primary: #0077b6;
@@ -486,8 +488,8 @@
         <div id="importForm" style="display:none;">
           <h4 style="margin-bottom:0.8rem;"><i class="fas fa-file-import"></i> Importer des résultats</h4>
           <div class="file-format-info">
-            <i class="fas fa-info-circle"></i> <strong>Formats acceptés :</strong> Excel (.xlsx, .xls), Word (.docx), PDF (.pdf)
-            <ul><li><strong>Colonnes attendues :</strong> NUMERO, NOM & PRENOM, NOTE/20</li></ul>
+            <i class="fas fa-info-circle"></i> <strong>Formats acceptés :</strong> Excel (.xlsx, .xls), ODS (.ods), Word (.docx), PDF (.pdf)
+            <ul><li><strong>Colonnes attendues :</strong> NUMERO, NOM&PRENOM, NOTE/20</li></ul>
           </div>
           <div class="form-group"><label>Semestre</label><select id="importSemester"></select></div>
           <div class="form-group"><label>Type d'évaluation</label>
@@ -497,7 +499,7 @@
             </select>
           </div>
           <div class="form-group"><label>Nom de la matière</label><select id="importSubject" style="width:100%; padding:0.6rem; border:2px solid var(--primary-light); border-radius:var(--radius); font-size:0.9rem;"><option value="">-- Sélectionner une matière --</option></select></div>
-          <div class="form-group"><label>Fichier à importer</label><input type="file" id="importFile" accept=".xlsx, .xls, .docx, .pdf"></div>
+          <div class="form-group"><label>Fichier à importer</label><input type="file" id="importFile" accept=".xlsx, .xls, .ods, .docx, .pdf"></div>
           <div id="importProgress" style="display:none;"><div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div><p id="progressText" style="text-align:center;">Analyse du fichier...</p></div>
           <button class="admin-btn success" onclick="processImport()">Importer</button>
           <button class="admin-btn secondary" onclick="hideImportForm()">Fermer</button>
@@ -591,7 +593,6 @@
   
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
   
-  // كلمات المرور الافتراضية
   const DEFAULT_CREDENTIALS = {
     PPV: { passwordHash: "13b34364b6022a2cd99414b5a0f9e5c3d86036b2e248b000c0f001e10928a26a", name: "PPV", allowedSemesters: ["S3", "S4", "S5", "S6"] },
     TC: { passwordHash: "7918ed501fbf72de90159f9ebcccc9998b8f47c80c0c921127764455c9a79aee", name: "TC", allowedSemesters: ["S1", "S2"] }
@@ -599,7 +600,6 @@
 
   let ADMIN_CREDENTIALS = { ...DEFAULT_CREDENTIALS };
 
-  // تحميل كلمات المرور من Firebase
   async function loadCredentialsFromFirebase() {
     try {
       const snapshot = await get(child(ref(db), 'admin_credentials'));
@@ -617,7 +617,6 @@
     }
   }
 
-  // حفظ كلمات المرور في Firebase
   async function saveCredentialsToFirebase() {
     try {
       const credentialsToSave = {
@@ -1032,39 +1031,113 @@
     return result.value;
   }
 
+  // دالة محسنة لاستخراج البيانات من النص
   function parseTextToData(text) {
     const lines = text.split('\n').filter(line => line.trim().length > 0);
     const data = [];
     
+    // البحث عن أي رقم (وليس فقط 6-8 أرقام) متبوعاً باسم وعلامة
     for (let line of lines) {
-      const match = line.match(/(\d{6,8})\s+([A-Za-zÀ-ÿ\s\-]+?)\s+(\d{1,2}(?:[.,]\d{1,2})?)/);
+      // تجاهل السطر إذا كان يحتوي على عناوين الأعمدة
+      if (line.match(/num[eé]ro|nom|prenom|note/i)) continue;
+      
+      // نمط: رقم (أي طول) ثم اسم (حروف ومسافات) ثم علامة (رقم بين 0 و 20)
+      const match = line.match(/(\d+)\s+([A-Za-zÀ-ÿ\s\-]+?)\s+(\d{1,2}(?:[.,]\d{1,2})?)/);
       if (match) {
         const grade = parseFloat(match[3].replace(',', '.'));
         if (grade >= 0 && grade <= 20) {
-          data.push({ 'NUMERO': match[1], 'NOM': match[2].trim(), 'NOTE': grade });
+          data.push({ 
+            'NUMERO': match[1].trim(), 
+            'NOM': match[2].trim(), 
+            'NOTE': grade 
+          });
         }
       }
     }
     
+    // إذا لم يتم العثور على بيانات، جرب نمطاً آخر
     if (data.length === 0) {
-      const numberPattern = /\b(\d{6,8})\b/g;
       for (let line of lines) {
-        const numbers = [...line.matchAll(numberPattern)];
-        if (numbers.length >= 1) {
-          const studentId = numbers[0][1];
-          const gradeMatch = line.match(/(\d{1,2}(?:[.,]\d{1,2})?)\s*\/?\s*20/);
-          if (gradeMatch) {
-            const grade = parseFloat(gradeMatch[1].replace(',', '.'));
-            if (grade >= 0 && grade <= 20) {
-              const name = line.replace(studentId, '').replace(gradeMatch[0], '').trim();
-              data.push({ 'NUMERO': studentId, 'NOM': name, 'NOTE': grade });
-            }
+        if (line.match(/num[eé]ro|nom|prenom|note/i)) continue;
+        
+        const parts = line.trim().split(/\s+/);
+        if (parts.length >= 3) {
+          const potentialGrade = parseFloat(parts[parts.length - 1].replace(',', '.'));
+          const potentialNum = parts[0];
+          
+          if (!isNaN(potentialGrade) && potentialGrade >= 0 && potentialGrade <= 20 && /^\d+$/.test(potentialNum)) {
+            const name = parts.slice(1, -1).join(' ');
+            data.push({
+              'NUMERO': potentialNum,
+              'NOM': name,
+              'NOTE': potentialGrade
+            });
           }
         }
       }
     }
     
     return data;
+  }
+
+  // دالة قراءة ملف ODS
+  async function readODSFile(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const sheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[sheetName];
+          const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+          
+          // تحويل المصفوفة إلى كائنات
+          const headers = jsonData[0] || [];
+          const result = [];
+          
+          // البحث عن أسماء الأعمدة (غير حساسة لحالة الأحرف)
+          let numCol = -1, nameCol = -1, gradeCol = -1;
+          headers.forEach((h, i) => {
+            const headerStr = String(h).toLowerCase();
+            if (headerStr.includes('num') || headerStr.includes('n°') || headerStr === 'id') numCol = i;
+            if (headerStr.includes('nom') || headerStr.includes('prenom')) nameCol = i;
+            if (headerStr.includes('note') || headerStr.includes('grade') || headerStr.includes('moyenne')) gradeCol = i;
+          });
+          
+          // إذا لم يتم العثور على الأعمدة، استخدم الافتراضي (A, B, C)
+          if (numCol === -1) numCol = 0;
+          if (nameCol === -1) nameCol = 1;
+          if (gradeCol === -1) gradeCol = 2;
+          
+          for (let i = 1; i < jsonData.length; i++) {
+            const row = jsonData[i];
+            if (!row || row.length === 0) continue;
+            
+            const numero = row[numCol];
+            const nom = row[nameCol];
+            const note = row[gradeCol];
+            
+            if (numero && note !== undefined && note !== null) {
+              const grade = parseFloat(String(note).replace(',', '.'));
+              if (!isNaN(grade) && grade >= 0 && grade <= 20) {
+                result.push({
+                  'NUMERO': String(numero).trim(),
+                  'NOM': nom ? String(nom).trim() : '',
+                  'NOTE': grade
+                });
+              }
+            }
+          }
+          
+          resolve(result);
+        } catch (err) {
+          reject(err);
+        }
+      };
+      reader.onerror = reject;
+      reader.readAsArrayBuffer(file);
+    });
   }
 
   async function parseFile(file) {
@@ -1102,10 +1175,40 @@
               const sheetName = workbook.SheetNames[0];
               const worksheet = workbook.Sheets[sheetName];
               const jsonData = XLSX.utils.sheet_to_json(worksheet);
+              
+              // تحويل البيانات مع تجاهل حساسية حالة الأحرف
+              const result = [];
+              jsonData.forEach(row => {
+                const keys = Object.keys(row);
+                let numKey = keys.find(k => k.toLowerCase().includes('num') || k.toLowerCase().includes('n°') || k.toLowerCase() === 'id');
+                let nameKey = keys.find(k => k.toLowerCase().includes('nom') || k.toLowerCase().includes('prenom'));
+                let gradeKey = keys.find(k => k.toLowerCase().includes('note') || k.toLowerCase().includes('grade') || k.toLowerCase().includes('moyenne'));
+                
+                // إذا لم يتم العثور، استخدم المفاتيح الافتراضية
+                if (!numKey) numKey = keys[0];
+                if (!nameKey) nameKey = keys[1];
+                if (!gradeKey) gradeKey = keys[2];
+                
+                const numero = row[numKey];
+                const nom = row[nameKey];
+                let grade = row[gradeKey];
+                
+                if (numero && grade !== undefined && grade !== null) {
+                  grade = parseFloat(String(grade).replace(',', '.'));
+                  if (!isNaN(grade) && grade >= 0 && grade <= 20) {
+                    result.push({
+                      'NUMERO': String(numero).trim(),
+                      'NOM': nom ? String(nom).trim() : '',
+                      'NOTE': grade
+                    });
+                  }
+                }
+              });
+              
               progressFill.style.width = '100%';
               progressText.textContent = 'Terminé !';
               setTimeout(() => { progressDiv.style.display = 'none'; }, 500);
-              resolve(jsonData);
+              resolve(result);
             } catch (err) {
               reject(err);
             }
@@ -1113,6 +1216,14 @@
           reader.onerror = reject;
           reader.readAsArrayBuffer(file);
         });
+      } else if (fileName.endsWith('.ods')) {
+        progressText.textContent = 'Lecture du fichier ODS...';
+        progressFill.style.width = '30%';
+        const data = await readODSFile(file);
+        progressFill.style.width = '100%';
+        progressText.textContent = 'Terminé !';
+        setTimeout(() => { progressDiv.style.display = 'none'; }, 500);
+        return data;
       } else {
         throw new Error('Format non supporté');
       }
@@ -1145,11 +1256,11 @@
     }
     
     const fileName = file.name.toLowerCase();
-    const allowedExtensions = ['.xlsx', '.xls', '.docx', '.pdf'];
+    const allowedExtensions = ['.xlsx', '.xls', '.ods', '.docx', '.pdf'];
     const isValid = allowedExtensions.some(ext => fileName.endsWith(ext));
     
     if (!isValid) {
-      alert('Format de fichier non supporté. Utilisez Excel (.xlsx, .xls), Word (.docx) ou PDF (.pdf)');
+      alert('Format de fichier non supporté. Utilisez Excel (.xlsx, .xls), ODS (.ods), Word (.docx) ou PDF (.pdf)');
       return;
     }
     
@@ -1182,13 +1293,15 @@
       
       let importCount = 0, duplicateCount = 0, errorCount = 0;
       
+      console.log('Données extraites:', jsonData);
+      
       for (let row of jsonData) {
-        let studentId = row.NUMERO || row.Numero || row.numero || row.ID || row.id || row.Matricule || row.matricule || row['N°'] || row.NUM;
+        let studentId = row.NUMERO;
         if (studentId) studentId = String(studentId).trim();
         
-        const studentName = row['NOM & PRENOM'] || row['Nom et Prenom'] || row.Nom || row.nom || row['NOM'] || row['PRENOM'] || row.NOM || row.NOM_ET_PRENOM || '';
+        const studentName = row.NOM || row.NOM_ET_PRENOM || row['NOM & PRENOM'] || row['Nom et Prenom'] || row.Nom || row.nom || row['NOM'] || row['PRENOM'] || '';
         
-        let grade = row['NOTE/20'] || row['Note/20'] || row.Note || row.note || row.Grade || row.grade || row.Moyenne || row.moyenne || row['NOTE'] || row.NOTE;
+        let grade = row.NOTE;
         if (grade) grade = parseFloat(String(grade).replace(',', '.'));
         
         if (!studentId) { errorCount++; continue; }
@@ -1212,13 +1325,17 @@
       if (duplicateCount > 0) message += `\n⚠️ ${duplicateCount} étudiants déjà existants (ignorés)`;
       if (errorCount > 0) message += `\n❌ ${errorCount} lignes avec erreur (ignorées)`;
       
+      if (importCount === 0 && jsonData.length > 0) {
+        message += `\n\n📋 ${jsonData.length} lignes trouvées dans le fichier. Vérifiez le format.`;
+      }
+      
       msgDiv.textContent = message; 
       msgDiv.className = 'message success'; 
       fileInput.value = '';
       
       setTimeout(() => { 
         if (msgDiv.style.display === 'block') msgDiv.style.display = 'none'; 
-      }, 5000);
+      }, 8000);
       
     } catch (error) { 
       console.error('Erreur:', error); 
