@@ -591,7 +591,7 @@
   
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
   
-  // كلمات المرور الافتراضية (تستخدم فقط إذا لم تكن موجودة في Firebase)
+  // كلمات المرور الافتراضية
   const DEFAULT_CREDENTIALS = {
     PPV: { passwordHash: "13b34364b6022a2cd99414b5a0f9e5c3d86036b2e248b000c0f001e10928a26a", name: "PPV", allowedSemesters: ["S3", "S4", "S5", "S6"] },
     TC: { passwordHash: "7918ed501fbf72de90159f9ebcccc9998b8f47c80c0c921127764455c9a79aee", name: "TC", allowedSemesters: ["S1", "S2"] }
@@ -605,19 +605,15 @@
       const snapshot = await get(child(ref(db), 'admin_credentials'));
       if (snapshot.exists()) {
         const firebaseCredentials = snapshot.val();
-        // دمج مع القيم الافتراضية للحفاظ على الخصائص الأخرى مثل allowedSemesters
         ADMIN_CREDENTIALS = {
           PPV: { ...DEFAULT_CREDENTIALS.PPV, ...(firebaseCredentials.PPV || {}) },
           TC: { ...DEFAULT_CREDENTIALS.TC, ...(firebaseCredentials.TC || {}) }
         };
-        console.log('✅ Credentials chargées depuis Firebase');
       } else {
-        // إذا لم تكن موجودة، قم بإنشائها
         await saveCredentialsToFirebase();
-        console.log('✅ Credentials par défaut sauvegardées dans Firebase');
       }
     } catch (error) {
-      console.error('❌ Erreur de chargement depuis Firebase, utilisation des credentials par défaut:', error);
+      console.error('Erreur de chargement depuis Firebase:', error);
     }
   }
 
@@ -629,15 +625,13 @@
         TC: { passwordHash: ADMIN_CREDENTIALS.TC.passwordHash }
       };
       await set(ref(db, 'admin_credentials'), credentialsToSave);
-      console.log('✅ Credentials sauvegardées dans Firebase');
       return true;
     } catch (error) {
-      console.error('❌ Erreur de sauvegarde dans Firebase:', error);
+      console.error('Erreur de sauvegarde dans Firebase:', error);
       return false;
     }
   }
 
-  // تحميل البيانات عند بدء التشغيل
   await loadCredentialsFromFirebase();
 
   const SUBJECTS_BY_DEPT = {
@@ -717,7 +711,7 @@
     PPV: { S3: { "Français_s3": 3.0, "Economie": 3.0, "I_Agronomie": 4.0, "I_Horticulture": 4.0, "Pesticides_agricoles": 4.0, "Entomologie_et_Nemato": 4.0, "Science_des_sols": 4.0, "Science_des_plantes": 4.0 }, S4: { "Vulgarisation": 3.0, "Technique_de_propagation": 4.0, "Technique_d_irrigation_et_BEC": 3.0, "Ecophysiologie_et_Biochimie": 4.0, "Fertilite_du_sol": 3.0, "Methodes_de_diagnostic": 3.0, "Malherbologie": 3.0 } }
   };
 
-  // ==================== وظائف تغيير كلمة المرور (متزامنة مع Firebase) ====================
+  // ==================== وظائف تغيير كلمة المرور ====================
   window.openChangePasswordModal = function() {
     document.getElementById('changePasswordModal').style.display = 'flex';
     document.getElementById('currentPassword').value = '';
@@ -756,9 +750,6 @@
     
     const currentHash = await hashPassword(currentPass);
     
-    // إعادة تحميل من Firebase للتأكد من أحدث نسخة
-    await loadCredentialsFromFirebase();
-    
     if (ADMIN_CREDENTIALS[currentAdmin.type].passwordHash !== currentHash) {
       msgDiv.textContent = 'Mot de passe actuel incorrect';
       msgDiv.style.display = 'block';
@@ -783,10 +774,7 @@
     }
     
     msgDiv.style.display = 'block';
-    
-    setTimeout(() => {
-      closeChangePasswordModal();
-    }, 2000);
+    setTimeout(() => closeChangePasswordModal(), 2000);
   };
 
   // ==================== البحث عن نتائج الطالب ====================
@@ -968,7 +956,6 @@
     
     if (!password) { msgDiv.textContent = 'Veuillez entrer le mot de passe'; msgDiv.style.display = 'block'; return; }
     
-    // تحميل أحدث credentials من Firebase
     msgDiv.textContent = '⏳ Vérification...'; msgDiv.style.display = 'block';
     await loadCredentialsFromFirebase();
     
