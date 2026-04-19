@@ -7,7 +7,6 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<!-- مكتبة لقراءة ملفات Word -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <style>
   :root {
@@ -592,22 +591,54 @@
   
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
   
-  let ADMIN_CREDENTIALS = {
+  // كلمات المرور الافتراضية (تستخدم فقط إذا لم تكن موجودة في Firebase)
+  const DEFAULT_CREDENTIALS = {
     PPV: { passwordHash: "13b34364b6022a2cd99414b5a0f9e5c3d86036b2e248b000c0f001e10928a26a", name: "PPV", allowedSemesters: ["S3", "S4", "S5", "S6"] },
     TC: { passwordHash: "7918ed501fbf72de90159f9ebcccc9998b8f47c80c0c921127764455c9a79aee", name: "TC", allowedSemesters: ["S1", "S2"] }
   };
 
-  const storedCredentials = localStorage.getItem('iset_admin_credentials');
-  if (storedCredentials) {
+  let ADMIN_CREDENTIALS = { ...DEFAULT_CREDENTIALS };
+
+  // تحميل كلمات المرور من Firebase
+  async function loadCredentialsFromFirebase() {
     try {
-      const stored = JSON.parse(storedCredentials);
-      ADMIN_CREDENTIALS = { ...ADMIN_CREDENTIALS, ...stored };
-    } catch(e) { console.error('Erreur de chargement des credentials:', e); }
+      const snapshot = await get(child(ref(db), 'admin_credentials'));
+      if (snapshot.exists()) {
+        const firebaseCredentials = snapshot.val();
+        // دمج مع القيم الافتراضية للحفاظ على الخصائص الأخرى مثل allowedSemesters
+        ADMIN_CREDENTIALS = {
+          PPV: { ...DEFAULT_CREDENTIALS.PPV, ...(firebaseCredentials.PPV || {}) },
+          TC: { ...DEFAULT_CREDENTIALS.TC, ...(firebaseCredentials.TC || {}) }
+        };
+        console.log('✅ Credentials chargées depuis Firebase');
+      } else {
+        // إذا لم تكن موجودة، قم بإنشائها
+        await saveCredentialsToFirebase();
+        console.log('✅ Credentials par défaut sauvegardées dans Firebase');
+      }
+    } catch (error) {
+      console.error('❌ Erreur de chargement depuis Firebase, utilisation des credentials par défaut:', error);
+    }
   }
 
-  function saveCredentials() {
-    localStorage.setItem('iset_admin_credentials', JSON.stringify(ADMIN_CREDENTIALS));
+  // حفظ كلمات المرور في Firebase
+  async function saveCredentialsToFirebase() {
+    try {
+      const credentialsToSave = {
+        PPV: { passwordHash: ADMIN_CREDENTIALS.PPV.passwordHash },
+        TC: { passwordHash: ADMIN_CREDENTIALS.TC.passwordHash }
+      };
+      await set(ref(db, 'admin_credentials'), credentialsToSave);
+      console.log('✅ Credentials sauvegardées dans Firebase');
+      return true;
+    } catch (error) {
+      console.error('❌ Erreur de sauvegarde dans Firebase:', error);
+      return false;
+    }
   }
+
+  // تحميل البيانات عند بدء التشغيل
+  await loadCredentialsFromFirebase();
 
   const SUBJECTS_BY_DEPT = {
     TC: {
@@ -686,7 +717,7 @@
     PPV: { S3: { "Français_s3": 3.0, "Economie": 3.0, "I_Agronomie": 4.0, "I_Horticulture": 4.0, "Pesticides_agricoles": 4.0, "Entomologie_et_Nemato": 4.0, "Science_des_sols": 4.0, "Science_des_plantes": 4.0 }, S4: { "Vulgarisation": 3.0, "Technique_de_propagation": 4.0, "Technique_d_irrigation_et_BEC": 3.0, "Ecophysiologie_et_Biochimie": 4.0, "Fertilite_du_sol": 3.0, "Methodes_de_diagnostic": 3.0, "Malherbologie": 3.0 } }
   };
 
-  // ==================== وظائف تغيير كلمة المرور ====================
+  // ==================== وظائف تغيير كلمة المرور (متزامنة مع Firebase) ====================
   window.openChangePasswordModal = function() {
     document.getElementById('changePasswordModal').style.display = 'flex';
     document.getElementById('currentPassword').value = '';
@@ -725,6 +756,9 @@
     
     const currentHash = await hashPassword(currentPass);
     
+    // إعادة تحميل من Firebase للتأكد من أحدث نسخة
+    await loadCredentialsFromFirebase();
+    
     if (ADMIN_CREDENTIALS[currentAdmin.type].passwordHash !== currentHash) {
       msgDiv.textContent = 'Mot de passe actuel incorrect';
       msgDiv.style.display = 'block';
@@ -733,15 +767,26 @@
     
     const newHash = await hashPassword(newPass);
     ADMIN_CREDENTIALS[currentAdmin.type].passwordHash = newHash;
-    saveCredentials();
     
-    msgDiv.textContent = '✅ Mot de passe changé avec succès';
-    msgDiv.className = 'message success';
+    msgDiv.textContent = '⏳ Sauvegarde dans Firebase...';
+    msgDiv.className = 'message';
+    msgDiv.style.display = 'block';
+    
+    const saved = await saveCredentialsToFirebase();
+    
+    if (saved) {
+      msgDiv.textContent = '✅ Mot de passe changé avec succès (synchronisé sur tous les appareils)';
+      msgDiv.className = 'message success';
+    } else {
+      msgDiv.textContent = '⚠️ Mot de passe changé mais non synchronisé (problème de connexion)';
+      msgDiv.className = 'message error';
+    }
+    
     msgDiv.style.display = 'block';
     
     setTimeout(() => {
       closeChangePasswordModal();
-    }, 1500);
+    }, 2000);
   };
 
   // ==================== البحث عن نتائج الطالب ====================
@@ -920,21 +965,37 @@
     const type = document.getElementById('adminTypeSelect').value;
     const password = document.getElementById('adminPassword').value;
     const msgDiv = document.getElementById('loginMessage');
+    
     if (!password) { msgDiv.textContent = 'Veuillez entrer le mot de passe'; msgDiv.style.display = 'block'; return; }
+    
+    // تحميل أحدث credentials من Firebase
+    msgDiv.textContent = '⏳ Vérification...'; msgDiv.style.display = 'block';
+    await loadCredentialsFromFirebase();
+    
     const inputHash = await hashPassword(password);
+    
     if (ADMIN_CREDENTIALS[type] && inputHash === ADMIN_CREDENTIALS[type].passwordHash) {
       currentAdmin = { type: type, ...ADMIN_CREDENTIALS[type] };
-      document.getElementById('adminLoginForm').style.display = 'none'; document.getElementById('adminActions').style.display = 'block';
-      document.getElementById('adminDeptName').textContent = type; document.getElementById('adminPassword').value = ''; msgDiv.style.display = 'none';
+      document.getElementById('adminLoginForm').style.display = 'none'; 
+      document.getElementById('adminActions').style.display = 'block';
+      document.getElementById('adminDeptName').textContent = type; 
+      document.getElementById('adminPassword').value = ''; 
+      msgDiv.style.display = 'none';
+      
       const allowed = currentAdmin.allowedSemesters;
-      const importSelect = document.getElementById('importSemester'); const manageSelect = document.getElementById('manageSemester');
+      const importSelect = document.getElementById('importSemester'); 
+      const manageSelect = document.getElementById('manageSemester');
       const resetSelect = document.getElementById('resetSemesterSelect');
       [importSelect, manageSelect, resetSelect].forEach(select => {
         if (select) { select.innerHTML = ''; allowed.forEach(s => { select.innerHTML += `<option value="${s}">${s}</option>`; }); }
       });
       importSelect.addEventListener('change', updateSubjectsListForImport);
-      updateSubjectsListForImport(); afficherAnnonce();
-    } else { msgDiv.textContent = 'Mot de passe incorrect'; msgDiv.style.display = 'block'; }
+      updateSubjectsListForImport(); 
+      afficherAnnonce();
+    } else { 
+      msgDiv.textContent = 'Mot de passe incorrect'; 
+      msgDiv.style.display = 'block'; 
+    }
   };
   
   window.adminLogout = () => { currentAdmin = null; document.getElementById('adminLoginForm').style.display = 'block'; document.getElementById('adminActions').style.display = 'none'; document.getElementById('importForm').style.display = 'none'; document.getElementById('manageSubjects').style.display = 'none'; document.getElementById('resetDataForm').style.display = 'none'; afficherAnnonce(); };
@@ -989,7 +1050,6 @@
     const data = [];
     
     for (let line of lines) {
-      // محاولة استخراج: رقم الطالب، الاسم، والعلامة
       const match = line.match(/(\d{6,8})\s+([A-Za-zÀ-ÿ\s\-]+?)\s+(\d{1,2}(?:[.,]\d{1,2})?)/);
       if (match) {
         const grade = parseFloat(match[3].replace(',', '.'));
@@ -999,7 +1059,6 @@
       }
     }
     
-    // إذا لم يتم العثور على بيانات بالنمط الأول، جرب نمطاً آخر
     if (data.length === 0) {
       const numberPattern = /\b(\d{6,8})\b/g;
       for (let line of lines) {
@@ -1098,7 +1157,6 @@
       return; 
     }
     
-    // التحقق من نوع الملف
     const fileName = file.name.toLowerCase();
     const allowedExtensions = ['.xlsx', '.xls', '.docx', '.pdf'];
     const isValid = allowedExtensions.some(ext => fileName.endsWith(ext));
