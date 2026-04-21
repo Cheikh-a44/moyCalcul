@@ -5,15 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Résultats PPV - Consultation des notes</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <style>
   :root {
-    --primary: #0077b6;
-    --primary-dark: #005f87;
-    --primary-light: #caf0f8;
-    --secondary: #0096c7;
+    --primary: #2c5f2d;
+    --primary-dark: #1e4420;
+    --primary-light: #e8f5e9;
+    --secondary: #4a7c59;
     --light: #f5f7fa;
     --white: #ffffff;
     --text: #333333;
@@ -29,7 +26,6 @@
     background:var(--light); 
     color:var(--text); 
     line-height:1.2;
-    overflow-x: hidden;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
@@ -40,352 +36,92 @@
     color:var(--white); 
     padding:1.5rem 1rem; 
     text-align:center; 
-    box-shadow:var(--shadow); 
   }
-  header h1 { 
-    font-size:2rem; 
-    margin-bottom:0.3rem; 
-  }
-  header p { 
-    font-size:1rem; 
-    opacity:0.9; 
-    max-width:600px; 
-    margin:0 auto; 
-  }
+  header h1 { font-size:2rem; margin-bottom:0.3rem; }
+  header p { font-size:1rem; opacity:0.9; }
   
-  .main-content {
-    flex: 1 0 auto;
-  }
-  
-  .container { 
-    max-width:1000px; 
-    margin:0 auto; 
-    padding:0 1rem; 
-  }
+  .main-content { flex: 1 0 auto; }
+  .container { max-width:1000px; margin:0 auto; padding:0 1rem; }
   
   .annonce-container {
-    margin-bottom: 0.8rem;
-    padding: 0;
-    border-radius: var(--radius);
-    overflow: hidden;
+    margin-bottom: 0.8rem; padding: 0; border-radius: var(--radius); overflow: hidden;
   }
   .annonce-bloc {
-    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
-    border-left: 6px solid #ffc107;
-    padding: 0.8rem 1rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.8rem;
-    box-shadow: var(--shadow);
+    background: linear-gradient(135deg, #fff3cd, #ffeaa7); border-left: 6px solid #ffc107;
+    padding: 0.8rem 1rem; display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 0.8rem; box-shadow: var(--shadow);
   }
-  .annonce-texte {
-    flex: 1;
-    font-size: 0.9rem;
-    color: #856404;
-  }
-  .annonce-icone {
-    font-size: 1.3rem;
-    margin-right: 0.5rem;
-    vertical-align: middle;
-  }
-  .annonce-date {
-    font-size: 0.7rem;
-    color: #856404;
-    margin-top: 0.2rem;
-  }
-  .annonce-fermer {
-    background: transparent;
-    border: none;
-    font-size: 1.1rem;
-    cursor: pointer;
-    color: #856404;
-    padding: 0.2rem 0.5rem;
-    border-radius: 50%;
-    transition: var(--transition);
-  }
-  .annonce-fermer:hover { background: rgba(0,0,0,0.1); }
+  .annonce-texte { flex: 1; font-size: 0.9rem; color: #856404; }
+  .annonce-icone { font-size: 1.3rem; margin-right: 0.5rem; vertical-align: middle; }
+  .annonce-date { font-size: 0.7rem; color: #856404; margin-top: 0.2rem; }
   
-  .modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    z-index: 1000;
-    justify-content: center;
-    align-items: center;
-  }
-  .modal-content {
-    background: white;
-    padding: 1.5rem;
-    border-radius: var(--radius);
-    max-width: 500px;
-    width: 90%;
-    box-shadow: var(--shadow);
-  }
-  .modal-content h3 { margin-bottom: 0.8rem; color: var(--primary); }
-  .modal-content textarea {
-    width: 100%;
-    padding: 0.6rem;
-    border: 2px solid var(--primary-light);
-    border-radius: var(--radius);
-    font-size: 0.9rem;
-    font-family: inherit;
-    resize: vertical;
-  }
-  .modal-content input {
-    width: 100%;
-    padding: 0.6rem;
-    border: 2px solid var(--primary-light);
-    border-radius: var(--radius);
-    font-size: 0.9rem;
-    outline: none;
-  }
-  .modal-content input:focus { border-color: var(--primary); }
-  .modal-buttons {
-    display: flex;
-    gap: 0.8rem;
-    justify-content: flex-end;
-    margin-top: 1rem;
-  }
+  .section-title { padding:1rem 0 0.8rem; font-size:1.3rem; color:var(--primary); text-align:center; }
   
-  .section-title { 
-    padding:1rem 0 0.8rem; 
-    font-size:1.3rem; 
-    color:var(--primary); 
-    display:flex; 
-    align-items:center; 
-    gap:0.5rem; 
-    justify-content:center;
-  }
-  
-  .search-box { 
-    display:flex; 
-    max-width:500px; 
-    margin:0 auto; 
-  }
+  .search-box { display:flex; max-width:500px; margin:0 auto; }
   .search-box input { 
-    flex:1; 
-    padding:0.8rem 1rem; 
-    border:2px solid var(--primary-light); 
-    border-radius:var(--radius) 0 0 var(--radius); 
-    font-size:0.9rem; 
-    outline:none; 
-    transition:var(--transition); 
+    flex:1; padding:0.8rem 1rem; border:2px solid var(--primary-light); 
+    border-radius:var(--radius) 0 0 var(--radius); font-size:0.9rem; outline:none; 
   }
   .search-box input:focus { border-color:var(--primary); }
   .search-box button { 
-    background:var(--primary); 
-    color:var(--white); 
-    border:none; 
-    padding:0 1.2rem; 
-    border-radius:0 var(--radius) var(--radius) 0; 
-    cursor:pointer; 
-    transition:var(--transition); 
-    font-size:1rem;
-    min-width:50px;
+    background:var(--primary); color:var(--white); border:none; padding:0 1.2rem;
+    border-radius:0 var(--radius) var(--radius) 0; cursor:pointer; font-size:1rem; min-width:50px;
   }
   .search-box button:hover { background:var(--primary-dark); }
   
   .result-card {
-    background:var(--white);
-    border-radius:var(--radius);
-    padding:1.2rem;
-    margin:1.5rem 0;
-    box-shadow:var(--shadow);
+    background:var(--white); border-radius:var(--radius); padding:1.2rem;
+    margin:1.5rem 0; box-shadow:var(--shadow);
   }
   
   .student-header {
-    text-align:center;
-    margin-bottom:1rem;
-    padding-bottom:0.8rem;
+    text-align:center; margin-bottom:1rem; padding-bottom:0.8rem;
     border-bottom:2px solid var(--primary-light);
   }
   .student-header h3 { font-size:1.2rem; color:var(--text); }
   .student-header p { color:var(--text-light); font-size:0.85rem; }
   
   .empty-state { text-align:center; padding:2rem 1rem; color:var(--text-light); }
-  .empty-state h3 { margin-bottom:0.5rem; }
-  
   .loading { text-align:center; padding:2rem; color:var(--text-light); }
   .loading i { font-size:2rem; animation:spin 1s linear infinite; margin-bottom:0.8rem; }
   @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
   
-  .admin-section {
-    margin-top:2rem;
-    padding-top:1.5rem;
-    border-top:2px dashed var(--primary-light);
-  }
-  
-  .admin-btn {
-    padding:0.6rem 1.2rem;
-    background:#f0f0f0;
-    color:#333;
-    border:1px solid #ccc;
-    border-radius:var(--radius);
-    font-size:0.9rem;
-    font-weight:600;
-    cursor:pointer;
-    transition:var(--transition);
-    margin:0.2rem;
-  }
-  .admin-btn:hover { background:#e0e0e0; transform:translateY(-1px); }
-  .admin-btn.secondary { background:#e9ecef; border-color:#adb5bd; }
-  .admin-btn.danger { background:#f8d7da; border-color:#dc3545; color:#721c24; }
-  .admin-btn.danger:hover { background:#f5c6cb; }
-  .admin-btn.success { background:#d4edda; border-color:#28a745; color:#155724; }
-  .admin-btn.success:hover { background:#c3e6cb; }
-  .admin-btn.warning { background:#fff3cd; border-color:#ffc107; color:#856404; }
-  .admin-btn.warning:hover { background:#ffeaa7; }
-  .admin-btn.primary { background:var(--primary); border-color:var(--primary-dark); color:white; }
-  .admin-btn.primary:hover { background:var(--primary-dark); }
-  
-  .admin-panel {
-    background:var(--white);
-    border-radius:var(--radius);
-    padding:1.5rem;
-    margin:1rem 0;
-    box-shadow:var(--shadow);
-    display:none;
-  }
-  .admin-panel.active { display:block; }
-  .admin-panel h3 { color:var(--primary); margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem; }
-  
-  .form-group { margin-bottom:1rem; }
-  .form-group label { display:block; font-weight:600; margin-bottom:0.2rem; color:var(--text); }
-  .form-group select, .form-group input {
-    width:100%;
-    padding:0.6rem 0.8rem;
-    border:2px solid var(--primary-light);
-    border-radius:var(--radius);
-    font-size:0.9rem;
-    outline:none;
-    transition:var(--transition);
-  }
-  .form-group select:focus, .form-group input:focus { border-color:var(--primary); }
-  
-  .file-format-info {
-    background:var(--primary-light);
-    padding:0.8rem;
-    border-radius:var(--radius);
-    margin-bottom:0.8rem;
-    font-size:0.85rem;
-  }
-  .file-format-info i { margin-right:0.5rem; color:var(--primary); }
-  .file-format-info ul { margin:0.3rem 0 0 1.5rem; }
-  .file-format-info li { margin:0.1rem 0; }
-  
-  .message {
-    padding:0.6rem 0.8rem;
-    border-radius:var(--radius);
-    margin-bottom:0.8rem;
-    display:none;
-  }
-  .message.success { background:#d4edda; color:#155724; }
-  .message.error { background:#f8d7da; color:#721c24; }
-  
-  .footer {
-    flex-shrink: 0;
-    text-align:center; 
-    padding:1.5rem; 
-    color:var(--text-light); 
-    font-size:0.85rem;
-    background:var(--light);
-    border-top:1px solid #ddd;
-    margin-top:2rem;
-  }
-  
-  .progress-bar {
-    width: 100%;
-    height: 6px;
-    background: var(--primary-light);
-    border-radius: 3px;
-    margin: 0.8rem 0;
-    overflow: hidden;
-  }
-  .progress-fill {
-    height: 100%;
-    background: var(--primary);
-    width: 0%;
-    transition: width 0.3s ease;
-  }
-  
   .pdf-link {
-    display: inline-block;
-    padding: 0.6rem 1.2rem;
-    background: #28a745;
-    color: white;
-    text-decoration: none;
-    border-radius: var(--radius);
-    font-weight: bold;
-    transition: var(--transition);
-    margin-top: 0.8rem;
+    display: inline-block; padding: 0.6rem 1.2rem; background: #28a745; color: white;
+    text-decoration: none; border-radius: var(--radius); font-weight: bold; margin-top: 0.8rem;
   }
-  .pdf-link:hover { background: #218838; transform: translateY(-2px); }
+  .pdf-link:hover { background: #218838; }
   
   .neutral-message {
-    text-align: center;
-    margin-top: 0.8rem;
-    padding: 0.6rem;
-    background: #e9ecef;
-    color: #6c757d;
-    border-radius: var(--radius);
-    font-weight: normal;
+    text-align: center; margin-top: 0.8rem; padding: 0.6rem; background: #e9ecef;
+    color: #6c757d; border-radius: var(--radius);
   }
   
-  .simple-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 0.8rem 0;
-    font-size: 13px;
-  }
-  .simple-table th, .simple-table td {
-    border: 1px solid #ddd;
-    padding: 5px;
-    text-align: center;
-  }
+  .simple-table { width: 100%; border-collapse: collapse; margin: 0.8rem 0; font-size: 13px; }
+  .simple-table th, .simple-table td { border: 1px solid #ddd; padding: 5px; text-align: center; }
   .simple-table th { background: var(--primary-light); font-weight: bold; }
   .simple-table td:first-child { text-align: left; }
   
-  .releve-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 0.5rem 0;
-    font-size: 12px;
-  }
+  .releve-table { width: 100%; border-collapse: collapse; margin: 0.5rem 0; font-size: 12px; }
   .releve-table th {
-    border: 1px solid #aaa;
-    padding: 3px 4px;
-    text-align: center;
-    background: var(--primary-light);
-    font-weight: bold;
+    border: 1px solid #aaa; padding: 3px 4px; text-align: center;
+    background: var(--primary-light); font-weight: bold;
   }
   .releve-table td { padding: 2px 4px; text-align: center; }
-  
   .releve-table tbody tr:not(.module-row):not(.student-info-row):not(.moyenne-row) td { border: 1px solid #aaa; }
   
   .releve-table .student-info-row { background: #f0f8ff; font-weight: bold; }
   .releve-table .student-info-row td {
-    border-top: 1px solid #aaa;
-    border-bottom: 1px solid #aaa;
-    border-left: none;
-    border-right: none;
-    padding: 2px 4px;
+    border-top: 1px solid #aaa; border-bottom: 1px solid #aaa;
+    border-left: none; border-right: none; padding: 2px 4px;
   }
   .releve-table .student-info-row td:first-child { border-left: 1px solid #aaa; }
   .releve-table .student-info-row td:last-child { border-right: 1px solid #aaa; }
   
-  .releve-table .module-row { background: #d0e8f7; font-weight: bold; }
+  .releve-table .module-row { background: #d4edda; font-weight: bold; }
   .releve-table .module-row td {
-    border-top: 1px solid #aaa;
-    border-bottom: 1px solid #aaa;
-    border-left: none;
-    border-right: none;
-    padding: 2px 4px;
+    border-top: 1px solid #aaa; border-bottom: 1px solid #aaa;
+    border-left: none; border-right: none; padding: 2px 4px;
   }
   .releve-table .module-row td:first-child { border-left: 1px solid #aaa; }
   .releve-table .module-row td:last-child { border-right: 1px solid #aaa; }
@@ -399,17 +135,20 @@
   .moyenne-row td { border: none !important; padding: 6px 4px 2px 4px; background: transparent; }
   
   .section-subtitle {
-    font-size: 1rem;
-    color: var(--primary);
-    margin: 0.8rem 0 0.3rem 0;
-    padding-bottom: 0.2rem;
-    border-bottom: 2px solid var(--primary-light);
+    font-size: 1rem; color: var(--primary); margin: 0.8rem 0 0.3rem 0;
+    padding-bottom: 0.2rem; border-bottom: 2px solid var(--primary-light);
   }
+  
+  .footer {
+    flex-shrink: 0; text-align:center; padding:1.5rem; color:var(--text-light);
+    font-size:0.85rem; background:var(--light); border-top:1px solid #ddd; margin-top:2rem;
+  }
+  .footer a { color: var(--primary); text-decoration: none; margin: 0 0.5rem; }
+  .footer a:hover { text-decoration: underline; }
   
   @media (max-width:600px) {
     header h1 { font-size:1.6rem; }
     .releve-table { font-size: 10px; }
-    .releve-table th, .releve-table td { padding: 1px 3px; }
     .simple-table { font-size: 11px; }
     .search-box button { padding:0 1rem; }
   }
@@ -429,6 +168,7 @@
     <div id="annonceContainer" class="annonce-container"></div>
     
     <div class="result-card">
+      <h2 class="section-title"><i class="fas fa-search"></i> Consulter votre résultat</h2>
       
       <div class="search-box">
         <input type="text" id="studentIdInput" placeholder="Entrez votre numéro d'étudiant...">
@@ -441,124 +181,19 @@
         <p>Vérifiez votre numéro d'étudiant</p>
       </div>
     </div>
-    
-    <div class="admin-section">
-      <div style="text-align:center;">
-        <button class="admin-btn success" onclick="showAdminLogin()"><i class="fas fa-lock"></i> Accès Coordinateurs</button>
-      </div>
-      
-      <div id="adminPanel" class="admin-panel">
-        <div id="adminLoginForm">
-          <h3><i class="fas fa-sign-in-alt"></i> Connexion Coordinateur</h3>
-          <div id="loginMessage" class="message error"></div>
-          <div class="form-group">
-            <label>Mot de passe</label>
-            <input type="password" id="adminPassword" placeholder="••••••••" onkeyup="if(event.key==='Enter') adminLogin()">
-          </div>
-          <button class="admin-btn" onclick="adminLogin()">Connexion</button>
-          <button class="admin-btn secondary" onclick="hideAdminPanel()">Annuler</button>
-        </div>
-        
-        <div id="adminActions" style="display:none;">
-          <h3><i class="fas fa-user-shield"></i> Panneau de coordination - PPV</h3>
-          
-          <div style="display:grid; gap:0.8rem; margin:1rem 0;">
-            <button class="admin-btn success" onclick="showImportForm()"><i class="fas fa-upload"></i> Importer des résultats</button>
-            <button class="admin-btn danger" onclick="showManageSubjects()"><i class="fas fa-trash-alt"></i> Gérer les matières</button>
-            <button class="admin-btn warning" onclick="openAnnonceModal()"><i class="fas fa-bullhorn"></i> Gérer l'annonce</button>
-            <button class="admin-btn primary" onclick="openChangePasswordModal()"><i class="fas fa-key"></i> Changer le mot de passe</button>
-            <button class="admin-btn danger" onclick="showResetDataForm()" style="background:#f8d7da; border-color:#dc3545; color:#721c24;"><i class="fas fa-database"></i> Supprimer les données d'un semestre</button>
-          </div>
-          
-          <div id="importForm" style="display:none;">
-            <h4 style="margin-bottom:0.8rem;"><i class="fas fa-file-import"></i> Importer des résultats</h4>
-            <div class="file-format-info">
-              <i class="fas fa-info-circle"></i> <strong>Formats acceptés :</strong> Excel (.xlsx, .xls), ODS (.ods), Word (.docx), PDF (.pdf)
-              <ul><li><strong>Colonnes attendues :</strong> NUMERO, NOM&PRENOM, NOTE/20</li></ul>
-            </div>
-            <div class="form-group"><label>Semestre</label><select id="importSemester"></select></div>
-            <div class="form-group"><label>Type d'évaluation</label>
-              <select id="importType" onchange="updateSubjectsForImportType()">
-                <option value="Examen">Examen</option><option value="Contrôle continu">Contrôle continu</option>
-                <option value="Rattrapage">Rattrapage</option><option value="TP">TP</option>
-              </select>
-            </div>
-            <div class="form-group"><label>Nom de la matière</label><select id="importSubject" style="width:100%; padding:0.6rem; border:2px solid var(--primary-light); border-radius:var(--radius); font-size:0.9rem;"><option value="">-- Sélectionner une matière --</option></select></div>
-            <div class="form-group"><label>Fichier à importer</label><input type="file" id="importFile" accept=".xlsx, .xls, .ods, .docx, .pdf"></div>
-            <div id="importProgress" style="display:none;"><div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div><p id="progressText" style="text-align:center;">Analyse du fichier...</p></div>
-            <button class="admin-btn success" onclick="processImport()">Importer</button>
-            <button class="admin-btn secondary" onclick="hideImportForm()">Fermer</button>
-          </div>
-          
-          <div id="manageSubjects" style="display:none;">
-            <h4 style="margin-bottom:0.8rem;"><i class="fas fa-list"></i> Gérer les matières</h4>
-            <div class="form-group"><label>Semestre</label><select id="manageSemester"></select></div>
-            <button class="admin-btn" onclick="loadSubjectsList()">Afficher les matières</button>
-            <div id="subjectsListContainer" style="margin-top:1rem;"></div>
-            <button class="admin-btn secondary" onclick="hideManageSubjects()" style="margin-top:0.8rem;">Retour</button>
-          </div>
-          
-          <div id="resetDataForm" style="display:none; margin-top:0.8rem; padding:0.8rem; background:#f8d7da; border-radius:8px; border:1px solid #dc3545;">
-            <h4 style="color:#721c24; margin-bottom:0.8rem;"><i class="fas fa-exclamation-triangle"></i> Supprimer les données d'un semestre</h4>
-            <p style="margin-bottom:0.8rem; color:#721c24;">Attention : Cette action supprimera définitivement toutes les données des étudiants pour le semestre sélectionné. Cette action est irréversible.</p>
-            <div class="form-group">
-              <label>Semestre</label>
-              <select id="resetSemesterSelect"></select>
-            </div>
-            <button class="admin-btn danger" onclick="resetAllData()" style="background:#dc3545; color:white;">Confirmer la suppression</button>
-            <button class="admin-btn secondary" onclick="hideResetDataForm()">Annuler</button>
-          </div>
-          
-          <button class="admin-btn secondary" onclick="adminLogout()" style="margin-top:0.8rem;">Déconnexion</button>
-          
-          <div id="adminMessage" class="message success" style="margin-top:1rem;"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div id="annonceModal" class="modal">
-  <div class="modal-content">
-    <h3><i class="fas fa-bullhorn"></i> Publier une annonce</h3>
-    <label>Texte de l'annonce :</label>
-    <textarea id="annonceTexte" rows="3" placeholder="Ex: Les résultats du semestre 3 sont disponibles !"></textarea>
-    <p style="font-size:0.8rem; color:#666; margin-top:0.3rem;"><i class="fas fa-info-circle"></i> L'annonce sera visible pendant 24 heures pour tous les visiteurs.</p>
-    <div class="modal-buttons"><button class="admin-btn" onclick="publierAnnonce()">Publier</button><button class="admin-btn secondary" onclick="fermerModalAnnonce()">Annuler</button></div>
-  </div>
-</div>
-
-<div id="changePasswordModal" class="modal">
-  <div class="modal-content">
-    <h3><i class="fas fa-key"></i> Changer le mot de passe</h3>
-    <div id="changePasswordMessage" class="message error"></div>
-    <div class="form-group">
-      <label>Mot de passe actuel</label>
-      <input type="password" id="currentPassword" placeholder="••••••••">
-    </div>
-    <div class="form-group">
-      <label>Nouveau mot de passe</label>
-      <input type="password" id="newPassword" placeholder="••••••••">
-    </div>
-    <div class="form-group">
-      <label>Confirmer le nouveau mot de passe</label>
-      <input type="password" id="confirmNewPassword" placeholder="••••••••">
-    </div>
-    <div class="modal-buttons">
-      <button class="admin-btn success" onclick="changePassword()">Enregistrer</button>
-      <button class="admin-btn secondary" onclick="closeChangePasswordModal()">Annuler</button>
-    </div>
   </div>
 </div>
 
 <footer class="footer">
   <p>© 2026 Département de Production et Protection Végétales</p>
-  <p style="margin-top:0.3rem; font-size:0.75rem;">......</p>
+  <p style="margin-top:0.3rem; font-size:0.75rem;">
+    <a href="Reco.html"><i class="fas fa-lock"></i> Accès Coordinateur</a>
+  </p>
 </footer>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getDatabase, ref, set, remove, get, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDnrW6WnmbEFpbWzlW9IGglxAafajt2Kyo",
@@ -572,89 +207,6 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
-  
-  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-  
-  const DEFAULT_CREDENTIALS = {
-    PPV: { passwordHash: "13b34364b6022a2cd99414b5a0f9e5c3d86036b2e248b000c0f001e10928a26a", name: "PPV", allowedSemesters: ["S3", "S4", "S5", "S6"] }
-  };
-
-  let ADMIN_CREDENTIALS = { ...DEFAULT_CREDENTIALS };
-
-  async function loadCredentialsFromFirebase() {
-    try {
-      const snapshot = await get(child(ref(db), 'admin_credentials'));
-      if (snapshot.exists()) {
-        const firebaseCredentials = snapshot.val();
-        ADMIN_CREDENTIALS = {
-          PPV: { ...DEFAULT_CREDENTIALS.PPV, ...(firebaseCredentials.PPV || {}) }
-        };
-        console.log('Credentials chargées depuis Firebase');
-      } else {
-        await saveCredentialsToFirebase();
-        console.log('Credentials par défaut sauvegardées dans Firebase');
-      }
-    } catch (error) {
-      console.error('Erreur de chargement depuis Firebase:', error);
-    }
-  }
-
-  async function saveCredentialsToFirebase() {
-    try {
-      const credentialsToSave = {
-        PPV: { passwordHash: ADMIN_CREDENTIALS.PPV.passwordHash }
-      };
-      await set(ref(db, 'admin_credentials'), credentialsToSave);
-      console.log('Credentials sauvegardées dans Firebase');
-      return true;
-    } catch (error) {
-      console.error('Erreur de sauvegarde dans Firebase:', error);
-      return false;
-    }
-  }
-
-  async function loadAnnonceFromFirebase() {
-    try {
-      const snapshot = await get(child(ref(db), 'annonces/active'));
-      if (snapshot.exists()) {
-        const annonce = snapshot.val();
-        if (annonce.expiration && Date.now() < annonce.expiration) {
-          return annonce;
-        } else {
-          await remove(ref(db, 'annonces/active'));
-          return null;
-        }
-      }
-      return null;
-    } catch (error) {
-      console.error('Erreur de chargement de l\'annonce depuis Firebase:', error);
-      return null;
-    }
-  }
-
-  async function saveAnnonceToFirebase(annonce) {
-    try {
-      await set(ref(db, 'annonces/active'), annonce);
-      console.log('Annonce sauvegardée dans Firebase');
-      return true;
-    } catch (error) {
-      console.error('Erreur de sauvegarde de l\'annonce dans Firebase:', error);
-      return false;
-    }
-  }
-
-  async function deleteAnnonceFromFirebase() {
-    try {
-      await remove(ref(db, 'annonces/active'));
-      console.log('Annonce supprimée de Firebase');
-      return true;
-    } catch (error) {
-      console.error('Erreur de suppression de l\'annonce de Firebase:', error);
-      return false;
-    }
-  }
-
-  await loadCredentialsFromFirebase();
 
   const SUBJECTS_BY_DEPT = {
     PPV: {
@@ -669,42 +221,6 @@
     "Math_et_Statistique", "Economie", "Vulgarisation"
   ];
 
-  function hasTP(subjectName) { return !SUBJECTS_WITHOUT_TP.includes(subjectName); }
-  function cleanSubjectName(subject) { return subject.replace(/\./g, '_').replace(/\s+/g, '_').replace(/[éèêë]/g, 'e').replace(/[ç]/g, 'c'); }
-  function displaySubjectName(subject) { return subject.replace(/_/g, ' ').replace(/I_/g, 'I.').replace(/et_/g, 'et '); }
-
-  function updateSubjectsForImportType() {
-    if (!currentAdmin) return;
-    const semester = document.getElementById('importSemester').value;
-    const evaluationType = document.getElementById('importType').value;
-    const subjectSelect = document.getElementById('importSubject');
-    subjectSelect.innerHTML = '<option value="">-- Sélectionner une matière --</option>';
-    if (!semester) return;
-    let subjects = SUBJECTS_BY_DEPT[currentAdmin.type]?.[semester] || [];
-    if (evaluationType === "TP") subjects = subjects.filter(subject => hasTP(subject));
-    subjects.forEach(subj => {
-      const option = document.createElement('option');
-      option.value = subj;
-      option.textContent = displaySubjectName(subj);
-      subjectSelect.appendChild(option);
-    });
-    if (subjects.length === 0) {
-      const option = document.createElement('option');
-      option.value = ""; option.textContent = "-- Aucune matière disponible pour ce type --"; option.disabled = true;
-      subjectSelect.appendChild(option);
-    }
-  }
-
-  async function hashPassword(password) {
-    const msgBuffer = new TextEncoder().encode(password);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  }
-
-  let currentAdmin = null;
-  function updateSubjectsListForImport() { updateSubjectsForImportType(); }
-
   const MODULES_STRUCTURE = {
     PPV: {
       S3: { M31: { name: "Module 31", credit: 6.0, subjects: ["Français_s3", "Economie"] }, M32: { name: "Module 32", credit: 8.0, subjects: ["I_Agronomie", "I_Horticulture"] }, M33: { name: "Module 33", credit: 8.0, subjects: ["Pesticides_agricoles", "Entomologie_et_Nemato"] }, M34: { name: "Module 34", credit: 8.0, subjects: ["Science_des_sols", "Science_des_plantes"] } },
@@ -716,770 +232,161 @@
     PPV: { S3: { "Français_s3": 3.0, "Economie": 3.0, "I_Agronomie": 4.0, "I_Horticulture": 4.0, "Pesticides_agricoles": 4.0, "Entomologie_et_Nemato": 4.0, "Science_des_sols": 4.0, "Science_des_plantes": 4.0 }, S4: { "Vulgarisation": 3.0, "Technique_de_propagation": 4.0, "Technique_d_irrigation_et_BEC": 3.0, "Ecophysiologie_et_Biochimie": 4.0, "Fertilite_du_sol": 3.0, "Methodes_de_diagnostic": 3.0, "Malherbologie": 3.0 } }
   };
 
-  window.openChangePasswordModal = function() {
-    document.getElementById('changePasswordModal').style.display = 'flex';
-    document.getElementById('currentPassword').value = '';
-    document.getElementById('newPassword').value = '';
-    document.getElementById('confirmNewPassword').value = '';
-    document.getElementById('changePasswordMessage').style.display = 'none';
-  };
+  function hasTP(s) { return !SUBJECTS_WITHOUT_TP.includes(s); }
+  function displaySubjectName(s) { return s.replace(/_/g, ' ').replace(/I_/g, 'I.').replace(/et_/g, 'et '); }
 
-  window.closeChangePasswordModal = function() {
-    document.getElementById('changePasswordModal').style.display = 'none';
-  };
+  async function loadAnnonce() {
+    try {
+      const snap = await get(child(ref(db), 'annonces/active'));
+      if (snap.exists()) {
+        const a = snap.val();
+        if (a.expiration && Date.now() < a.expiration) return a;
+      }
+      return null;
+    } catch (e) { return null; }
+  }
 
-  window.changePassword = async function() {
-    const currentPass = document.getElementById('currentPassword').value;
-    const newPass = document.getElementById('newPassword').value;
-    const confirmPass = document.getElementById('confirmNewPassword').value;
-    const msgDiv = document.getElementById('changePasswordMessage');
-    
-    if (!currentPass || !newPass || !confirmPass) {
-      msgDiv.textContent = 'Veuillez remplir tous les champs';
-      msgDiv.style.display = 'block';
-      return;
-    }
-    
-    if (newPass !== confirmPass) {
-      msgDiv.textContent = 'Les mots de passe ne correspondent pas';
-      msgDiv.style.display = 'block';
-      return;
-    }
-    
-    if (newPass.length < 4) {
-      msgDiv.textContent = 'Le mot de passe doit contenir au moins 4 caractères';
-      msgDiv.style.display = 'block';
-      return;
-    }
-    
-    const currentHash = await hashPassword(currentPass);
-    
-    if (ADMIN_CREDENTIALS.PPV.passwordHash !== currentHash) {
-      msgDiv.textContent = 'Mot de passe actuel incorrect';
-      msgDiv.style.display = 'block';
-      return;
-    }
-    
-    const newHash = await hashPassword(newPass);
-    ADMIN_CREDENTIALS.PPV.passwordHash = newHash;
-    
-    msgDiv.textContent = 'Sauvegarde dans Firebase...';
-    msgDiv.className = 'message';
-    msgDiv.style.display = 'block';
-    
-    const saved = await saveCredentialsToFirebase();
-    
-    if (saved) {
-      msgDiv.textContent = 'Mot de passe changé avec succès (synchronisé sur tous les appareils)';
-      msgDiv.className = 'message success';
-    } else {
-      msgDiv.textContent = 'Mot de passe changé mais non synchronisé (problème de connexion)';
-      msgDiv.className = 'message error';
-    }
-    
-    msgDiv.style.display = 'block';
-    setTimeout(() => closeChangePasswordModal(), 2000);
-  };
-
-  window.openAnnonceModal = function() { 
-    document.getElementById('annonceModal').style.display = 'flex'; 
-  }
-  
-  window.fermerModalAnnonce = function() { 
-    document.getElementById('annonceModal').style.display = 'none'; 
-    document.getElementById('annonceTexte').value = ''; 
-  }
-  
-  window.publierAnnonce = async function() {
-    const texte = document.getElementById('annonceTexte').value.trim();
-    if (!texte) { 
-      alert('Veuillez écrire un texte pour l\'annonce'); 
-      return; 
-    }
-    
-    const expiration = Date.now() + (24 * 60 * 60 * 1000);
-    const annonce = { 
-      texte: texte, 
-      expiration: expiration, 
-      dateCreation: Date.now() 
-    };
-    
-    const msgDiv = document.getElementById('adminMessage');
-    msgDiv.textContent = 'Publication de l\'annonce...';
-    msgDiv.className = 'message';
-    msgDiv.style.display = 'block';
-    
-    const saved = await saveAnnonceToFirebase(annonce);
-    
-    if (saved) {
-      msgDiv.textContent = 'Annonce publiée avec succès (visible 24h pour tous les visiteurs)';
-      msgDiv.className = 'message success';
-    } else {
-      msgDiv.textContent = 'Annonce publiée localement uniquement (problème de connexion)';
-      msgDiv.className = 'message error';
-    }
-    
-    fermerModalAnnonce(); 
-    afficherAnnonce();
-    
-    setTimeout(() => msgDiv.style.display = 'none', 3000);
-  }
-  
-  window.supprimerAnnonce = async function() {
-    if (!confirm('Voulez-vous vraiment supprimer cette annonce ?')) return;
-    
-    const msgDiv = document.getElementById('adminMessage');
-    msgDiv.textContent = 'Suppression de l\'annonce...';
-    msgDiv.className = 'message';
-    msgDiv.style.display = 'block';
-    
-    const deleted = await deleteAnnonceFromFirebase();
-    
-    if (deleted) {
-      msgDiv.textContent = 'Annonce supprimée pour tous les visiteurs';
-      msgDiv.className = 'message success';
-    } else {
-      msgDiv.textContent = 'Annonce supprimée localement uniquement';
-      msgDiv.className = 'message error';
-    }
-    
-    afficherAnnonce();
-    setTimeout(() => msgDiv.style.display = 'none', 3000);
-  }
-  
   async function afficherAnnonce() {
-    const annonce = await loadAnnonceFromFirebase();
-    const container = document.getElementById('annonceContainer');
-    if (!container) return;
+    const a = await loadAnnonce();
+    const c = document.getElementById('annonceContainer');
+    if (!a || !a.texte) { c.innerHTML = ''; return; }
+    const d = new Date(a.expiration).toLocaleString('fr-FR');
+    c.innerHTML = `<div class="annonce-bloc"><div style="flex:1"><span class="annonce-icone"><i class="fas fa-bullhorn"></i></span><span class="annonce-texte"><strong>Annonce :</strong> ${a.texte.replace(/</g,'&lt;')}</span><div class="annonce-date">Visible jusqu'au ${d}</div></div></div>`;
+  }
+
+  function calculateResults(notes, dept, sem) {
+    const mods = MODULES_STRUCTURE[dept]?.[sem];
+    if (!mods) return null;
+    const req = [];
+    for (let m in mods) for (let s of mods[m].subjects) if (!req.includes(s)) req.push(s);
     
-    if (!annonce || !annonce.texte) { 
-      container.innerHTML = ''; 
-      return; 
+    const subjAvg = {}, subjStatus = {}, subjSR = {};
+    for (let s of req) {
+      const n = notes[s] || {};
+      const exam = n['Examen'] || 0, cc = n['Contrôle continu'] || 0, tp = n['TP'] || 0;
+      const ratt = n['Rattrapage'];
+      const useSR = ratt !== undefined && ratt > exam;
+      subjSR[s] = useSR;
+      const final = useSR ? ratt : exam;
+      subjAvg[s] = hasTP(s) ? (tp + cc * 2 + final * 3) / 6 : (cc * 2 + final * 3) / 5;
+      subjStatus[s] = subjAvg[s] >= 10 ? 'C' : 'NC';
     }
     
-    const dateExpiration = new Date(annonce.expiration);
-    const dateFormatted = dateExpiration.toLocaleString('fr-FR');
-    const isAdmin = (currentAdmin !== null);
+    const modAvg = {}, modStatus = {}, modCredits = {};
+    for (let m in mods) {
+      let w = 0, c = 0, earned = 0;
+      for (let s of mods[m].subjects) {
+        const cr = SUBJECT_CREDITS[dept][sem][s] || 3;
+        w += (subjAvg[s] || 0) * cr; c += cr;
+        if (subjStatus[s] === 'C') earned += cr;
+      }
+      modAvg[m] = c > 0 ? w / c : 0;
+      modStatus[m] = mods[m].subjects.every(s => subjStatus[s] === 'C') && modAvg[m] >= 10 ? 'V' : 'NV';
+      modCredits[m] = earned;
+    }
     
-    container.innerHTML = `
-      <div class="annonce-bloc">
-        <div style="flex:1">
-          <span class="annonce-icone"><i class="fas fa-bullhorn"></i></span>
-          <span class="annonce-texte"><strong>Annonce :</strong> ${annonce.texte.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</span>
-          <div class="annonce-date">Visible jusqu'au ${dateFormatted}</div>
-        </div>
-        ${isAdmin ? `<button class="annonce-fermer" onclick="supprimerAnnonce()" title="Supprimer l'annonce"><i class="fas fa-times"></i></button>` : ''}
-      </div>
-    `;
+    let tw = 0, tc = 0;
+    for (let s of req) { const cr = SUBJECT_CREDITS[dept][sem][s] || 3; tw += (subjAvg[s] || 0) * cr; tc += cr; }
+    const genMoy = tc > 0 ? tw / tc : 0;
+    const hasNV = Object.values(modStatus).some(s => s === 'NV');
+    const semStatus = hasNV ? 'Non Validé' : (genMoy >= 10 ? 'Validé' : 'Non Validé');
+    const hasSR = Object.values(subjSR).some(v => v);
+    
+    return { genMoy, semStatus, modStatus, modCredits, modAvg, subjAvg, subjStatus, hasSR, modules: mods };
   }
 
   window.searchStudentResult = async () => {
-    const studentId = document.getElementById('studentIdInput').value.trim();
-    const container = document.getElementById('studentResultContainer');
-    const noResult = document.getElementById('noResultMessage');
+    const id = document.getElementById('studentIdInput').value.trim();
+    const cont = document.getElementById('studentResultContainer');
+    const noRes = document.getElementById('noResultMessage');
     
-    if (!studentId) { alert('Veuillez entrer votre numéro d\'étudiant'); return; }
+    if (!id) { alert('Veuillez entrer votre numéro d\'étudiant'); return; }
     
-    container.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><p>Chargement...</p></div>';
-    container.style.display = 'block'; noResult.style.display = 'none';
+    cont.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><p>Chargement...</p></div>';
+    cont.style.display = 'block'; noRes.style.display = 'none';
     
-    const departments = ['PPV'];
-    const semesters = ['S3', 'S4', 'S5', 'S6'];
+    const sems = ['S3', 'S4', 'S5', 'S6'];
     
-    let foundData = null;
-    let foundDept = null;
-    let foundSem = null;
-    
-    for (let dept of departments) {
-      for (let sem of semesters) {
-        const snapshot = await get(child(ref(db), `results/${dept}/${sem}/${studentId}`));
-        if (snapshot.exists()) {
-          foundData = snapshot.val();
-          foundDept = dept;
-          foundSem = sem;
-          break;
-        }
-      }
-      if (foundData) break;
+    let data = null, sem = null;
+    for (let s of sems) {
+      const snap = await get(child(ref(db), `results/PPV/${s}/${id}`));
+      if (snap.exists()) { data = snap.val(); sem = s; break; }
     }
     
-    if (!foundData) { 
-      container.style.display = 'none'; 
-      noResult.style.display = 'block'; 
-      return; 
+    if (!data) { cont.style.display = 'none'; noRes.style.display = 'block'; return; }
+    
+    let name = '';
+    const notes = {};
+    for (let k in data) {
+      if (data[k].name) name = data[k].name;
+      if (!notes[data[k].subject]) notes[data[k].subject] = {};
+      notes[data[k].subject][data[k].type] = data[k].grade;
     }
     
-    const studentData = foundData;
-    const department = foundDept;
-    const semester = foundSem;
-    
-    let studentName = '';
-    for (let key in studentData) { if (studentData[key].name) { studentName = studentData[key].name; break; } }
-    
-    const notesBySubject = {};
-    for (let key in studentData) {
-      const data = studentData[key];
-      if (!notesBySubject[data.subject]) notesBySubject[data.subject] = {};
-      notesBySubject[data.subject][data.type] = data.grade;
+    const req = SUBJECTS_BY_DEPT.PPV[sem] || [];
+    let complete = req.length > 0;
+    for (let s of req) {
+      const htp = hasTP(s);
+      if (!notes[s]?.['Examen'] || !notes[s]?.['Contrôle continu'] || (htp && !notes[s]?.['TP'])) { complete = false; break; }
     }
     
-    const requiredSubjects = SUBJECTS_BY_DEPT[department]?.[semester] || [];
-    let allNotesComplete = true;
-    for (let subject of requiredSubjects) {
-      const hasTPforSubject = hasTP(subject);
-      const examExists = notesBySubject[subject] && notesBySubject[subject]['Examen'] !== undefined;
-      const ccExists = notesBySubject[subject] && notesBySubject[subject]['Contrôle continu'] !== undefined;
-      const tpExists = !hasTPforSubject || (notesBySubject[subject] && notesBySubject[subject]['TP'] !== undefined);
-      if (!examExists || !ccExists || !tpExists) { allNotesComplete = false; break; }
-    }
+    let html = `<div class="student-header"><h3>${name || 'Étudiant'}</h3><p>N° ${id} | PPV | ${sem}</p></div>`;
     
-    let html = `<div class="student-header"><h3>${studentName || 'Étudiant'}</h3><p>N° ${studentId} | ${department} | ${semester}</p></div>`;
-    
-    if (allNotesComplete) {
-      const subjectAverages = {}, subjectStatus = {}, subjectHasSR = {};
-      for (let subject of requiredSubjects) {
-        const notes = notesBySubject[subject] || {};
-        const hasTPforSubject = hasTP(subject);
-        const exam = notes['Examen'] || 0, cc = notes['Contrôle continu'] || 0, tp = notes['TP'] || 0;
-        const rattrapage = notes['Rattrapage'];
-        const useSR = (rattrapage !== undefined && rattrapage > exam);
-        subjectHasSR[subject] = useSR;
-        const finalExam = useSR ? rattrapage : exam;
-        let moyenne = hasTPforSubject ? (tp * 1 + cc * 2 + finalExam * 3) / 6 : (cc * 2 + finalExam * 3) / 5;
-        subjectAverages[subject] = moyenne;
-        subjectStatus[subject] = moyenne >= 10 ? 'C' : 'NC';
-      }
+    if (complete) {
+      const res = calculateResults(notes, 'PPV', sem);
+      const showSR = res.hasSR;
       
-      const moduleAverages = {}, moduleStatus = {}, moduleEarnedCredits = {};
-      const modulesStructure = MODULES_STRUCTURE[department]?.[semester];
+      html += '<div style="overflow-x:auto;"><table class="releve-table"><thead><tr><th>Numéro</th><th>Nom et Prénom</th><th>TP</th><th>CC</th><th>Examen</th>' + (showSR ? '<th>SR</th>' : '') + '<th>NFe</th><th>Crédit</th><th>Obs</th></tr></thead><tbody>';
+      html += `<tr class="student-info-row"><td>${id}</td><td style="text-align:left; padding-left:15px;">${name}</td><td></td><td></td><td></td>${showSR ? '<td></td>' : ''}<td></td><td></td><td></td></tr>`;
       
-      for (let moduleCode in modulesStructure) {
-        const module = modulesStructure[moduleCode];
-        let totalWeighted = 0, totalCredits = 0, earnedModuleCredits = 0;
-        for (let subject of module.subjects) {
-          const credit = SUBJECT_CREDITS[department]?.[semester]?.[subject] || 3.0;
-          totalWeighted += (subjectAverages[subject] || 0) * credit;
-          totalCredits += credit;
-          if (subjectStatus[subject] === 'C') earnedModuleCredits += credit;
-        }
-        const moduleMoyenne = totalCredits > 0 ? totalWeighted / totalCredits : 0;
-        moduleAverages[moduleCode] = moduleMoyenne;
-        let allC = true;
-        for (let subject of module.subjects) if (subjectStatus[subject] !== 'C') allC = false;
-        moduleStatus[moduleCode] = allC && moduleMoyenne >= 10 ? 'V' : 'NV';
-        moduleEarnedCredits[moduleCode] = earnedModuleCredits;
-      }
-      
-      let totalWeightedGeneral = 0, totalCreditsGeneral = 0;
-      for (let subject of requiredSubjects) {
-        const credit = SUBJECT_CREDITS[department]?.[semester]?.[subject] || 3.0;
-        totalWeightedGeneral += (subjectAverages[subject] || 0) * credit;
-        totalCreditsGeneral += credit;
-      }
-      const generaleMoyenne = totalCreditsGeneral > 0 ? totalWeightedGeneral / totalCreditsGeneral : 0;
-      
-      let hasAnyNV = false;
-      for (let moduleCode in moduleStatus) if (moduleStatus[moduleCode] === 'NV') { hasAnyNV = true; break; }
-      const semestreStatus = hasAnyNV ? 'Non Validé' : (generaleMoyenne >= 10 ? 'Validé' : 'Non Validé');
-      
-      let hasAnySR = false;
-      for (let subject of requiredSubjects) if (subjectHasSR[subject]) { hasAnySR = true; break; }
-      const showSRColumn = hasAnySR;
-      
-      html += '<div style="overflow-x:auto;"><table class="releve-table"><thead><tr><th>Numéro</th><th>Nom et Prénom</th><th>TP</th><th>CC</th><th>Examen</th>' + (showSRColumn ? '<th>SR</th>' : '') + '<th>NFe</th><th>Crédit</th><th>Obs</th></tr></thead><tbody>';
-      html += `<tr class="student-info-row"><td>${studentId}</td><td style="text-align:left; padding-left:15px;">${studentName}</td><td></td><td></td><td></td>${showSRColumn ? '<td></td>' : ''}<td></td><td></td><td></td></tr>`;
-      
-      for (let moduleCode in modulesStructure) {
-        const module = modulesStructure[moduleCode];
-        html += `<tr class="module-row"><td>${moduleCode}</td><td style="text-align:left; padding-left:15px;">${module.name}</td><td></td><td></td><td></td>${showSRColumn ? '<td></td>' : ''}<td style="font-weight:bold;">${moduleAverages[moduleCode].toFixed(2)}</td><td>${moduleEarnedCredits[moduleCode].toFixed(1)}</td><td class="${moduleStatus[moduleCode] === 'V' ? 'status-V' : 'status-NV'}">${moduleStatus[moduleCode]}</td></tr>`;
-        for (let subject of module.subjects) {
-          const notes = notesBySubject[subject] || {};
-          const hasTPforSubject = hasTP(subject);
-          const credit = SUBJECT_CREDITS[department]?.[semester]?.[subject] || 3.0;
-          const rattrapage = notes['Rattrapage'];
-          const srDisplay = (rattrapage !== undefined && rattrapage > (notes['Examen'] || 0)) ? rattrapage.toFixed(2) : '';
-          html += `<tr class="subject-row"><td></td><td style="text-align:left; padding-left:30px;">${displaySubjectName(subject)}</td><td>${hasTPforSubject ? (notes['TP'] !== undefined ? notes['TP'].toFixed(2) : '') : ''}</td><td>${notes['Contrôle continu'] !== undefined ? notes['Contrôle continu'].toFixed(2) : ''}</td><td>${notes['Examen'] !== undefined ? notes['Examen'].toFixed(2) : ''}</td>${showSRColumn ? `<td>${srDisplay}</td>` : ''}<td style="font-weight:bold;">${subjectAverages[subject].toFixed(2)}</td><td>${credit.toFixed(1)}</td><td class="${subjectStatus[subject] === 'C' ? 'status-C' : 'status-NC'}">${subjectStatus[subject]}</td></tr>`;
+      for (let m in res.modules) {
+        const mod = res.modules[m];
+        html += `<tr class="module-row"><td>${m}</td><td style="text-align:left; padding-left:15px;">${mod.name}</td><td></td><td></td><td></td>${showSR ? '<td></td>' : ''}<td style="font-weight:bold;">${res.modAvg[m].toFixed(2)}</td><td>${res.modCredits[m].toFixed(1)}</td><td class="${res.modStatus[m]==='V'?'status-V':'status-NV'}">${res.modStatus[m]}</td></tr>`;
+        for (let s of mod.subjects) {
+          const n = notes[s] || {};
+          const tp = hasTP(s) ? (n['TP']?.toFixed(2) || '') : '';
+          const cc = n['Contrôle continu']?.toFixed(2) || '';
+          const exam = n['Examen']?.toFixed(2) || '';
+          const ratt = n['Rattrapage'];
+          const sr = (ratt !== undefined && ratt > (n['Examen'] || 0)) ? ratt.toFixed(2) : '';
+          const cr = SUBJECT_CREDITS.PPV[sem][s] || 3;
+          
+          html += `<tr class="subject-row"><td></td><td style="text-align:left; padding-left:30px;">${displaySubjectName(s)}</td><td>${tp}</td><td>${cc}</td><td>${exam}</td>${showSR?`<td>${sr}</td>`:''}<td style="font-weight:bold;">${res.subjAvg[s].toFixed(2)}</td><td>${cr.toFixed(1)}</td><td class="${res.subjStatus[s]==='C'?'status-C':'status-NC'}">${res.subjStatus[s]}</td></tr>`;
         }
       }
       
-      const colspanValue = showSRColumn ? 6 : 5;
-      html += `<tr class="moyenne-row"><td colspan="${colspanValue}" style="text-align:right; font-weight:bold;">Moyenne Semestre :</td><td style="font-weight:bold;">${generaleMoyenne.toFixed(2)}</td><td></td><td class="${semestreStatus === 'Validé' ? 'status-V' : 'status-NV'}" style="font-weight:bold;">${semestreStatus}</td></tr>`;
+      const colspan = showSR ? 6 : 5;
+      html += `<tr class="moyenne-row"><td colspan="${colspan}" style="text-align:right; font-weight:bold;">Moyenne Semestre :</td><td style="font-weight:bold;">${res.genMoy.toFixed(2)}</td><td></td><td class="${res.semStatus==='Validé'?'status-V':'status-NV'}" style="font-weight:bold;">${res.semStatus}</td></tr>`;
       html += '</tbody></table></div>';
-      html += `<div style="text-align:center;"><a href="result.html?dept=${department}&sem=${semester}&id=${studentId}&name=${encodeURIComponent(studentName)}" class="pdf-link" target="_blank"><i class="fas fa-file-pdf"></i> Télécharger mon relevé PDF</a></div>`;
+      html += `<div style="text-align:center;"><a href="result.html?dept=PPV&sem=${sem}&id=${id}&name=${encodeURIComponent(name)}" class="pdf-link" target="_blank"><i class="fas fa-file-pdf"></i> Télécharger mon relevé PDF</a></div>`;
     } else {
-      let hasAnyTP = false, hasAnyCC = false, hasAnyExam = false, hasAnyRattrapage = false;
-      for (let subject of requiredSubjects) {
-        if (notesBySubject[subject]?.['TP'] !== undefined) hasAnyTP = true;
-        if (notesBySubject[subject]?.['Contrôle continu'] !== undefined) hasAnyCC = true;
-        if (notesBySubject[subject]?.['Examen'] !== undefined) hasAnyExam = true;
-        if (notesBySubject[subject]?.['Rattrapage'] !== undefined) hasAnyRattrapage = true;
+      let hasTP = false, hasCC = false, hasExam = false;
+      for (let s of req) {
+        if (notes[s]?.['TP'] !== undefined) hasTP = true;
+        if (notes[s]?.['Contrôle continu'] !== undefined) hasCC = true;
+        if (notes[s]?.['Examen'] !== undefined) hasExam = true;
       }
-      
-      if (hasAnyTP) {
+      if (hasTP) {
         html += `<h4 class="section-subtitle">Résultats TP</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note TP</th></tr></thead><tbody>`;
-        for (let subject of requiredSubjects) { if (!hasTP(subject)) continue; const note = notesBySubject[subject]?.['TP']; html += `<tr><td>${displaySubjectName(subject)}</td><td style="text-align:center;">${note !== undefined ? note.toFixed(2) : ''}</td></tr>`; }
+        for (let s of req) if (hasTP(s)) { const n = notes[s]?.['TP']; html += `<tr><td>${displaySubjectName(s)}</td><td>${n!==undefined?n.toFixed(2):''}</td></tr>`; }
         html += `</tbody></table>`;
       }
-      if (hasAnyCC) {
+      if (hasCC) {
         html += `<h4 class="section-subtitle">Résultats Contrôle continu</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note CC</th></tr></thead><tbody>`;
-        for (let subject of requiredSubjects) { const note = notesBySubject[subject]?.['Contrôle continu']; html += `<tr><td>${displaySubjectName(subject)}</td><td style="text-align:center;">${note !== undefined ? note.toFixed(2) : ''}</td></tr>`; }
+        for (let s of req) { const n = notes[s]?.['Contrôle continu']; html += `<tr><td>${displaySubjectName(s)}</td><td>${n!==undefined?n.toFixed(2):''}</td></tr>`; }
         html += `</tbody></table>`;
       }
-      if (hasAnyExam) {
+      if (hasExam) {
         html += `<h4 class="section-subtitle">Résultats Examen</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note Examen</th></tr></thead><tbody>`;
-        for (let subject of requiredSubjects) { const note = notesBySubject[subject]?.['Examen']; html += `<tr><td>${displaySubjectName(subject)}</td><td style="text-align:center;">${note !== undefined ? note.toFixed(2) : ''}</td></tr>`; }
+        for (let s of req) { const n = notes[s]?.['Examen']; html += `<tr><td>${displaySubjectName(s)}</td><td>${n!==undefined?n.toFixed(2):''}</td></tr>`; }
         html += `</tbody></table>`;
       }
-      if (hasAnyRattrapage) {
-        html += `<h4 class="section-subtitle">Résultats Rattrapage</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note Rattrapage</th></tr></thead><tbody>`;
-        for (let subject of requiredSubjects) { const note = notesBySubject[subject]?.['Rattrapage']; if (note !== undefined) html += `<tr><td>${displaySubjectName(subject)}</td><td style="text-align:center;">${note.toFixed(2)}</td></tr>`; }
-        html += `</tbody></table>`;
-      }
-      html += `<div class="neutral-message"><i class="fas fa-info-circle"></i> Les résultats ne sont pas encore finalisés par le coordinateur.</div>`;
+      html += `<div class="neutral-message"><i class="fas fa-info-circle"></i> Les résultats ne sont pas encore finalisés.</div>`;
     }
-    container.innerHTML = html;
+    cont.innerHTML = html;
   };
 
-  window.showAdminLogin = () => { document.getElementById('adminPanel').classList.add('active'); document.getElementById('adminLoginForm').style.display = 'block'; document.getElementById('adminActions').style.display = 'none'; document.getElementById('loginMessage').style.display = 'none'; };
-  window.hideAdminPanel = () => { document.getElementById('adminPanel').classList.remove('active'); currentAdmin = null; afficherAnnonce(); };
-  
-  window.adminLogin = async () => {
-    const password = document.getElementById('adminPassword').value;
-    const msgDiv = document.getElementById('loginMessage');
-    
-    if (!password) { msgDiv.textContent = 'Veuillez entrer le mot de passe'; msgDiv.style.display = 'block'; return; }
-    
-    msgDiv.textContent = 'Vérification...'; msgDiv.style.display = 'block';
-    await loadCredentialsFromFirebase();
-    
-    const inputHash = await hashPassword(password);
-    
-    if (ADMIN_CREDENTIALS.PPV && inputHash === ADMIN_CREDENTIALS.PPV.passwordHash) {
-      currentAdmin = { type: 'PPV', ...ADMIN_CREDENTIALS.PPV };
-      document.getElementById('adminLoginForm').style.display = 'none'; 
-      document.getElementById('adminActions').style.display = 'block';
-      document.getElementById('adminPassword').value = ''; 
-      msgDiv.style.display = 'none';
-      
-      const allowed = currentAdmin.allowedSemesters;
-      const importSelect = document.getElementById('importSemester'); 
-      const manageSelect = document.getElementById('manageSemester');
-      const resetSelect = document.getElementById('resetSemesterSelect');
-      [importSelect, manageSelect, resetSelect].forEach(select => {
-        if (select) { select.innerHTML = ''; allowed.forEach(s => { select.innerHTML += `<option value="${s}">${s}</option>`; }); }
-      });
-      importSelect.addEventListener('change', updateSubjectsListForImport);
-      updateSubjectsListForImport(); 
-      afficherAnnonce();
-    } else { 
-      msgDiv.textContent = 'Mot de passe incorrect'; 
-      msgDiv.style.display = 'block'; 
-    }
-  };
-  
-  window.adminLogout = () => { currentAdmin = null; document.getElementById('adminLoginForm').style.display = 'block'; document.getElementById('adminActions').style.display = 'none'; document.getElementById('importForm').style.display = 'none'; document.getElementById('manageSubjects').style.display = 'none'; document.getElementById('resetDataForm').style.display = 'none'; afficherAnnonce(); };
-  window.showImportForm = () => { document.getElementById('importForm').style.display = 'block'; document.getElementById('manageSubjects').style.display = 'none'; document.getElementById('resetDataForm').style.display = 'none'; updateSubjectsListForImport(); };
-  window.hideImportForm = () => { document.getElementById('importForm').style.display = 'none'; document.getElementById('importProgress').style.display = 'none'; };
-  window.showManageSubjects = () => { document.getElementById('manageSubjects').style.display = 'block'; document.getElementById('importForm').style.display = 'none'; document.getElementById('resetDataForm').style.display = 'none'; document.getElementById('subjectsListContainer').innerHTML = ''; };
-  window.hideManageSubjects = () => { document.getElementById('manageSubjects').style.display = 'none'; };
-  window.showResetDataForm = () => { document.getElementById('resetDataForm').style.display = 'block'; document.getElementById('importForm').style.display = 'none'; document.getElementById('manageSubjects').style.display = 'none'; };
-  window.hideResetDataForm = () => { document.getElementById('resetDataForm').style.display = 'none'; };
-  
-  window.resetAllData = async () => {
-    const semester = document.getElementById('resetSemesterSelect').value;
-    if (!semester) { alert('Veuillez sélectionner le semestre'); return; }
-    if (!confirm(`ATTENTION ! Êtes-vous sûr de vouloir supprimer TOUTES les données du PPV - ${semester} ?\n\nCette action est irréversible.`)) return;
-    const msgDiv = document.getElementById('adminMessage');
-    msgDiv.textContent = 'Suppression en cours...'; msgDiv.style.display = 'block'; msgDiv.className = 'message';
-    try {
-      const path = `results/PPV/${semester}`;
-      const snapshot = await get(child(ref(db), path));
-      if (!snapshot.exists()) { msgDiv.textContent = 'Aucune donnée trouvée pour ce semestre'; msgDiv.className = 'message error'; setTimeout(() => msgDiv.style.display = 'none', 3000); return; }
-      const allStudents = snapshot.val(); let deletedCount = 0;
-      for (let studentId in allStudents) { await remove(ref(db, `${path}/${studentId}`)); deletedCount++; }
-      msgDiv.textContent = `Suppression terminée ! ${deletedCount} étudiant(s) supprimés du PPV - ${semester}`; msgDiv.className = 'message success';
-      hideResetDataForm(); if (document.getElementById('manageSubjects').style.display === 'block') loadSubjectsList();
-      setTimeout(() => msgDiv.style.display = 'none', 5000);
-    } catch (error) { console.error('Erreur lors de la suppression:', error); msgDiv.textContent = 'Erreur lors de la suppression des données'; msgDiv.className = 'message error'; setTimeout(() => msgDiv.style.display = 'none', 3000); }
-  };
-  
-  async function extractTextFromPDF(file) {
-    const arrayBuffer = await file.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-    let fullText = '';
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const textContent = await page.getTextContent();
-      const pageText = textContent.items.map(item => item.str).join(' ');
-      fullText += pageText + '\n';
-    }
-    return fullText;
-  }
-
-  async function extractTextFromWord(file) {
-    const arrayBuffer = await file.arrayBuffer();
-    const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
-    return result.value;
-  }
-
-  function parseTextToData(text) {
-    const lines = text.split('\n').filter(line => line.trim().length > 0);
-    const data = [];
-    
-    for (let line of lines) {
-      if (line.match(/num[eé]ro|nom|prenom|note/i)) continue;
-      
-      const match = line.match(/(\d+)\s+([A-Za-zÀ-ÿ\s\-]+?)\s+(\d{1,2}(?:[.,]\d{1,2})?)/);
-      if (match) {
-        const grade = parseFloat(match[3].replace(',', '.'));
-        if (grade >= 0 && grade <= 20) {
-          data.push({ 
-            'NUMERO': match[1].trim(), 
-            'NOM': match[2].trim(), 
-            'NOTE': grade 
-          });
-        }
-      }
-    }
-    
-    if (data.length === 0) {
-      for (let line of lines) {
-        if (line.match(/num[eé]ro|nom|prenom|note/i)) continue;
-        
-        const parts = line.trim().split(/\s+/);
-        if (parts.length >= 3) {
-          const potentialGrade = parseFloat(parts[parts.length - 1].replace(',', '.'));
-          const potentialNum = parts[0];
-          
-          if (!isNaN(potentialGrade) && potentialGrade >= 0 && potentialGrade <= 20 && /^\d+$/.test(potentialNum)) {
-            const name = parts.slice(1, -1).join(' ');
-            data.push({
-              'NUMERO': potentialNum,
-              'NOM': name,
-              'NOTE': potentialGrade
-            });
-          }
-        }
-      }
-    }
-    
-    return data;
-  }
-
-  async function readODSFile(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, { type: 'array' });
-          const sheetName = workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[sheetName];
-          const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-          
-          const headers = jsonData[0] || [];
-          const result = [];
-          
-          let numCol = -1, nameCol = -1, gradeCol = -1;
-          headers.forEach((h, i) => {
-            const headerStr = String(h).toLowerCase();
-            if (headerStr.includes('num') || headerStr.includes('n°') || headerStr === 'id') numCol = i;
-            if (headerStr.includes('nom') || headerStr.includes('prenom')) nameCol = i;
-            if (headerStr.includes('note') || headerStr.includes('grade') || headerStr.includes('moyenne')) gradeCol = i;
-          });
-          
-          if (numCol === -1) numCol = 0;
-          if (nameCol === -1) nameCol = 1;
-          if (gradeCol === -1) gradeCol = 2;
-          
-          for (let i = 1; i < jsonData.length; i++) {
-            const row = jsonData[i];
-            if (!row || row.length === 0) continue;
-            
-            const numero = row[numCol];
-            const nom = row[nameCol];
-            const note = row[gradeCol];
-            
-            if (numero && note !== undefined && note !== null) {
-              const grade = parseFloat(String(note).replace(',', '.'));
-              if (!isNaN(grade) && grade >= 0 && grade <= 20) {
-                result.push({
-                  'NUMERO': String(numero).trim(),
-                  'NOM': nom ? String(nom).trim() : '',
-                  'NOTE': grade
-                });
-              }
-            }
-          }
-          
-          resolve(result);
-        } catch (err) {
-          reject(err);
-        }
-      };
-      reader.onerror = reject;
-      reader.readAsArrayBuffer(file);
-    });
-  }
-
-  async function parseFile(file) {
-    const fileName = file.name.toLowerCase();
-    const progressDiv = document.getElementById('importProgress');
-    const progressFill = document.getElementById('progressFill');
-    const progressText = document.getElementById('progressText');
-    
-    progressDiv.style.display = 'block';
-    progressFill.style.width = '0%';
-    progressText.textContent = 'Analyse du fichier...';
-    
-    try {
-      let text = '';
-      
-      if (fileName.endsWith('.pdf')) {
-        progressText.textContent = 'Extraction du PDF...';
-        progressFill.style.width = '30%';
-        text = await extractTextFromPDF(file);
-        progressFill.style.width = '60%';
-      } else if (fileName.endsWith('.docx')) {
-        progressText.textContent = 'Extraction du document Word...';
-        progressFill.style.width = '30%';
-        text = await extractTextFromWord(file);
-        progressFill.style.width = '60%';
-      } else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
-        progressText.textContent = 'Lecture du fichier Excel...';
-        progressFill.style.width = '30%';
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            try {
-              const data = new Uint8Array(e.target.result);
-              const workbook = XLSX.read(data, { type: 'array' });
-              const sheetName = workbook.SheetNames[0];
-              const worksheet = workbook.Sheets[sheetName];
-              const jsonData = XLSX.utils.sheet_to_json(worksheet);
-              
-              const result = [];
-              jsonData.forEach(row => {
-                const keys = Object.keys(row);
-                let numKey = keys.find(k => k.toLowerCase().includes('num') || k.toLowerCase().includes('n°') || k.toLowerCase() === 'id');
-                let nameKey = keys.find(k => k.toLowerCase().includes('nom') || k.toLowerCase().includes('prenom'));
-                let gradeKey = keys.find(k => k.toLowerCase().includes('note') || k.toLowerCase().includes('grade') || k.toLowerCase().includes('moyenne'));
-                
-                if (!numKey) numKey = keys[0];
-                if (!nameKey) nameKey = keys[1];
-                if (!gradeKey) gradeKey = keys[2];
-                
-                const numero = row[numKey];
-                const nom = row[nameKey];
-                let grade = row[gradeKey];
-                
-                if (numero && grade !== undefined && grade !== null) {
-                  grade = parseFloat(String(grade).replace(',', '.'));
-                  if (!isNaN(grade) && grade >= 0 && grade <= 20) {
-                    result.push({
-                      'NUMERO': String(numero).trim(),
-                      'NOM': nom ? String(nom).trim() : '',
-                      'NOTE': grade
-                    });
-                  }
-                }
-              });
-              
-              progressFill.style.width = '100%';
-              progressText.textContent = 'Terminé !';
-              setTimeout(() => { progressDiv.style.display = 'none'; }, 500);
-              resolve(result);
-            } catch (err) {
-              reject(err);
-            }
-          };
-          reader.onerror = reject;
-          reader.readAsArrayBuffer(file);
-        });
-      } else if (fileName.endsWith('.ods')) {
-        progressText.textContent = 'Lecture du fichier ODS...';
-        progressFill.style.width = '30%';
-        const data = await readODSFile(file);
-        progressFill.style.width = '100%';
-        progressText.textContent = 'Terminé !';
-        setTimeout(() => { progressDiv.style.display = 'none'; }, 500);
-        return data;
-      } else {
-        throw new Error('Format non supporté');
-      }
-      
-      progressText.textContent = 'Analyse du texte...';
-      progressFill.style.width = '80%';
-      const data = parseTextToData(text);
-      progressFill.style.width = '100%';
-      progressText.textContent = 'Terminé !';
-      setTimeout(() => { progressDiv.style.display = 'none'; }, 500);
-      return data;
-      
-    } catch (error) {
-      progressDiv.style.display = 'none';
-      throw error;
-    }
-  }
-  
-  window.processImport = async () => {
-    const semester = document.getElementById('importSemester').value;
-    const type = document.getElementById('importType').value;
-    const subject = document.getElementById('importSubject').value.trim();
-    const fileInput = document.getElementById('importFile');
-    const file = fileInput.files[0];
-    const msgDiv = document.getElementById('adminMessage');
-    
-    if (!semester || !subject || !file) { 
-      alert('Veuillez remplir tous les champs'); 
-      return; 
-    }
-    
-    const fileName = file.name.toLowerCase();
-    const allowedExtensions = ['.xlsx', '.xls', '.ods', '.docx', '.pdf'];
-    const isValid = allowedExtensions.some(ext => fileName.endsWith(ext));
-    
-    if (!isValid) {
-      alert('Format de fichier non supporté. Utilisez Excel (.xlsx, .xls), ODS (.ods), Word (.docx) ou PDF (.pdf)');
-      return;
-    }
-    
-    const cleanSubject = cleanSubjectName(subject);
-    if (type === "TP" && !hasTP(subject)) { 
-      alert(`La matière "${displaySubjectName(subject)}" ne possède pas de TP.`); 
-      return; 
-    }
-    
-    msgDiv.textContent = 'Vérification des données existantes...'; 
-    msgDiv.style.display = 'block'; 
-    msgDiv.className = 'message';
-    
-    try {
-      const prefix = `PPV/${semester}`;
-      const snapshot = await get(child(ref(db), prefix));
-      const existingStudents = new Set();
-      
-      if (snapshot.exists()) { 
-        const allStudents = snapshot.val(); 
-        for (let studentId in allStudents) { 
-          if (allStudents[studentId][`${cleanSubject}_${type}`]) {
-            existingStudents.add(studentId); 
-          }
-        } 
-      }
-      
-      msgDiv.textContent = 'Analyse du fichier en cours...';
-      const jsonData = await parseFile(file);
-      
-      let importCount = 0, duplicateCount = 0, errorCount = 0;
-      
-      for (let row of jsonData) {
-        let studentId = row.NUMERO;
-        if (studentId) studentId = String(studentId).trim();
-        
-        const studentName = row.NOM || row.NOM_ET_PRENOM || row['NOM & PRENOM'] || row['Nom et Prenom'] || row.Nom || row.nom || row['NOM'] || row['PRENOM'] || '';
-        
-        let grade = row.NOTE;
-        if (grade) grade = parseFloat(String(grade).replace(',', '.'));
-        
-        if (!studentId) { errorCount++; continue; }
-        if (isNaN(grade) || grade < 0 || grade > 20) { errorCount++; continue; }
-        if (existingStudents.has(studentId)) { duplicateCount++; continue; }
-        
-        const path = `results/PPV/${semester}/${studentId}/${cleanSubject}_${type}`;
-        await set(ref(db, path), { 
-          grade, 
-          name: studentName, 
-          subject: subject, 
-          type, 
-          dateAdded: Date.now() 
-        });
-        
-        importCount++; 
-        existingStudents.add(studentId);
-      }
-      
-      let message = `${importCount} nouveaux étudiants ajoutés pour "${displaySubjectName(subject)}" (${type})`;
-      if (duplicateCount > 0) message += `\n${duplicateCount} étudiants déjà existants (ignorés)`;
-      if (errorCount > 0) message += `\n${errorCount} lignes avec erreur (ignorées)`;
-      
-      if (importCount === 0 && jsonData.length > 0) {
-        message += `\n\n${jsonData.length} lignes trouvées dans le fichier. Vérifiez le format.`;
-      }
-      
-      msgDiv.textContent = message; 
-      msgDiv.className = 'message success'; 
-      fileInput.value = '';
-      
-      setTimeout(() => { 
-        if (msgDiv.style.display === 'block') msgDiv.style.display = 'none'; 
-      }, 8000);
-      
-    } catch (error) { 
-      console.error('Erreur:', error); 
-      msgDiv.textContent = 'Erreur lors de l\'importation. Vérifiez le format du fichier.'; 
-      msgDiv.className = 'message error'; 
-    }
-  };
-  
-  window.loadSubjectsList = async () => {
-    const semester = document.getElementById('manageSemester').value; 
-    const container = document.getElementById('subjectsListContainer'); 
-    container.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i></div>';
-    
-    const snapshot = await get(child(ref(db), `results/PPV/${semester}`));
-    if (!snapshot.exists()) { 
-      container.innerHTML = '<p style="text-align:center;color:var(--text-light);">Aucune matière dans ce semestre</p>'; 
-      return; 
-    }
-    
-    const allStudents = snapshot.val(); 
-    const subjectsMap = new Map();
-    
-    for (let studentId in allStudents) { 
-      for (let subjectKey in allStudents[studentId]) { 
-        const data = allStudents[studentId][subjectKey]; 
-        const key = `${data.subject}_${data.type}`; 
-        if (!subjectsMap.has(key)) subjectsMap.set(key, { subject: data.subject, type: data.type, count: 0 }); 
-        subjectsMap.get(key).count++; 
-      } 
-    }
-    
-    if (subjectsMap.size === 0) { 
-      container.innerHTML = '<p style="text-align:center;color:var(--text-light);">Aucune matière dans ce semestre</p>'; 
-      return; 
-    }
-    
-    let html = `<table class="simple-table"><thead><tr><th>Matière</th><th>Type</th><th>Étudiants</th><th>Action</th></tr></thead><tbody>`;
-    for (let [key, data] of subjectsMap) { 
-      html += `<tr><td><strong>${displaySubjectName(data.subject)}</strong></td><td>${data.type}</td><td style="text-align:center;">${data.count}</td><td style="text-align:center;"><button class="admin-btn danger" style="padding:0.2rem 0.6rem;font-size:0.75rem;" onclick="deleteSubject('${semester}', '${data.subject}', '${data.type}')"><i class="fas fa-trash"></i> Supprimer</button></td></tr>`; 
-    }
-    html += '</tbody></table>'; 
-    container.innerHTML = html;
-  };
-  
-  window.deleteSubject = async (semester, subject, type) => {
-    if (!confirm(`Êtes-vous sûr de vouloir supprimer TOUTES les notes de la matière "${displaySubjectName(subject)}" (${type}) ?`)) return;
-    
-    const snapshot = await get(child(ref(db), `results/PPV/${semester}`)); 
-    if (!snapshot.exists()) return;
-    
-    const allStudents = snapshot.val(); 
-    const cleanSubject = cleanSubjectName(subject); 
-    const subjectKey = `${cleanSubject}_${type}`;
-    
-    for (let studentId in allStudents) { 
-      if (allStudents[studentId][subjectKey]) { 
-        await remove(ref(db, `results/PPV/${semester}/${studentId}/${subjectKey}`)); 
-      } 
-    }
-    
-    alert('Matière supprimée avec succès'); 
-    loadSubjectsList();
-  };
-  
   document.getElementById('studentIdInput').addEventListener('keyup', e => { if (e.key === 'Enter') searchStudentResult(); });
-  
   afficherAnnonce();
 </script>
 </body>
