@@ -86,6 +86,13 @@
   .loading i { font-size:2rem; animation:spin 1s linear infinite; margin-bottom:0.8rem; }
   @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
   
+  .error-state { text-align:center; padding:2rem 1rem; color:#dc3545; }
+  .error-state i { font-size:2rem; margin-bottom:0.8rem; }
+  .error-state button { 
+    margin-top:1rem; padding:0.5rem 1rem; background:var(--primary); 
+    color:white; border:none; border-radius:var(--radius); cursor:pointer;
+  }
+  
   .pdf-link {
     display: inline-block; padding: 0.6rem 1.2rem; background: #28a745; color: white;
     text-decoration: none; border-radius: var(--radius); font-weight: bold; margin-top: 0.8rem;
@@ -168,7 +175,7 @@
     <div id="annonceContainer" class="annonce-container"></div>
     
     <div class="result-card">
-      <h2 class="section-title"><i class="fas fa-search"></i> Consulter votre résultat</h2>
+      <h2 class="section-title"> Consulter votre résultat</h2>
       
       <div class="search-box">
         <input type="text" id="studentIdInput" placeholder="Entrez votre numéro d'étudiant...">
@@ -263,7 +270,9 @@
     const subjAvg = {}, subjStatus = {}, subjSR = {};
     for (let s of req) {
       const n = notes[s] || {};
-      const exam = n['Examen'] || 0, cc = n['Contrôle continu'] || 0, tp = n['TP'] || 0;
+      const exam = n['Examen'] ?? 0;
+      const cc = n['Contrôle continu'] ?? 0;
+      const tp = n['TP'] ?? 0;
       const ratt = n['Rattrapage'];
       const useSR = ratt !== undefined && ratt > exam;
       subjSR[s] = useSR;
@@ -300,90 +309,150 @@
     const cont = document.getElementById('studentResultContainer');
     const noRes = document.getElementById('noResultMessage');
     
-    if (!id) { alert('Veuillez entrer votre numéro d\'étudiant'); return; }
+    if (!id) { 
+      alert('Veuillez entrer votre numéro d\'étudiant'); 
+      return; 
+    }
     
     cont.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><p>Chargement...</p></div>';
-    cont.style.display = 'block'; noRes.style.display = 'none';
+    cont.style.display = 'block'; 
+    noRes.style.display = 'none';
+    
+    let timeoutId;
+    const timeoutPromise = new Promise((_, reject) => {
+      timeoutId = setTimeout(() => reject(new Error('TIMEOUT')), 15000);
+    });
     
     const sems = ['S3', 'S4', 'S5', 'S6'];
-    
     let data = null, sem = null;
-    for (let s of sems) {
-      const snap = await get(child(ref(db), `results/PPV/${s}/${id}`));
-      if (snap.exists()) { data = snap.val(); sem = s; break; }
-    }
     
-    if (!data) { cont.style.display = 'none'; noRes.style.display = 'block'; return; }
-    
-    let name = '';
-    const notes = {};
-    for (let k in data) {
-      if (data[k].name) name = data[k].name;
-      if (!notes[data[k].subject]) notes[data[k].subject] = {};
-      notes[data[k].subject][data[k].type] = data[k].grade;
-    }
-    
-    const req = SUBJECTS_BY_DEPT.PPV[sem] || [];
-    let complete = req.length > 0;
-    for (let s of req) {
-      const htp = hasTP(s);
-      if (!notes[s]?.['Examen'] || !notes[s]?.['Contrôle continu'] || (htp && !notes[s]?.['TP'])) { complete = false; break; }
-    }
-    
-    let html = `<div class="student-header"><h3>${name || 'Étudiant'}</h3><p>N° ${id} | PPV | ${sem}</p></div>`;
-    
-    if (complete) {
-      const res = calculateResults(notes, 'PPV', sem);
-      const showSR = res.hasSR;
-      
-      html += '<div style="overflow-x:auto;"><table class="releve-table"><thead><tr><th>Numéro</th><th>Nom et Prénom</th><th>TP</th><th>CC</th><th>Examen</th>' + (showSR ? '<th>SR</th>' : '') + '<th>NFe</th><th>Crédit</th><th>Obs</th></tr></thead><tbody>';
-      html += `<tr class="student-info-row"><td>${id}</td><td style="text-align:left; padding-left:15px;">${name}</td><td></td><td></td><td></td>${showSR ? '<td></td>' : ''}<td></td><td></td><td></td></tr>`;
-      
-      for (let m in res.modules) {
-        const mod = res.modules[m];
-        html += `<tr class="module-row"><td>${m}</td><td style="text-align:left; padding-left:15px;">${mod.name}</td><td></td><td></td><td></td>${showSR ? '<td></td>' : ''}<td style="font-weight:bold;">${res.modAvg[m].toFixed(2)}</td><td>${res.modCredits[m].toFixed(1)}</td><td class="${res.modStatus[m]==='V'?'status-V':'status-NV'}">${res.modStatus[m]}</td></tr>`;
-        for (let s of mod.subjects) {
-          const n = notes[s] || {};
-          const tp = hasTP(s) ? (n['TP']?.toFixed(2) || '') : '';
-          const cc = n['Contrôle continu']?.toFixed(2) || '';
-          const exam = n['Examen']?.toFixed(2) || '';
-          const ratt = n['Rattrapage'];
-          const sr = (ratt !== undefined && ratt > (n['Examen'] || 0)) ? ratt.toFixed(2) : '';
-          const cr = SUBJECT_CREDITS.PPV[sem][s] || 3;
-          
-          html += `<tr class="subject-row"><td></td><td style="text-align:left; padding-left:30px;">${displaySubjectName(s)}</td><td>${tp}</td><td>${cc}</td><td>${exam}</td>${showSR?`<td>${sr}</td>`:''}<td style="font-weight:bold;">${res.subjAvg[s].toFixed(2)}</td><td>${cr.toFixed(1)}</td><td class="${res.subjStatus[s]==='C'?'status-C':'status-NC'}">${res.subjStatus[s]}</td></tr>`;
+    try {
+      for (let s of sems) {
+        try {
+          const snap = await Promise.race([
+            get(child(ref(db), `results/PPV/${s}/${id}`)),
+            timeoutPromise
+          ]);
+          clearTimeout(timeoutId);
+          if (snap.exists()) { 
+            data = snap.val(); 
+            sem = s; 
+            break; 
+          }
+        } catch (err) {
+          clearTimeout(timeoutId);
+          if (err.message === 'TIMEOUT') throw err;
+          console.warn(`Erreur pour ${s}:`, err);
+          continue;
         }
       }
       
-      const colspan = showSR ? 6 : 5;
-      html += `<tr class="moyenne-row"><td colspan="${colspan}" style="text-align:right; font-weight:bold;">Moyenne Semestre :</td><td style="font-weight:bold;">${res.genMoy.toFixed(2)}</td><td></td><td class="${res.semStatus==='Validé'?'status-V':'status-NV'}" style="font-weight:bold;">${res.semStatus}</td></tr>`;
-      html += '</tbody></table></div>';
-      html += `<div style="text-align:center;"><a href="result.html?dept=PPV&sem=${sem}&id=${id}&name=${encodeURIComponent(name)}" class="pdf-link" target="_blank"><i class="fas fa-file-pdf"></i> Télécharger mon relevé PDF</a></div>`;
-    } else {
-      let hasTP = false, hasCC = false, hasExam = false;
+      clearTimeout(timeoutId);
+      
+      if (!data) { 
+        cont.style.display = 'none'; 
+        noRes.style.display = 'block'; 
+        return; 
+      }
+      
+      let name = '';
+      const notes = {};
+      for (let k in data) {
+        if (data[k].name) name = data[k].name;
+        if (!notes[data[k].subject]) notes[data[k].subject] = {};
+        notes[data[k].subject][data[k].type] = data[k].grade;
+      }
+      
+      const req = SUBJECTS_BY_DEPT.PPV[sem] || [];
+      let complete = req.length > 0;
       for (let s of req) {
-        if (notes[s]?.['TP'] !== undefined) hasTP = true;
-        if (notes[s]?.['Contrôle continu'] !== undefined) hasCC = true;
-        if (notes[s]?.['Examen'] !== undefined) hasExam = true;
+        const htp = hasTP(s);
+        const examExists = notes[s]?.['Examen'] !== undefined;
+        const ccExists = notes[s]?.['Contrôle continu'] !== undefined;
+        const tpExists = !htp || notes[s]?.['TP'] !== undefined;
+        
+        if (!examExists || !ccExists || !tpExists) {
+          complete = false;
+          break;
+        }
       }
-      if (hasTP) {
-        html += `<h4 class="section-subtitle">Résultats TP</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note TP</th></tr></thead><tbody>`;
-        for (let s of req) if (hasTP(s)) { const n = notes[s]?.['TP']; html += `<tr><td>${displaySubjectName(s)}</td><td>${n!==undefined?n.toFixed(2):''}</td></tr>`; }
-        html += `</tbody></table>`;
+      
+      let html = `<div class="student-header"><h3>${name || 'Étudiant'}</h3><p>N° ${id} | PPV | ${sem}</p></div>`;
+      
+      if (complete) {
+        const res = calculateResults(notes, 'PPV', sem);
+        const showSR = res.hasSR;
+        
+        html += '<div style="overflow-x:auto;"><table class="releve-table"><thead><tr><th>Numéro</th><th>Nom et Prénom</th><th>TP</th><th>CC</th><th>Examen</th>' + (showSR ? '<th>SR</th>' : '') + '<th>NFe</th><th>Crédit</th><th>Obs</th></tr></thead><tbody>';
+        html += `<tr class="student-info-row"><td>${id}</td><td style="text-align:left; padding-left:15px;">${name}</td><td></td><td style="text-align:center;"></td><td style="text-align:center;"></td>${showSR ? '<td style="text-align:center;"></td>' : ''}<td style="text-align:center;"></td><td style="text-align:center;"></td><td style="text-align:center;"></td></tr>`;
+        
+        for (let m in res.modules) {
+          const mod = res.modules[m];
+          html += `<tr class="module-row"><td>${m}</td><td style="text-align:left; padding-left:15px;">${mod.name}</td><td style="text-align:center;"></td><td style="text-align:center;"></td><td style="text-align:center;"></td>${showSR ? '<td style="text-align:center;"></td>' : ''}<td style="font-weight:bold; text-align:center;">${res.modAvg[m].toFixed(2)}</td><td style="text-align:center;">${res.modCredits[m].toFixed(1)}</td><td class="${res.modStatus[m]==='V'?'status-V':'status-NV'}" style="text-align:center;">${res.modStatus[m]}</td></tr>`;
+          for (let s of mod.subjects) {
+            const n = notes[s] || {};
+            const tp = hasTP(s) ? (n['TP']?.toFixed(2) || '') : '';
+            const cc = n['Contrôle continu']?.toFixed(2) || '';
+            const exam = n['Examen']?.toFixed(2) || '';
+            const ratt = n['Rattrapage'];
+            // التعديل: عرض SR دائماً إذا كان موجوداً
+            const sr = (ratt !== undefined) ? ratt.toFixed(2) : '';
+            const cr = SUBJECT_CREDITS.PPV[sem][s] || 3;
+            
+            html += `<tr class="subject-row"><td><td style="text-align:left; padding-left:30px;">${displaySubjectName(s)}</td><td style="text-align:center;">${tp}</td><td style="text-align:center;">${cc}</td><td style="text-align:center;">${exam}</td>${showSR?`<td style="text-align:center;">${sr}</td>`:''}<td style="font-weight:bold; text-align:center;">${res.subjAvg[s].toFixed(2)}</td><td style="text-align:center;">${cr.toFixed(1)}</td><td class="${res.subjStatus[s]==='C'?'status-C':'status-NC'}" style="text-align:center;">${res.subjStatus[s]}</td></tr>`;
+          }
+        }
+        
+        const colspan = showSR ? 6 : 5;
+        html += `<tr class="moyenne-row"><td colspan="${colspan}" style="text-align:right; font-weight:bold;">Moyenne Semestre :</td><td style="font-weight:bold; text-align:center;">${res.genMoy.toFixed(2)}</td><td style="text-align:center;"></td><td class="${res.semStatus==='Validé'?'status-V':'status-NV'}" style="font-weight:bold; text-align:center;">${res.semStatus}</td></tr>`;
+        html += '</tbody> nahil</div>';
+        html += `<div style="text-align:center;"><a href="result.html?dept=PPV&sem=${sem}&id=${id}&name=${encodeURIComponent(name)}" class="pdf-link" target="_blank"> Télécharger mon relevé PDF</a></div>`;
+      } else {
+        let hasTPdata = false, hasCC = false, hasExam = false;
+        for (let s of req) {
+          if (notes[s]?.['TP'] !== undefined) hasTPdata = true;
+          if (notes[s]?.['Contrôle continu'] !== undefined) hasCC = true;
+          if (notes[s]?.['Examen'] !== undefined) hasExam = true;
+        }
+        if (hasTPdata) {
+          html += `<h4 class="section-subtitle">Résultats TP</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note TP</th></tr></thead><tbody>`;
+          for (let s of req) if (hasTP(s)) { const n = notes[s]?.['TP']; html += `<tr><td style="text-align:left;">${displaySubjectName(s)}</td><td style="text-align:center;">${n!==undefined?n.toFixed(2):''}</td></tr>`; }
+          html += `</tbody>}</table>`;
+        }
+        if (hasCC) {
+          html += `<h4 class="section-subtitle">Résultats Contrôle continu</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note CC</th></tr></thead><tbody>`;
+          for (let s of req) { const n = notes[s]?.['Contrôle continu']; html += `<tr><td style="text-align:left;">${displaySubjectName(s)}</td><td style="text-align:center;">${n!==undefined?n.toFixed(2):''}</td></tr>`; }
+          html += `</tbody>}</table>`;
+        }
+        if (hasExam) {
+          html += `<h4 class="section-subtitle">Résultats Examen</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note Examen</th></tr></thead><tbody>`;
+          for (let s of req) { const n = notes[s]?.['Examen']; html += `<tr><td style="text-align:left;">${displaySubjectName(s)}</td><td style="text-align:center;">${n!==undefined?n.toFixed(2):''}</td></tr>`; }
+          html += `</tbody>}</table>`;
+        }
+        html += `<div class="neutral-message"> Les résultats ne sont pas encore finalisés.</div>`;
       }
-      if (hasCC) {
-        html += `<h4 class="section-subtitle">Résultats Contrôle continu</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note CC</th></tr></thead><tbody>`;
-        for (let s of req) { const n = notes[s]?.['Contrôle continu']; html += `<tr><td>${displaySubjectName(s)}</td><td>${n!==undefined?n.toFixed(2):''}</td></tr>`; }
-        html += `</tbody></table>`;
+      cont.innerHTML = html;
+      
+    } catch (error) {
+      clearTimeout(timeoutId);
+      console.error('Erreur:', error);
+      
+      if (error.message === 'TIMEOUT') {
+        cont.innerHTML = `<div class="error-state">
+          <h3>Délai d'attente dépassé</h3>
+          <p>Vérifiez votre connexion internet et réessayez.</p>
+          <button onclick="searchStudentResult()">Réessayer</button>
+        </div>`;
+      } else {
+        cont.innerHTML = `<div class="error-state">
+          <h3>Erreur de connexion</h3>
+          <p>Impossible de contacter le serveur. Veuillez réessayer.</p>
+          <button onclick="searchStudentResult()">Réessayer</button>
+        </div>`;
       }
-      if (hasExam) {
-        html += `<h4 class="section-subtitle">Résultats Examen</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note Examen</th></tr></thead><tbody>`;
-        for (let s of req) { const n = notes[s]?.['Examen']; html += `<tr><td>${displaySubjectName(s)}</td><td>${n!==undefined?n.toFixed(2):''}</td></tr>`; }
-        html += `</tbody></table>`;
-      }
-      html += `<div class="neutral-message"><i class="fas fa-info-circle"></i> Les résultats ne sont pas encore finalisés.</div>`;
+      cont.style.display = 'block';
+      noRes.style.display = 'none';
     }
-    cont.innerHTML = html;
   };
 
   document.getElementById('studentIdInput').addEventListener('keyup', e => { if (e.key === 'Enter') searchStudentResult(); });
