@@ -66,6 +66,10 @@
   
   .progress-bar { width:100%; height:6px; background:var(--primary-light); border-radius:3px; margin:0.8rem 0; overflow:hidden; }
   .progress-fill { height:100%; background:var(--primary); width:0%; transition:width 0.3s; }
+  
+  .status-V { color: #27ae60; font-weight: bold; }
+  .status-NV { color: #e74c3c; font-weight: bold; }
+  .neutral-message { text-align: center; margin-top: 0.8rem; padding: 0.6rem; background: #e9ecef; color: #6c757d; border-radius: var(--radius); }
 </style>
 </head>
 <body>
@@ -301,41 +305,120 @@
     return { genMoy, semStatus, modStatus, modCredits, modAvg, subjAvg, subjStatus, hasSR, modules:mods };
   }
 
-  window.loadAllStudents=async function(){
-    const sem=document.getElementById('viewSemester').value;
-    currentSem=sem;
-    const cont=document.getElementById('resultsContainer');
-    cont.innerHTML='<p style="text-align:center;">Chargement...</p>';
-    const snap=await get(child(ref(db),`results/PPV/${sem}`));
-    if(!snap.exists()){ cont.innerHTML='<p>Aucun résultat</p>'; return; }
-    const students=snap.val(); const results=[];
-    for(let id in students){
-      const data=students[id]; let name=''; const notes={};
-      for(let k in data){ if(data[k].name) name=data[k].name; if(!notes[data[k].subject]) notes[data[k].subject]={}; notes[data[k].subject][data[k].type]=data[k].grade; }
-      const req=SUBJECTS.PPV[sem]||[];
-      if(req.length===0) continue;
-      let complete=true;
-      for(let s of req){ const htp=hasTP(s); if(!notes[s]?.['Examen']||!notes[s]?.['Contrôle continu']||(htp&&!notes[s]?.['TP'])){ complete=false; break; } }
-      if(complete){ const calc=calculate(notes,'PPV',sem); if(calc) results.push({id,name,notes,calc}); }
+  window.loadAllStudents = async function() {
+    const sem = document.getElementById('viewSemester').value;
+    currentSem = sem;
+    const cont = document.getElementById('resultsContainer');
+    cont.innerHTML = '<p style="text-align:center;">Chargement...</p>';
+    
+    const snap = await get(child(ref(db), `results/PPV/${sem}`));
+    if (!snap.exists()) { 
+      cont.innerHTML = '<p>Aucun résultat</p>'; 
+      return; 
     }
-    results.sort((a,b)=>a.id.localeCompare(b.id));
-    currentResults=results;
-    let html='<table class="simple-table"><thead><tr><th>N°</th><th>Nom</th><th>Moyenne</th><th>Statut</th></tr></thead><tbody>';
-    for(let r of results) html+=`<tr><td>${r.id}</td><td style="text-align:left;">${r.name}</td><td>${r.calc.genMoy.toFixed(2)}</td><td class="${r.calc.semStatus==='Validé'?'status-V':'status-NV'}">${r.calc.semStatus}</td></tr>`;
-    html+='</tbody></table>'; cont.innerHTML=html;
+    
+    const students = snap.val();
+    const results = [];
+    
+    for (let id in students) {
+      const data = students[id];
+      let name = '';
+      const notes = {};
+      
+      for (let k in data) { 
+        if (data[k].name) name = data[k].name; 
+        if (!notes[data[k].subject]) notes[data[k].subject] = {};
+        notes[data[k].subject][data[k].type] = data[k].grade; 
+      }
+      
+      const req = SUBJECTS.PPV[sem] || [];
+      if (req.length === 0) continue;
+      
+      let complete = true;
+      let missingSubjects = [];
+      
+      for (let s of req) {
+        const htp = hasTP(s);
+        const examExists = notes[s]?.['Examen'] !== undefined;
+        const ccExists = notes[s]?.['Contrôle continu'] !== undefined;
+        const tpExists = !htp || notes[s]?.['TP'] !== undefined;
+        
+        if (!examExists) missingSubjects.push(`${displaySubject(s)} (Examen)`);
+        if (!ccExists) missingSubjects.push(`${displaySubject(s)} (CC)`);
+        if (htp && !tpExists) missingSubjects.push(`${displaySubject(s)} (TP)`);
+        
+        if (!examExists || !ccExists || (htp && !tpExists)) {
+          complete = false;
+        }
+      }
+      
+      if (complete) {
+        const calc = calculate(notes, 'PPV', sem);
+        if (calc) {
+          results.push({ 
+            id, name, notes, calc, 
+            complete: true, 
+            missingSubjects: [] 
+          });
+        }
+      } else {
+        results.push({ 
+          id, name, notes, 
+          complete: false, 
+          missingSubjects: missingSubjects,
+          calc: null 
+        });
+      }
+    }
+    
+    results.sort((a, b) => a.id.localeCompare(b.id));
+    currentResults = results;
+    
+    let html = '<table class="simple-table"><thead><tr><th>N°</th><th>Nom</th><th>Moyenne</th><th>Statut</th><th>Détails</th></tr></thead><tbody>';
+    
+    for (let r of results) {
+      if (r.complete) {
+        html += `<tr>
+          <td>${r.id}</td>
+          <td style="text-align:left;">${r.name || 'Sans nom'}</td>
+          <td><strong>${r.calc.genMoy.toFixed(2)}</strong></td>
+          <td class="${r.calc.semStatus === 'Validé' ? 'status-V' : 'status-NV'}">${r.calc.semStatus}</td>
+          <td>-</span></td>
+        </tr>`;
+      } else {
+        html += `<tr style="background:#fff3cd;">
+          <td>${r.id}</td>
+          <td style="text-align:left;">${r.name || 'Sans nom'}</td>
+          <td style="color:#856404; font-weight:bold;">Incomplet</span></td>
+          <td style="color:#856404;">Non finalisé</span></td>
+          <td><span title="${r.missingSubjects.join(', ')}" style="cursor:help; color:#856404;"><i class="fas fa-info-circle"></i> Données manquantes</span></td>
+        </tr>`;
+      }
+    }
+    
+    html += '</tbody></table>';
+    cont.innerHTML = html;
   };
 
-  // ==================== downloadCompletePDF : 3 étudiants par page, en-tête une seule fois ====================
   window.downloadCompletePDF = async function() {
-    if (!currentResults || currentResults.length === 0) { alert('Affichez d\'abord les résultats'); return; }
+    if (!currentResults || currentResults.length === 0) { 
+      alert('Affichez d\'abord les résultats'); 
+      return; 
+    }
+    
+    const completedResults = currentResults.filter(r => r.complete === true);
+    
+    if (completedResults.length === 0) {
+      alert('Aucun étudiant avec des données complètes à exporter vers PDF.');
+      return;
+    }
     
     const sem = currentSem;
-    const results = currentResults;
+    const results = completedResults;
     const currentYear = new Date().getFullYear();
     const academicYear = `${currentYear-1}-${currentYear}`;
     const filiere = 'L2PPV-L2 Licence PPV';
     
-    // En-tête une seule fois au début du document
     let content = `
       <div style="padding: 15mm 10mm 5mm 10mm; font-family: Arial, Helvetica, sans-serif; font-size: 11pt;">
         <div style="font-weight: bold; font-size: 12pt; margin-bottom: 5px;">Institut Supérieur d'Enseignement Technologique de Rosso</div>
@@ -344,17 +427,21 @@
           <span style="font-weight: normal;">Année Universitaire : ${academicYear}</span>
         </div>
         <div style="margin-top: 5px;"><span style="font-weight: bold;">Filière :</span> ${filiere}</div>
+        <div style="margin-top: 5px; color: green;"><span style="font-weight: bold;">Nombre d'étudiants :</span> ${results.length}</div>
       </div>
     `;
     
+    let studentCount = 0;
+    
     for (let i = 0; i < results.length; i++) {
       const r = results[i];
+      studentCount++;
       const calc = r.calc;
       const showSRColumn = calc.hasSR;
       const colspanValue = showSRColumn ? 6 : 5;
-
-      const isLastOnPage = (i % 3 === 2) && (i < results.length - 1);
-
+      
+      const isLastOnPage = (studentCount % 2 === 0) && (i < results.length - 1);
+      
       content += `
         <div style="padding: 0 10mm 5mm 10mm; font-family: Arial, Helvetica, sans-serif; font-size: 11pt; ${isLastOnPage ? 'page-break-after: always;' : ''}">
           <table style="width:100%; border-collapse:collapse; border:1px solid #000; font-size:10pt; margin-top:8px;">
@@ -382,7 +469,7 @@
                 <td style="border:1px solid #000; padding:2px;"></td>
                 <td style="border:1px solid #000; padding:2px;"></td>
                 <td style="border:1px solid #000; padding:2px;"></td>
-              </tr>
+               </tr>
       `;
       
       for (let m in calc.modules) {
@@ -398,7 +485,7 @@
             <td style="border:1px solid #000; padding:2px; font-weight:bold;">${calc.modAvg[m].toFixed(2)}</td>
             <td style="border:1px solid #000; padding:2px;">${calc.modCredits[m].toFixed(1)}</td>
             <td style="border:1px solid #000; padding:2px;">${calc.modStatus[m]}</td>
-          </tr>
+           </tr>
         `;
         
         for (let s of mod.subjects) {
@@ -407,7 +494,8 @@
           const ccDisplay = notes['Contrôle continu']?.toFixed(2) || '';
           const examDisplay = notes['Examen']?.toFixed(2) || '';
           const ratt = notes['Rattrapage'];
-          const srDisplay = (ratt !== undefined && ratt > (notes['Examen'] || 0)) ? ratt.toFixed(2) : '';
+          // التعديل: عرض SR دائماً إذا كان موجوداً
+          const srDisplay = (ratt !== undefined) ? ratt.toFixed(2) : '';
           const credit = CREDITS.PPV[sem][s] || 3;
           
           content += `
@@ -432,11 +520,15 @@
                 <td style="border:none; padding:4px 4px 2px 4px; font-weight:bold;">${calc.genMoy.toFixed(2)}</td>
                 <td style="border:none; padding:4px 4px 2px 4px;"></td>
                 <td style="border:none; padding:4px 4px 2px 4px; font-weight:bold;">${calc.semStatus}</td>
-              </tr>
+              </table>
             </tbody>
           </table>
         </div>
       `;
+      
+      if (isLastOnPage && i < results.length - 1) {
+        content += `<div style="page-break-after: always;"></div>`;
+      }
     }
     
     const element = document.createElement('div');
@@ -451,8 +543,13 @@
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
     };
     
-    html2pdf().set(opt).from(element).save().then(() => document.body.removeChild(element))
-      .catch(err => { console.error('Erreur PDF:', err); alert('Erreur lors de la génération du PDF.'); document.body.removeChild(element); });
+    html2pdf().set(opt).from(element).save()
+      .then(() => document.body.removeChild(element))
+      .catch(err => { 
+        console.error('Erreur PDF:', err); 
+        alert('Erreur lors de la génération du PDF.'); 
+        document.body.removeChild(element); 
+      });
   };
 
   // Import functions
