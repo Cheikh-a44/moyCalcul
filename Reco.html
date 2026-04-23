@@ -355,19 +355,10 @@
       if (complete) {
         const calc = calculate(notes, 'PPV', sem);
         if (calc) {
-          results.push({ 
-            id, name, notes, calc, 
-            complete: true, 
-            missingSubjects: [] 
-          });
+          results.push({ id, name, notes, calc, complete: true, missingSubjects: [] });
         }
       } else {
-        results.push({ 
-          id, name, notes, 
-          complete: false, 
-          missingSubjects: missingSubjects,
-          calc: null 
-        });
+        results.push({ id, name, notes, complete: false, missingSubjects, calc: null });
       }
     }
     
@@ -383,14 +374,14 @@
           <td style="text-align:left;">${r.name || 'Sans nom'}</td>
           <td><strong>${r.calc.genMoy.toFixed(2)}</strong></td>
           <td class="${r.calc.semStatus === 'Validé' ? 'status-V' : 'status-NV'}">${r.calc.semStatus}</td>
-          <td>-</span></td>
+          <td>-</td>
         </tr>`;
       } else {
         html += `<tr style="background:#fff3cd;">
           <td>${r.id}</td>
           <td style="text-align:left;">${r.name || 'Sans nom'}</td>
-          <td style="color:#856404; font-weight:bold;">Incomplet</span></td>
-          <td style="color:#856404;">Non finalisé</span></td>
+          <td style="color:#856404; font-weight:bold;">Incomplet</td>
+          <td style="color:#856404;">Non finalisé</td>
           <td><span title="${r.missingSubjects.join(', ')}" style="cursor:help; color:#856404;"><i class="fas fa-info-circle"></i> Données manquantes</span></td>
         </tr>`;
       }
@@ -400,6 +391,9 @@
     cont.innerHTML = html;
   };
 
+  // =====================================================================
+  // دالة PDF المعدّلة لتطابق تماماً نمط جدول الكود المدمج (index_merged)
+  // =====================================================================
   window.downloadCompletePDF = async function() {
     if (!currentResults || currentResults.length === 0) { 
       alert('Affichez d\'abord les résultats'); 
@@ -407,46 +401,42 @@
     }
     
     const completedResults = currentResults.filter(r => r.complete === true);
-    
     if (completedResults.length === 0) {
       alert('Aucun étudiant avec des données complètes à exporter vers PDF.');
       return;
     }
     
     const sem = currentSem;
-    const results = completedResults;
     const currentYear = new Date().getFullYear();
-    const academicYear = `${currentYear-1}-${currentYear}`;
+    const academicYear = `${currentYear - 1}-${currentYear}`;
     const filiere = 'L2PPV-L2 Licence PPV';
-    
+
+    // ---- رأس الصفحة الأول ----
     let content = `
       <div style="padding: 15mm 10mm 5mm 10mm; font-family: Arial, Helvetica, sans-serif; font-size: 11pt;">
         <div style="font-weight: bold; font-size: 12pt; margin-bottom: 5px;">Institut Supérieur d'Enseignement Technologique de Rosso</div>
         <div style="display: flex; justify-content: space-between; margin-top: 8px;">
-          <span style="font-weight: bold; font-size: 14pt;">Résultats du ${sem}</span>
+          <span style="font-weight: bold; font-size: 14pt;">Résultats du ${escapeHtml(sem)}</span>
           <span style="font-weight: normal;">Année Universitaire : ${academicYear}</span>
         </div>
         <div style="margin-top: 5px;"><span style="font-weight: bold;">Filière :</span> ${filiere}</div>
-        <div style="margin-top: 5px; color: green;"><span style="font-weight: bold;">Nombre d'étudiants :</span> ${results.length}</div>
+        <div style="margin-top: 5px; color: green;"><span style="font-weight: bold;">Nombre d'étudiants :</span> ${completedResults.length}</div>
       </div>
     `;
-    
-    let studentCount = 0;
-    
-    for (let i = 0; i < results.length; i++) {
-      const r = results[i];
-      studentCount++;
+
+    for (let i = 0; i < completedResults.length; i++) {
+      const r = completedResults[i];
       const calc = r.calc;
       const showSRColumn = calc.hasSR;
       const colspanValue = showSRColumn ? 6 : 5;
-      
-      const isLastOnPage = (studentCount % 2 === 0) && (i < results.length - 1);
-      
+      const isLastOnPage = ((i + 1) % 2 === 0) && (i < completedResults.length - 1);
+
+      // ---- جدول كل طالب بنفس نمط الكود المدمج ----
       content += `
         <div style="padding: 0 10mm 5mm 10mm; font-family: Arial, Helvetica, sans-serif; font-size: 11pt; ${isLastOnPage ? 'page-break-after: always;' : ''}">
           <table style="width:100%; border-collapse:collapse; border:1px solid #000; font-size:10pt; margin-top:8px;">
             <thead>
-              <tr style="background:#e8f4fc;">
+              <tr style="background:#e8f4e8;">
                 <th style="border:1px solid #000; padding:3px;">Numéro</th>
                 <th style="border:1px solid #000; padding:3px;">Nom et Prénom</th>
                 <th style="border:1px solid #000; padding:3px;">TP</th>
@@ -459,96 +449,96 @@
               </tr>
             </thead>
             <tbody>
-              <tr style="background:#f0f8ff;">
-                <td style="border:1px solid #000; padding:2px;">${escapeHtml(r.id)}</td>
-                <td style="border:1px solid #000; padding:2px; text-align:left;">${escapeHtml(r.name)}</td>
-                <td style="border:1px solid #000; padding:2px;"></td>
-                <td style="border:1px solid #000; padding:2px;"></td>
-                <td style="border:1px solid #000; padding:2px;"></td>
-                ${showSRColumn ? '<td style="border:1px solid #000; padding:2px;"></td>' : ''}
-                <td style="border:1px solid #000; padding:2px;"></td>
-                <td style="border:1px solid #000; padding:2px;"></td>
-                <td style="border:1px solid #000; padding:2px;"></td>
-               </tr>
+              <!-- صف معلومات الطالب -->
+              <tr style="background:#f0f8ff; font-weight:bold;">
+                <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; border-left:1px solid #000; border-right:1px solid #000; padding:2px;">${escapeHtml(r.id)}</td>
+                <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px; text-align:left;">${escapeHtml(r.name)}</td>
+                <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
+                <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
+                <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
+                ${showSRColumn ? '<td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>' : ''}
+                <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
+                <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
+                <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; border-right:1px solid #000; padding:2px;"></td>
+              </tr>
       `;
-      
+
       for (let m in calc.modules) {
         const mod = calc.modules[m];
+
+        // ---- صف الوحدة (module) - نمط border-top/bottom فقط كالكود المدمج ----
         content += `
-          <tr style="background:#d0e8f7;">
-            <td style="border:1px solid #000; padding:2px;">${escapeHtml(m)}</td>
-            <td style="border:1px solid #000; padding:2px; text-align:left;">${escapeHtml(mod.name)}</td>
-            <td style="border:1px solid #000; padding:2px;"></td>
-            <td style="border:1px solid #000; padding:2px;"></td>
-            <td style="border:1px solid #000; padding:2px;"></td>
-            ${showSRColumn ? '<td style="border:1px solid #000; padding:2px;"></td>' : ''}
-            <td style="border:1px solid #000; padding:2px; font-weight:bold;">${calc.modAvg[m].toFixed(2)}</td>
-            <td style="border:1px solid #000; padding:2px;">${calc.modCredits[m].toFixed(1)}</td>
-            <td style="border:1px solid #000; padding:2px;">${calc.modStatus[m]}</td>
-           </tr>
+              <tr style="background:#d4edda; font-weight:bold;">
+                <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; border-left:1px solid #000; padding:2px;">${escapeHtml(m)}</td>
+                <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px; text-align:left;">${escapeHtml(mod.name)}</td>
+                <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
+                <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
+                <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
+                ${showSRColumn ? '<td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>' : ''}
+                <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px; font-weight:bold;">${calc.modAvg[m].toFixed(2)}</td>
+                <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;">${calc.modCredits[m].toFixed(1)}</td>
+                <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; border-right:1px solid #000; padding:2px;">${calc.modStatus[m]}</td>
+              </tr>
         `;
-        
+
+        // ---- صفوف المواد ----
         for (let s of mod.subjects) {
           const notes = r.notes[s] || {};
-          const tpDisplay = hasTP(s) ? (notes['TP']?.toFixed(2) || '') : '';
-          const ccDisplay = notes['Contrôle continu']?.toFixed(2) || '';
-          const examDisplay = notes['Examen']?.toFixed(2) || '';
+          const tpDisplay = hasTP(s) ? (notes['TP'] !== undefined ? notes['TP'].toFixed(2) : '') : '';
+          const ccDisplay = notes['Contrôle continu'] !== undefined ? notes['Contrôle continu'].toFixed(2) : '';
+          const examDisplay = notes['Examen'] !== undefined ? notes['Examen'].toFixed(2) : '';
           const ratt = notes['Rattrapage'];
-          // التعديل: عرض SR دائماً إذا كان موجوداً
           const srDisplay = (ratt !== undefined) ? ratt.toFixed(2) : '';
           const credit = CREDITS.PPV[sem][s] || 3;
-          
+
           content += `
-            <tr>
-              <td style="border:1px solid #000; padding:1px;"></td>
-              <td style="border:1px solid #000; padding:1px; text-align:left; padding-left:20px;">${escapeHtml(displaySubject(s))}</td>
-              <td style="border:1px solid #000; padding:1px;">${tpDisplay}</td>
-              <td style="border:1px solid #000; padding:1px;">${ccDisplay}</td>
-              <td style="border:1px solid #000; padding:1px;">${examDisplay}</td>
-              ${showSRColumn ? `<td style="border:1px solid #000; padding:1px;">${srDisplay}</td>` : ''}
-              <td style="border:1px solid #000; padding:1px; font-weight:bold;">${calc.subjAvg[s].toFixed(2)}</td>
-              <td style="border:1px solid #000; padding:1px;">${credit.toFixed(1)}</td>
-              <td style="border:1px solid #000; padding:1px;">${calc.subjStatus[s]}</td>
-            </tr>
+              <tr>
+                <td style="border:1px solid #000; padding:1px;"></td>
+                <td style="border:1px solid #000; padding:1px; text-align:left; padding-left:20px;">${escapeHtml(displaySubject(s))}</td>
+                <td style="border:1px solid #000; padding:1px;">${tpDisplay}</td>
+                <td style="border:1px solid #000; padding:1px;">${ccDisplay}</td>
+                <td style="border:1px solid #000; padding:1px;">${examDisplay}</td>
+                ${showSRColumn ? `<td style="border:1px solid #000; padding:1px;">${srDisplay}</td>` : ''}
+                <td style="border:1px solid #000; padding:1px; font-weight:bold;">${calc.subjAvg[s].toFixed(2)}</td>
+                <td style="border:1px solid #000; padding:1px;">${credit.toFixed(1)}</td>
+                <td style="border:1px solid #000; padding:1px;">${calc.subjStatus[s]}</td>
+              </tr>
           `;
         }
       }
-      
+
+      // ---- صف المعدل ----
       content += `
               <tr>
-                <td colspan="${colspanValue}" style="border:none; padding:4px 4px 2px 4px; text-align:right; font-weight:bold;">Moyenne Semestre :</td>
-                <td style="border:none; padding:4px 4px 2px 4px; font-weight:bold;">${calc.genMoy.toFixed(2)}</td>
-                <td style="border:none; padding:4px 4px 2px 4px;"></td>
-                <td style="border:none; padding:4px 4px 2px 4px; font-weight:bold;">${calc.semStatus}</td>
-              </table>
+                <td colspan="${colspanValue}" style="border:none; padding:6px 4px 2px 4px; text-align:right; font-weight:bold;">Moyenne Semestre :</td>
+                <td style="border:none; padding:6px 4px 2px 4px; font-weight:bold;">${calc.genMoy.toFixed(2)}</td>
+                <td style="border:none; padding:6px 4px 2px 4px;"></td>
+                <td style="border:none; padding:6px 4px 2px 4px; font-weight:bold;">${calc.semStatus}</td>
+              </tr>
             </tbody>
           </table>
         </div>
       `;
-      
-      if (isLastOnPage && i < results.length - 1) {
-        content += `<div style="page-break-after: always;"></div>`;
-      }
     }
-    
+
     const element = document.createElement('div');
     element.innerHTML = content;
     document.body.appendChild(element);
-    
-    const opt = { 
-      margin: [0, 5, 5, 5], 
-      filename: `Resultats_PPV_${sem}.pdf`, 
-      image: { type: 'jpeg', quality: 0.98 }, 
-      html2canvas: { scale: 2, letterRendering: true, scrollY: 0 }, 
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
+
+    const opt = {
+      margin: [0, 5, 5, 5],
+      filename: `Resultats_PPV_${sem}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, letterRendering: true, scrollY: 0 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
-    
+
     html2pdf().set(opt).from(element).save()
       .then(() => document.body.removeChild(element))
-      .catch(err => { 
-        console.error('Erreur PDF:', err); 
-        alert('Erreur lors de la génération du PDF.'); 
-        document.body.removeChild(element); 
+      .catch(err => {
+        console.error('Erreur PDF:', err);
+        alert('Erreur lors de la génération du PDF.');
+        document.body.removeChild(element);
       });
   };
 
