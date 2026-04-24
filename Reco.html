@@ -150,7 +150,7 @@
 </div>
 
 <!-- Modals -->
-<div id="annonceModal" class="modal"><div class="modal-content"><h3>Publier une annonce</h3><textarea id="annonceTexte" rows="3" placeholder="Ex: Les résultats du S3 sont disponibles !"></textarea><div style="display:flex; gap:0.5rem; justify-content:flex-end; margin-top:1rem;"><button class="admin-btn" onclick="publierAnnonce()">Publier</button><button class="admin-btn secondary" onclick="closeAnnonceModal()">Annuler</button></div></div></div>
+<div id="annonceModal" class="modal"><div class="modal-content"><h3>Publier une annonce</h3><textarea id="annonceTexte" rows="3" placeholder="Ex: Les résultats du S3 sont disponibles !"></textarea><div style="display:flex; gap:0.5rem; justify-content:flex-end; margin-top:1rem;"><button class="admin-btn" onclick="publierAnnonce()">Publier</button><button class="admin-btn danger" onclick="supprimerAnnonce()">Supprimer</button><button class="admin-btn secondary" onclick="closeAnnonceModal()">Annuler</button></div></div></div>
 <div id="changePasswordModal" class="modal"><div class="modal-content"><h3>Changer mot de passe</h3><div id="changePasswordMessage" class="message error"></div><div class="form-group"><label>Actuel</label><input type="password" id="currentPassword"></div><div class="form-group"><label>Nouveau</label><input type="password" id="newPassword"></div><div class="form-group"><label>Confirmer</label><input type="password" id="confirmNewPassword"></div><div style="display:flex; gap:0.5rem; justify-content:flex-end;"><button class="admin-btn success" onclick="changePassword()">Enregistrer</button><button class="admin-btn secondary" onclick="closeChangePasswordModal()">Annuler</button></div></div></div>
 
 <footer class="footer"><p>© 2026 Département PPV | <a href="index.html">Accueil</a></p></footer>
@@ -240,6 +240,12 @@
     if(!t){ alert('Texte requis'); return; }
     await set(ref(db,'annonces/active'),{texte:t,expiration:Date.now()+86400000});
     showMsg('Annonce publiée','success'); closeAnnonceModal();
+  };
+
+  window.supprimerAnnonce=async function(){
+    if(!confirm('Supprimer l\'annonce active ?')) return;
+    await remove(ref(db,'annonces/active'));
+    showMsg('Annonce supprimée','success'); closeAnnonceModal();
   };
 
   window.changePassword=async function(){
