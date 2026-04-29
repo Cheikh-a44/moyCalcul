@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Coordinateur PPV - Gestion</title>
+<title>Coordinateur ISET - Gestion</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -21,139 +21,216 @@
     --radius: 10px;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:var(--light); color:var(--text); line-height:1.4; min-height:100vh; }
+  body { font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; background:var(--light); color:var(--text); line-height:1.4; min-height:100vh; }
   header { background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:var(--white); padding:1rem; text-align:center; }
   .container { max-width:1000px; margin:0 auto; padding:1rem; }
-  
-  .admin-btn {
-    padding:0.6rem 1.2rem; background:#f0f0f0; color:#333; border:1px solid #ccc;
-    border-radius:var(--radius); font-size:0.9rem; font-weight:600; cursor:pointer; margin:0.2rem;
-  }
+
+  .admin-btn { padding:0.6rem 1.2rem; background:#f0f0f0; color:#333; border:1px solid #ccc; border-radius:var(--radius); font-size:0.9rem; font-weight:600; cursor:pointer; margin:0.2rem; }
   .admin-btn.primary { background:var(--primary); color:white; border-color:var(--primary-dark); }
   .admin-btn.success { background:#d4edda; color:#155724; border-color:#28a745; }
-  .admin-btn.danger { background:#f8d7da; color:#721c24; border-color:#dc3545; }
+  .admin-btn.danger  { background:#f8d7da; color:#721c24; border-color:#dc3545; }
   .admin-btn.warning { background:#fff3cd; color:#856404; border-color:#ffc107; }
   .admin-btn.secondary { background:#e9ecef; border-color:#adb5bd; }
-  
+  .admin-btn:disabled { opacity:0.5; cursor:not-allowed; }
+
   .login-container { max-width:400px; margin:2rem auto; background:white; padding:2rem; border-radius:var(--radius); box-shadow:var(--shadow); }
   .dashboard { display:none; }
   .dashboard.active { display:block; }
-  
+
   .card { background:white; border-radius:var(--radius); padding:1.5rem; margin:1rem 0; box-shadow:var(--shadow); }
-  .card h3, .card h4 { color:var(--primary); margin-bottom:1rem; border-bottom:2px solid var(--primary-light); padding-bottom:0.5rem; }
-  
+  .card h3,.card h4 { color:var(--primary); margin-bottom:1rem; border-bottom:2px solid var(--primary-light); padding-bottom:0.5rem; }
+
   .form-group { margin-bottom:1rem; }
   .form-group label { display:block; font-weight:600; margin-bottom:0.2rem; }
-  .form-group select, .form-group input, .form-group textarea {
-    width:100%; padding:0.6rem; border:2px solid var(--primary-light); border-radius:var(--radius); font-size:0.9rem;
-  }
-  
+  .form-group select,.form-group input,.form-group textarea { width:100%; padding:0.6rem; border:2px solid var(--primary-light); border-radius:var(--radius); font-size:0.9rem; }
+
   .message { padding:0.6rem 0.8rem; border-radius:var(--radius); margin:0.8rem 0; display:none; }
   .message.success { background:#d4edda; color:#155724; }
-  .message.error { background:#f8d7da; color:#721c24; }
-  .message.info { background:#c8e6d4; color:#1f5c3a; }
-  
+  .message.error   { background:#f8d7da; color:#721c24; }
+  .message.info    { background:#c8e6d4; color:#1f5c3a; }
+
   .file-format-info { background:var(--primary-light); padding:0.8rem; border-radius:var(--radius); margin-bottom:0.8rem; font-size:0.85rem; }
-  
+
   .simple-table { width:100%; border-collapse:collapse; font-size:13px; }
-  .simple-table th, .simple-table td { border:1px solid #ddd; padding:5px; text-align:center; }
+  .simple-table th,.simple-table td { border:1px solid #ddd; padding:5px; text-align:center; }
   .simple-table th { background:var(--primary-light); font-weight:bold; }
-  
+
   .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center; }
-  .modal-content { background:white; padding:1.5rem; border-radius:var(--radius); max-width:500px; width:90%; }
-  
+  .modal-content { background:white; padding:1.5rem; border-radius:var(--radius); max-width:600px; width:90%; max-height:90vh; overflow-y:auto; }
+  .modal-content h3 { color:var(--primary); margin-bottom:1rem; border-bottom:2px solid var(--primary-light); padding-bottom:0.5rem; }
+
   .footer { text-align:center; padding:1rem; color:#666; border-top:1px solid #ddd; margin-top:2rem; }
-  
+
   .progress-bar { width:100%; height:6px; background:var(--primary-light); border-radius:3px; margin:0.8rem 0; overflow:hidden; }
   .progress-fill { height:100%; background:var(--primary); width:0%; transition:width 0.3s; }
-  
-  .status-V { color: #27ae60; font-weight: bold; }
-  .status-NV { color: #e74c3c; font-weight: bold; }
-  .neutral-message { text-align: center; margin-top: 0.8rem; padding: 0.6rem; background: #e9ecef; color: #6c757d; border-radius: var(--radius); }
+
+  .status-V  { color:#27ae60; font-weight:bold; }
+  .status-NV { color:#e74c3c; font-weight:bold; }
+
+  /* Module builder */
+  .module-block { background:#f8f9fa; border:1px solid #dee2e6; border-radius:8px; padding:1rem; margin-bottom:1rem; }
+  .module-block h5 { color:var(--primary); margin-bottom:0.5rem; }
+  .subject-entry { display:grid; grid-template-columns:1fr 80px 80px auto; gap:0.5rem; align-items:center; margin-bottom:0.4rem; }
+  .subject-entry input { padding:0.4rem; border:1px solid #ccc; border-radius:6px; font-size:0.85rem; }
+  .subject-entry select { padding:0.4rem; border:1px solid #ccc; border-radius:6px; font-size:0.85rem; }
+  .subject-entry .remove-btn { background:#f8d7da; color:#721c24; border:1px solid #dc3545; border-radius:6px; padding:0.3rem 0.6rem; cursor:pointer; font-size:0.8rem; }
+  .add-subject-btn { background:#d4edda; color:#155724; border:1px solid #28a745; border-radius:6px; padding:0.3rem 0.8rem; cursor:pointer; font-size:0.85rem; margin-top:0.3rem; }
+  .add-module-btn { background:var(--primary-light); color:var(--primary-dark); border:1px solid var(--primary); border-radius:6px; padding:0.4rem 1rem; cursor:pointer; font-size:0.85rem; }
+
+  @media(max-width:600px){
+    .subject-entry { grid-template-columns:1fr 60px 60px auto; }
+  }
 </style>
 </head>
 <body>
 
 <header>
-  <h1><i class="fas fa-user-shield"></i> Coordinateur PPV</h1>
-  <p>Département de Production et Protection Végétales</p>
+  <h1><i class="fas fa-user-shield"></i> Coordinateur ISET</h1>
+  <p>Institut Supérieur d'Enseignement Technologique de Rosso</p>
 </header>
 
 <div class="container">
-  <!-- Login -->
+
+  <!-- LOGIN -->
   <div id="loginForm" class="login-container">
     <h2 style="text-align:center; margin-bottom:1.5rem; color:var(--primary);">Connexion</h2>
     <div id="loginMessage" class="message error"></div>
+    <div class="form-group"><label>Département</label>
+      <select id="loginDept">
+        <option value="PPV">PPV</option>
+        <option value="TC">TC</option>
+        <option value="GAB">GAB</option>
+        <option value="GEM">GEM</option>
+        <option value="PSA">PSA</option>
+        <option value="STA">STA</option>
+      </select>
+    </div>
     <div class="form-group"><label>Mot de passe</label><input type="password" id="adminPassword" placeholder="••••••••"></div>
     <button class="admin-btn primary" onclick="login()" style="width:100%;">Se connecter</button>
     <p style="text-align:center; margin-top:1rem;"><a href="index.html">← Retour au site</a></p>
   </div>
-  
-  <!-- Dashboard -->
+
+  <!-- DASHBOARD -->
   <div id="dashboard" class="dashboard">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-      <h2>Panneau de coordination - PPV</h2>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
+      <h2 id="dashboardTitle">Panneau de coordination</h2>
       <button class="admin-btn danger" onclick="logout()">Déconnexion</button>
     </div>
     <div id="dashboardMessage" class="message success"></div>
-    
+
     <div style="display:grid; gap:0.8rem; margin:1rem 0;">
-      <button class="admin-btn success" onclick="showImportForm()"><i class="fas fa-upload"></i> Importer des résultats</button>
-      <button class="admin-btn danger" onclick="showManageSubjects()"><i class="fas fa-trash-alt"></i> Gérer les matières</button>
-      <button class="admin-btn warning" onclick="openAnnonceModal()"><i class="fas fa-bullhorn"></i> Gérer l'annonce</button>
-      <button class="admin-btn primary" onclick="openChangePasswordModal()"><i class="fas fa-key"></i> Changer le mot de passe</button>
-      <button class="admin-btn danger" onclick="showResetDataForm()" style="background:#f8d7da;"><i class="fas fa-database"></i> Supprimer données semestre</button>
-      <button class="admin-btn primary" onclick="showViewResultsForm()"><i class="fas fa-eye"></i> Voir résultats étudiants</button>
+      <button class="admin-btn success"  onclick="showImportForm()"><i class="fas fa-upload"></i> Importer des résultats</button>
+      <button class="admin-btn danger"   onclick="showManageSubjects()"><i class="fas fa-trash-alt"></i> Gérer les matières</button>
+      <button class="admin-btn primary"  onclick="openSubjectBuilderModal()"><i class="fas fa-plus-circle"></i> Ajouter des matières / modules</button>
+      <button class="admin-btn warning"  onclick="openAnnonceModal()"><i class="fas fa-bullhorn"></i> Gérer l'annonce</button>
+      <button class="admin-btn primary"  onclick="openChangePasswordModal()"><i class="fas fa-key"></i> Changer le mot de passe</button>
+      <button class="admin-btn danger"   onclick="showResetDataForm()"><i class="fas fa-database"></i> Supprimer données semestre</button>
+      <button class="admin-btn primary"  onclick="showViewResultsForm()"><i class="fas fa-eye"></i> Voir résultats étudiants</button>
     </div>
-    
-    <!-- Import Form -->
+
+    <!-- Import -->
     <div id="importForm" class="card" style="display:none;">
       <h4>Importer des résultats</h4>
-      <div class="file-format-info"><i class="fas fa-info-circle"></i> <strong>Formats :</strong> Excel, ODS, Word, PDF - Colonnes : NUMERO, NOM, NOTE/20</div>
-      <div class="form-group"><label>Semestre</label><select id="importSemester"><option value="S3">S3</option><option value="S4">S4</option><option value="S5">S5</option><option value="S6">S6</option></select></div>
-      <div class="form-group"><label>Type</label><select id="importType"><option value="Examen">Examen</option><option value="Contrôle continu">Contrôle continu</option><option value="Rattrapage">Rattrapage</option><option value="TP">TP</option></select></div>
+      <div class="file-format-info"><i class="fas fa-info-circle"></i> <strong>Formats :</strong> Excel, ODS, Word, PDF — Colonnes : NUMERO, NOM, NOTE/20</div>
+      <div class="form-group"><label>Semestre</label><select id="importSemester"></select></div>
+      <div class="form-group"><label>Type</label>
+        <select id="importType">
+          <option value="Examen">Examen</option>
+          <option value="Contrôle continu">Contrôle continu</option>
+          <option value="Rattrapage">Rattrapage</option>
+          <option value="TP">TP</option>
+        </select>
+      </div>
       <div class="form-group"><label>Matière</label><select id="importSubject"></select></div>
       <div class="form-group"><label>Fichier</label><input type="file" id="importFile" accept=".xlsx,.xls,.ods,.docx,.pdf"></div>
-      <div id="importProgress" style="display:none;"><div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div><p id="progressText" style="text-align:center;">Analyse...</p></div>
+      <div id="importProgress" style="display:none;">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <p id="progressText" style="text-align:center;">Analyse...</p>
+      </div>
       <button class="admin-btn success" onclick="processImport()">Importer</button>
       <button class="admin-btn secondary" onclick="hideImportForm()">Fermer</button>
     </div>
-    
+
     <!-- Manage Subjects -->
     <div id="manageSubjects" class="card" style="display:none;">
       <h4>Gérer les matières</h4>
-      <div class="form-group"><label>Semestre</label><select id="manageSemester"><option value="S3">S3</option><option value="S4">S4</option><option value="S5">S5</option><option value="S6">S6</option></select></div>
+      <div class="form-group"><label>Semestre</label><select id="manageSemester"></select></div>
       <button class="admin-btn primary" onclick="loadSubjectsList()">Afficher</button>
       <div id="subjectsListContainer" style="margin-top:1rem;"></div>
       <button class="admin-btn secondary" onclick="hideManageSubjects()">Fermer</button>
     </div>
-    
-    <!-- Reset Data -->
+
+    <!-- Reset -->
     <div id="resetDataForm" class="card" style="display:none; background:#f8d7da;">
       <h4 style="color:#721c24;">Supprimer données</h4>
       <p style="color:#721c24;">Attention : Action irréversible.</p>
-      <div class="form-group"><label>Semestre</label><select id="resetSemesterSelect"><option value="S3">S3</option><option value="S4">S4</option><option value="S5">S5</option><option value="S6">S6</option></select></div>
+      <div class="form-group"><label>Semestre</label><select id="resetSemesterSelect"></select></div>
       <button class="admin-btn danger" onclick="resetAllData()" style="background:#dc3545; color:white;">Confirmer</button>
       <button class="admin-btn secondary" onclick="hideResetDataForm()">Annuler</button>
     </div>
-    
+
     <!-- View Results -->
     <div id="viewResultsForm" class="card" style="display:none;">
       <h4>Résultats des étudiants</h4>
-      <div class="form-group"><label>Semestre</label><select id="viewSemester"><option value="S3">S3</option><option value="S4">S4</option><option value="S5">S5</option><option value="S6">S6</option></select></div>
+      <div class="form-group"><label>Semestre</label><select id="viewSemester"></select></div>
       <button class="admin-btn primary" onclick="loadAllStudents()">Afficher</button>
-      <button class="admin-btn success" onclick="downloadCompletePDF()">Télécharger PDF</button>
+      <button class="admin-btn success" onclick="downloadCompletePDF()">Télécharger PDF complet</button>
       <button class="admin-btn secondary" onclick="hideViewResultsForm()">Fermer</button>
       <div id="resultsContainer" style="margin-top:1rem; max-height:400px; overflow:auto;"></div>
     </div>
   </div>
 </div>
 
-<!-- Modals -->
-<div id="annonceModal" class="modal"><div class="modal-content"><h3>Publier une annonce</h3><textarea id="annonceTexte" rows="3" placeholder="Ex: Les résultats du S3 sont disponibles !"></textarea><div style="display:flex; gap:0.5rem; justify-content:flex-end; margin-top:1rem;"><button class="admin-btn" onclick="publierAnnonce()">Publier</button><button class="admin-btn danger" onclick="supprimerAnnonce()">Supprimer</button><button class="admin-btn secondary" onclick="closeAnnonceModal()">Annuler</button></div></div></div>
-<div id="changePasswordModal" class="modal"><div class="modal-content"><h3>Changer mot de passe</h3><div id="changePasswordMessage" class="message error"></div><div class="form-group"><label>Actuel</label><input type="password" id="currentPassword"></div><div class="form-group"><label>Nouveau</label><input type="password" id="newPassword"></div><div class="form-group"><label>Confirmer</label><input type="password" id="confirmNewPassword"></div><div style="display:flex; gap:0.5rem; justify-content:flex-end;"><button class="admin-btn success" onclick="changePassword()">Enregistrer</button><button class="admin-btn secondary" onclick="closeChangePasswordModal()">Annuler</button></div></div></div>
+<!-- MODALS -->
+<div id="annonceModal" class="modal">
+  <div class="modal-content">
+    <h3>Publier une annonce</h3>
+    <textarea id="annonceTexte" rows="3" style="width:100%;padding:0.5rem;" placeholder="Ex: Les résultats du S3 sont disponibles !"></textarea>
+    <div style="display:flex; gap:0.5rem; justify-content:flex-end; margin-top:1rem;">
+      <button class="admin-btn" onclick="publierAnnonce()">Publier</button>
+      <button class="admin-btn danger" onclick="supprimerAnnonce()">Supprimer</button>
+      <button class="admin-btn secondary" onclick="closeAnnonceModal()">Annuler</button>
+    </div>
+  </div>
+</div>
 
-<footer class="footer"><p>© 2026 Département PPV | <a href="index.html">Accueil</a></p></footer>
+<div id="changePasswordModal" class="modal">
+  <div class="modal-content">
+    <h3>Changer mot de passe</h3>
+    <div id="changePasswordMessage" class="message error"></div>
+    <div class="form-group"><label>Actuel</label><input type="password" id="currentPassword"></div>
+    <div class="form-group"><label>Nouveau</label><input type="password" id="newPassword"></div>
+    <div class="form-group"><label>Confirmer</label><input type="password" id="confirmNewPassword"></div>
+    <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+      <button class="admin-btn success" onclick="changePassword()">Enregistrer</button>
+      <button class="admin-btn secondary" onclick="closeChangePasswordModal()">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<!-- Subject Builder Modal -->
+<div id="subjectBuilderModal" class="modal">
+  <div class="modal-content">
+    <h3><i class="fas fa-plus-circle"></i> Ajouter des matières / modules</h3>
+    <div id="builderMessage" class="message"></div>
+    <div class="form-group">
+      <label>Semestre cible</label>
+      <select id="builderSemester"></select>
+    </div>
+    <div id="modulesBuilder"></div>
+    <div style="margin:0.8rem 0;">
+      <button class="add-module-btn" onclick="addModuleBlock()"><i class="fas fa-plus"></i> Ajouter un module</button>
+    </div>
+    <div style="display:flex; gap:0.5rem; justify-content:flex-end; margin-top:1rem;">
+      <button class="admin-btn primary" onclick="saveSubjectStructure()"><i class="fas fa-save"></i> Enregistrer</button>
+      <button class="admin-btn secondary" onclick="closeSubjectBuilderModal()">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <p>© 2026 Institut Supérieur d'Enseignement Technologique de Rosso | <a href="index.html">Accueil</a></p>
+</footer>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -173,113 +250,451 @@
   const db = getDatabase(app);
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-  const DEFAULT_CREDENTIALS = { PPV: { passwordHash: "13b34364b6022a2cd99414b5a0f9e5c3d86036b2e248b000c0f001e10928a26a" } };
-  let ADMIN_CREDENTIALS = { ...DEFAULT_CREDENTIALS };
+  // =====================================================================
+  // DEFAULT CREDENTIALS — one per department
+  // =====================================================================
+  const DEFAULT_HASHES = {
+    PPV: "13b34364b6022a2cd99414b5a0f9e5c3d86036b2e248b000c0f001e10928a26a",
+    TC:  "13b34364b6022a2cd99414b5a0f9e5c3d86036b2e248b000c0f001e10928a26a",
+    GAB: "13b34364b6022a2cd99414b5a0f9e5c3d86036b2e248b000c0f001e10928a26a",
+    GEM: "13b34364b6022a2cd99414b5a0f9e5c3d86036b2e248b000c0f001e10928a26a",
+    PSA: "13b34364b6022a2cd99414b5a0f9e5c3d86036b2e248b000c0f001e10928a26a",
+    STA: "13b34364b6022a2cd99414b5a0f9e5c3d86036b2e248b000c0f001e10928a26a",
+  };
+  let ADMIN_CREDENTIALS = {};
+  Object.keys(DEFAULT_HASHES).forEach(d => ADMIN_CREDENTIALS[d]={ passwordHash: DEFAULT_HASHES[d] });
 
-  const SUBJECTS = { PPV: { S3: ["Français_s3","Economie","I_Agronomie","I_Horticulture","Pesticides_agricoles","Entomologie_et_Nemato","Science_des_sols","Science_des_plantes"], S4: ["Vulgarisation","Technique_de_propagation","Technique_d_irrigation_et_BEC","Ecophysiologie_et_Biochimie","Fertilite_du_sol","Methodes_de_diagnostic","Malherbologie"], S5: [], S6: [] } };
-  const NO_TP = ["Anglais","Anglais_2","Français","Français_2","Français_s3","Math_et_Statistique","Economie","Vulgarisation"];
-  const MODULES = { PPV: { S3: { M31:{name:"Module 31",credit:6,subjects:["Français_s3","Economie"]}, M32:{name:"Module 32",credit:8,subjects:["I_Agronomie","I_Horticulture"]}, M33:{name:"Module 33",credit:8,subjects:["Pesticides_agricoles","Entomologie_et_Nemato"]}, M34:{name:"Module 34",credit:8,subjects:["Science_des_sols","Science_des_plantes"]} }, S4: { M41:{name:"Module 41",credit:3,subjects:["Vulgarisation"]}, M42:{name:"Module 42",credit:7,subjects:["Technique_de_propagation","Technique_d_irrigation_et_BEC"]}, M43:{name:"Module 43",credit:7,subjects:["Ecophysiologie_et_Biochimie","Fertilite_du_sol"]}, M44:{name:"Module 44",credit:6,subjects:["Methodes_de_diagnostic","Malherbologie"]} }, S5:{}, S6:{} } };
-  const CREDITS = { PPV: { S3:{"Français_s3":3,"Economie":3,"I_Agronomie":4,"I_Horticulture":4,"Pesticides_agricoles":4,"Entomologie_et_Nemato":4,"Science_des_sols":4,"Science_des_plantes":4}, S4:{"Vulgarisation":3,"Technique_de_propagation":4,"Technique_d_irrigation_et_BEC":3,"Ecophysiologie_et_Biochimie":4,"Fertilite_du_sol":3,"Methodes_de_diagnostic":3,"Malherbologie":3}, S5:{}, S6:{} } };
+  // =====================================================================
+  // STATIC DATA — same logic as index.html
+  // =====================================================================
+  const DEPT_SEMESTERS = {
+    PPV: ['S3','S4','S5','S6'],
+    TC:  ['S1','S2'],
+    GAB: ['S3','S4','S5','S6'],
+    GEM: ['S3','S4','S5','S6'],
+    PSA: ['S3','S4','S5','S6'],
+    STA: ['S3','S4','S5','S6'],
+  };
 
-  function hasTP(s) { return !NO_TP.includes(s); }
-  function cleanSubject(s) { return s.replace(/\./g,'_').replace(/\s+/g,'_').replace(/[éèêë]/g,'e').replace(/[ç]/g,'c'); }
-  function displaySubject(s) { return s.replace(/_/g,' ').replace(/I_/g,'I.').replace(/et_/g,'et '); }
-  function escapeHtml(s) { if (!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
-  async function hash(p) { const m=new TextEncoder().encode(p); const h=await crypto.subtle.digest('SHA-256',m); return Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,'0')).join(''); }
+  const SUBJECTS_WITHOUT_TP = [
+    "Anglais","Anglais_2","Français","Français_2","Français_s3","Français_GAB_S3",
+    "Math_et_Statistique","Economie","Economie_GAB","Vulgarisation"
+  ];
 
+  // Modules (static — can be extended via Firebase dynamic structure)
+  let MODULES_STRUCTURE = {
+    PPV: {
+      S3: {
+        M31_PPV:{name:"Module 31",credit:6.0, subjects:["Français_s3","Economie"]},
+        M32_PPV:{name:"Module 32",credit:8.0, subjects:["I_Agronomie","I_Horticulture"]},
+        M33_PPV:{name:"Module 33",credit:8.0, subjects:["Pesticides_agricoles","Entomologie_et_Nemato"]},
+        M34_PPV:{name:"Module 34",credit:8.0, subjects:["Science_des_sols","Science_des_plantes"]}
+      },
+      S4: {
+        M41_PPV:{name:"Module 41",credit:3.0, subjects:["Vulgarisation"]},
+        M42_PPV:{name:"Module 42",credit:7.0, subjects:["Technique_de_propagation","Technique_d_irrigation_et_BEC"]},
+        M43_PPV:{name:"Module 43",credit:7.0, subjects:["Ecophysiologie_et_Biochimie","Fertilite_du_sol"]},
+        M44_PPV:{name:"Module 44",credit:6.0, subjects:["Methodes_de_diagnostic","Malherbologie"]}
+      },
+      S5:{}, S6:{}
+    },
+    TC:  { S1:{}, S2:{} },
+    GAB: {
+      S3: {
+        M31_GAB:{name:"Module 31",credit:6.0, subjects:["Français_GAB_S3","Economie_GAB"]},
+        M32_GAB:{name:"Module 32",credit:9.0, subjects:["Resistance_de_materiaux","Energie_renouvelable","Environnement"]},
+        M33_GAB:{name:"Module 33",credit:7.0, subjects:["Topographie","Dessin_assiste_par_ordinateur"]},
+        M34_GAB:{name:"Module 34",credit:8.0, subjects:["Mecanique_de_fluides","Chimie_de_leau"]}
+      },
+      S4:{}, S5:{}, S6:{}
+    },
+    GEM: { S3:{}, S4:{}, S5:{}, S6:{} },
+    PSA: { S3:{}, S4:{}, S5:{}, S6:{} },
+    STA: { S3:{}, S4:{}, S5:{}, S6:{} }
+  };
+
+  let SUBJECT_CREDITS = {
+    PPV: {
+      S3:{"Français_s3":3,"Economie":3,"I_Agronomie":4,"I_Horticulture":4,"Pesticides_agricoles":4,"Entomologie_et_Nemato":4,"Science_des_sols":4,"Science_des_plantes":4},
+      S4:{"Vulgarisation":3,"Technique_de_propagation":4,"Technique_d_irrigation_et_BEC":3,"Ecophysiologie_et_Biochimie":4,"Fertilite_du_sol":3,"Methodes_de_diagnostic":3,"Malherbologie":3},
+      S5:{}, S6:{}
+    },
+    TC:  { S1:{}, S2:{} },
+    GAB: {
+      S3:{"Français_GAB_S3":3,"Economie_GAB":3,"Resistance_de_materiaux":3,"Energie_renouvelable":3,"Environnement":3,"Topographie":4,"Dessin_assiste_par_ordinateur":3,"Mecanique_de_fluides":4,"Chimie_de_leau":4},
+      S4:{}, S5:{}, S6:{}
+    },
+    GEM: { S3:{}, S4:{}, S5:{}, S6:{} },
+    PSA: { S3:{}, S4:{}, S5:{}, S6:{} },
+    STA: { S3:{}, S4:{}, S5:{}, S6:{} }
+  };
+
+  // =====================================================================
+  // HELPERS
+  // =====================================================================
+  let currentDept = 'PPV';
   let currentResults = null, currentSem = null;
 
-  async function loadCreds() { try{ const s=await get(child(ref(db),'admin_credentials')); if(s.exists()){ const c=s.val(); ADMIN_CREDENTIALS={PPV:{...DEFAULT_CREDENTIALS.PPV,...(c.PPV||{})}}; } }catch(e){} }
-  async function saveCreds() { try{ await set(ref(db,'admin_credentials'),{PPV:{passwordHash:ADMIN_CREDENTIALS.PPV.passwordHash}}); return true; }catch(e){ return false; } }
+  function hasTP(s) { return !SUBJECTS_WITHOUT_TP.includes(s); }
+  function toKey(s) { return s.trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9_]/g,'_').replace(/__+/g,'_'); }
+  function displaySubject(s) {
+    return s.replace(/_GAB_S\d/g,'').replace(/_PPV|_GAB|_GEM|_PSA|_STA|_TC/g,'')
+            .replace(/_/g,' ').replace(/I\s/g,'I.').replace(/l eau/gi,"l'eau");
+  }
+  function escapeHtml(s) { if(!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
+  async function hash(p) { const m=new TextEncoder().encode(p); const h=await crypto.subtle.digest('SHA-256',m); return Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,'0')).join(''); }
 
-  function showMsg(t,type){ const e=document.getElementById('dashboardMessage'); e.textContent=t; e.className=`message ${type}`; e.style.display='block'; setTimeout(()=>e.style.display='none',4000); }
+  function getSubjectsForSem(dept, sem) {
+    const mods = MODULES_STRUCTURE[dept]?.[sem] || {};
+    const list = [];
+    for (let m in mods) for (let s of mods[m].subjects) if (!list.includes(s)) list.push(s);
+    return list;
+  }
 
-  function updateSubjectList(){
-    const sem=document.getElementById('importSemester')?.value||'S3';
-    const type=document.getElementById('importType')?.value||'Examen';
-    const sel=document.getElementById('importSubject');
-    if(!sel) return;
-    sel.innerHTML='<option value="">-- Sélectionner --</option>';
-    let subs=SUBJECTS.PPV[sem]||[];
-    if(type==='TP') subs=subs.filter(s=>hasTP(s));
+  function showMsg(t, type) {
+    const e = document.getElementById('dashboardMessage');
+    e.textContent=t; e.className=`message ${type}`; e.style.display='block';
+    setTimeout(()=>e.style.display='none',4000);
+  }
+
+  // =====================================================================
+  // SEMESTER SELECTORS — fill based on current dept
+  // =====================================================================
+  function fillSemSelectors() {
+    const sems = DEPT_SEMESTERS[currentDept] || [];
+    ['importSemester','manageSemester','resetSemesterSelect','viewSemester','builderSemester'].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.innerHTML = sems.map(s=>`<option value="${s}">${s}</option>`).join('');
+    });
+    updateSubjectList();
+  }
+
+  function updateSubjectList() {
+    const sem  = document.getElementById('importSemester')?.value;
+    const type = document.getElementById('importType')?.value || 'Examen';
+    const sel  = document.getElementById('importSubject');
+    if (!sel || !sem) return;
+    sel.innerHTML = '<option value="">-- Sélectionner --</option>';
+    let subs = getSubjectsForSem(currentDept, sem);
+    if (type==='TP') subs = subs.filter(s=>hasTP(s));
     subs.forEach(s=>{ const o=document.createElement('option'); o.value=s; o.textContent=displaySubject(s); sel.appendChild(o); });
   }
 
-  document.getElementById('importSemester')?.addEventListener('change',updateSubjectList);
-  document.getElementById('importType')?.addEventListener('change',updateSubjectList);
+  document.getElementById('importSemester')?.addEventListener('change', updateSubjectList);
+  document.getElementById('importType')?.addEventListener('change', updateSubjectList);
 
-  window.login=async function(){
-    const p=document.getElementById('adminPassword').value;
-    if(!p){ document.getElementById('loginMessage').textContent='Mot de passe requis'; document.getElementById('loginMessage').style.display='block'; return; }
+  // =====================================================================
+  // CREDENTIALS
+  // =====================================================================
+  async function loadCreds() {
+    try {
+      const snap = await get(child(ref(db),'admin_credentials'));
+      if (snap.exists()) {
+        const c = snap.val();
+        Object.keys(DEFAULT_HASHES).forEach(d => {
+          if (c[d]?.passwordHash) ADMIN_CREDENTIALS[d].passwordHash = c[d].passwordHash;
+        });
+      }
+    } catch(e) {}
+  }
+
+  async function saveCreds() {
+    try {
+      const data = {};
+      Object.keys(ADMIN_CREDENTIALS).forEach(d => { data[d]={ passwordHash: ADMIN_CREDENTIALS[d].passwordHash }; });
+      await set(ref(db,'admin_credentials'), data);
+      return true;
+    } catch(e) { return false; }
+  }
+
+  // =====================================================================
+  // LOGIN / LOGOUT
+  // =====================================================================
+  window.login = async function() {
+    const p    = document.getElementById('adminPassword').value;
+    const dept = document.getElementById('loginDept').value;
+    const msgEl = document.getElementById('loginMessage');
+    if (!p) { msgEl.textContent='Mot de passe requis'; msgEl.style.display='block'; return; }
     await loadCreds();
-    if(await hash(p)===ADMIN_CREDENTIALS.PPV.passwordHash){
+    if (await hash(p) === ADMIN_CREDENTIALS[dept].passwordHash) {
+      currentDept = dept;
       document.getElementById('loginForm').style.display='none';
       document.getElementById('dashboard').classList.add('active');
-      updateSubjectList();
-    }else{ document.getElementById('loginMessage').textContent='Mot de passe incorrect'; document.getElementById('loginMessage').style.display='block'; }
+      document.getElementById('dashboardTitle').textContent=`Panneau de coordination — ${dept}`;
+      fillSemSelectors();
+      loadDynamicStructure();
+    } else {
+      msgEl.textContent='Mot de passe incorrect'; msgEl.style.display='block';
+    }
   };
-  window.logout=function(){ document.getElementById('loginForm').style.display='block'; document.getElementById('dashboard').classList.remove('active'); };
 
-  function hideAll(){ document.getElementById('importForm').style.display='none'; document.getElementById('manageSubjects').style.display='none'; document.getElementById('resetDataForm').style.display='none'; document.getElementById('viewResultsForm').style.display='none'; }
-  window.showImportForm=()=>{ hideAll(); document.getElementById('importForm').style.display='block'; updateSubjectList(); };
-  window.hideImportForm=()=>{ document.getElementById('importForm').style.display='none'; document.getElementById('importProgress').style.display='none'; };
-  window.showManageSubjects=()=>{ hideAll(); document.getElementById('manageSubjects').style.display='block'; };
-  window.hideManageSubjects=()=>{ document.getElementById('manageSubjects').style.display='none'; };
-  window.showResetDataForm=()=>{ hideAll(); document.getElementById('resetDataForm').style.display='block'; };
-  window.hideResetDataForm=()=>{ document.getElementById('resetDataForm').style.display='none'; };
-  window.showViewResultsForm=()=>{ hideAll(); document.getElementById('viewResultsForm').style.display='block'; };
-  window.hideViewResultsForm=()=>{ document.getElementById('viewResultsForm').style.display='none'; };
+  window.logout = function() {
+    document.getElementById('loginForm').style.display='block';
+    document.getElementById('dashboard').classList.remove('active');
+    document.getElementById('adminPassword').value='';
+    currentDept='PPV'; currentResults=null; currentSem=null;
+  };
 
-  window.openAnnonceModal=()=>document.getElementById('annonceModal').style.display='flex';
-  window.closeAnnonceModal=()=>{ document.getElementById('annonceModal').style.display='none'; document.getElementById('annonceTexte').value=''; };
-  window.openChangePasswordModal=()=>{ document.getElementById('changePasswordModal').style.display='flex'; };
-  window.closeChangePasswordModal=()=>{ document.getElementById('changePasswordModal').style.display='none'; };
+  // =====================================================================
+  // DYNAMIC STRUCTURE — load extra modules saved in Firebase
+  // =====================================================================
+  async function loadDynamicStructure() {
+    try {
+      const snap = await get(child(ref(db), `structure/${currentDept}`));
+      if (!snap.exists()) return;
+      const dynData = snap.val();
+      for (let sem in dynData) {
+        if (!MODULES_STRUCTURE[currentDept][sem]) MODULES_STRUCTURE[currentDept][sem]={};
+        if (!SUBJECT_CREDITS[currentDept][sem])   SUBJECT_CREDITS[currentDept][sem]={};
+        for (let mKey in dynData[sem]) {
+          const m = dynData[sem][mKey];
+          MODULES_STRUCTURE[currentDept][sem][mKey] = { name: m.name, credit: m.credit, subjects: m.subjects };
+          for (let s of m.subjects) {
+            SUBJECT_CREDITS[currentDept][sem][s] = m.subjectCredits?.[s] || 3;
+          }
+        }
+      }
+      updateSubjectList();
+    } catch(e) { console.warn('loadDynamicStructure:', e); }
+  }
 
-  window.publierAnnonce=async function(){
-    const t=document.getElementById('annonceTexte').value.trim();
-    if(!t){ alert('Texte requis'); return; }
+  // =====================================================================
+  // PANEL VISIBILITY
+  // =====================================================================
+  function hideAll() {
+    ['importForm','manageSubjects','resetDataForm','viewResultsForm'].forEach(id=>{ document.getElementById(id).style.display='none'; });
+  }
+  window.showImportForm       = ()=>{ hideAll(); document.getElementById('importForm').style.display='block'; updateSubjectList(); };
+  window.hideImportForm       = ()=>{ document.getElementById('importForm').style.display='none'; document.getElementById('importProgress').style.display='none'; };
+  window.showManageSubjects   = ()=>{ hideAll(); document.getElementById('manageSubjects').style.display='block'; };
+  window.hideManageSubjects   = ()=>{ document.getElementById('manageSubjects').style.display='none'; };
+  window.showResetDataForm    = ()=>{ hideAll(); document.getElementById('resetDataForm').style.display='block'; };
+  window.hideResetDataForm    = ()=>{ document.getElementById('resetDataForm').style.display='none'; };
+  window.showViewResultsForm  = ()=>{ hideAll(); document.getElementById('viewResultsForm').style.display='block'; };
+  window.hideViewResultsForm  = ()=>{ document.getElementById('viewResultsForm').style.display='none'; };
+
+  window.openAnnonceModal       = ()=> document.getElementById('annonceModal').style.display='flex';
+  window.closeAnnonceModal      = ()=>{ document.getElementById('annonceModal').style.display='none'; document.getElementById('annonceTexte').value=''; };
+  window.openChangePasswordModal= ()=> document.getElementById('changePasswordModal').style.display='flex';
+  window.closeChangePasswordModal=()=> document.getElementById('changePasswordModal').style.display='none';
+
+  // =====================================================================
+  // SUBJECT BUILDER MODAL
+  // =====================================================================
+  let moduleCounter = 0;
+
+  window.openSubjectBuilderModal = async function() {
+    moduleCounter = 0;
+    document.getElementById('modulesBuilder').innerHTML='';
+    document.getElementById('builderMessage').style.display='none';
+    document.getElementById('subjectBuilderModal').style.display='flex';
+
+    // Pre-fill from existing structure
+    const sem = document.getElementById('builderSemester').value;
+    const mods = MODULES_STRUCTURE[currentDept]?.[sem] || {};
+    if (Object.keys(mods).length > 0) {
+      for (let mKey in mods) {
+        const m = mods[mKey];
+        addModuleBlock(mKey, m.name, m.credit, m.subjects, sem);
+      }
+    }
+  };
+
+  window.closeSubjectBuilderModal = ()=> document.getElementById('subjectBuilderModal').style.display='none';
+
+  document.getElementById('builderSemester')?.addEventListener('change', ()=>{
+    document.getElementById('modulesBuilder').innerHTML='';
+    moduleCounter=0;
+    const sem = document.getElementById('builderSemester').value;
+    const mods = MODULES_STRUCTURE[currentDept]?.[sem]||{};
+    for (let mKey in mods) {
+      const m = mods[mKey];
+      addModuleBlock(mKey, m.name, m.credit, m.subjects, sem);
+    }
+  });
+
+  window.addModuleBlock = function(existingKey, existingName, existingCredit, existingSubjects, sem) {
+    moduleCounter++;
+    const idx = moduleCounter;
+    const dept = currentDept;
+    const defaultKey = existingKey || `M${idx}_${dept}`;
+    const defaultName = existingName || `Module ${idx}`;
+    const defaultCredit = existingCredit || 6;
+
+    const div = document.createElement('div');
+    div.className='module-block';
+    div.id=`module-block-${idx}`;
+    div.innerHTML=`
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+        <h5>Module ${idx}</h5>
+        <button onclick="removeModuleBlock(${idx})" style="background:#f8d7da;color:#721c24;border:1px solid #dc3545;border-radius:6px;padding:0.2rem 0.6rem;cursor:pointer;font-size:0.8rem;">✕ Supprimer</button>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.5rem; margin-bottom:0.5rem;">
+        <div><label style="font-size:0.8rem;font-weight:600;">Clé (ex: M31_${dept})</label>
+          <input type="text" id="mkey-${idx}" value="${escapeHtml(defaultKey)}" style="width:100%;padding:0.3rem;border:1px solid #ccc;border-radius:6px;font-size:0.85rem;">
+        </div>
+        <div><label style="font-size:0.8rem;font-weight:600;">Nom du module</label>
+          <input type="text" id="mname-${idx}" value="${escapeHtml(defaultName)}" style="width:100%;padding:0.3rem;border:1px solid #ccc;border-radius:6px;font-size:0.85rem;">
+        </div>
+        <div><label style="font-size:0.8rem;font-weight:600;">Crédit total module</label>
+          <input type="number" id="mcredit-${idx}" value="${defaultCredit}" min="1" max="30" style="width:100%;padding:0.3rem;border:1px solid #ccc;border-radius:6px;font-size:0.85rem;">
+        </div>
+      </div>
+      <div style="font-size:0.8rem;font-weight:600;margin-bottom:0.3rem;">Matières :</div>
+      <div style="font-size:0.75rem;color:#666;margin-bottom:0.4rem;display:grid;grid-template-columns:1fr 80px 80px auto;gap:0.5rem;">
+        <span>Nom de la matière</span><span style="text-align:center;">Crédit</span><span style="text-align:center;">TP?</span><span></span>
+      </div>
+      <div id="subjects-container-${idx}"></div>
+      <button class="add-subject-btn" onclick="addSubjectRow(${idx})"><i class="fas fa-plus"></i> Ajouter matière</button>
+    `;
+    document.getElementById('modulesBuilder').appendChild(div);
+
+    // Add existing subjects
+    if (existingSubjects && existingSubjects.length>0) {
+      existingSubjects.forEach(s => {
+        const cr = sem ? (SUBJECT_CREDITS[dept]?.[sem]?.[s]||3) : 3;
+        const noTp = !hasTP(s);
+        addSubjectRow(idx, s, cr, noTp);
+      });
+    } else {
+      addSubjectRow(idx);
+    }
+  };
+
+  window.removeModuleBlock = function(idx) {
+    const el = document.getElementById(`module-block-${idx}`);
+    if (el) el.remove();
+  };
+
+  window.addSubjectRow = function(moduleIdx, existingName, existingCredit, existingNoTP) {
+    const container = document.getElementById(`subjects-container-${moduleIdx}`);
+    if (!container) return;
+    const rowId = `row-${moduleIdx}-${Date.now()}`;
+    const div = document.createElement('div');
+    div.className='subject-entry'; div.id=rowId;
+    div.innerHTML=`
+      <input type="text" placeholder="Nom de la matière" value="${escapeHtml(existingName||'')}">
+      <input type="number" placeholder="Crédit" value="${existingCredit||3}" min="1" max="10" style="text-align:center;">
+      <select style="padding:0.4rem;border:1px solid #ccc;border-radius:6px;font-size:0.85rem;">
+        <option value="oui" ${!existingNoTP?'selected':''}>Avec TP</option>
+        <option value="non" ${existingNoTP?'selected':''}>Sans TP</option>
+      </select>
+      <button class="remove-btn" onclick="document.getElementById('${rowId}').remove()">✕</button>
+    `;
+    container.appendChild(div);
+  };
+
+  window.saveSubjectStructure = async function() {
+    const sem    = document.getElementById('builderSemester').value;
+    const dept   = currentDept;
+    const msgEl  = document.getElementById('builderMessage');
+    const blocks = document.querySelectorAll('.module-block');
+    if (blocks.length===0) { msgEl.textContent='Ajoutez au moins un module.'; msgEl.className='message error'; msgEl.style.display='block'; return; }
+
+    const newMods = {};
+    const newCredits = {};
+    const noTPList = [...SUBJECTS_WITHOUT_TP];
+
+    let valid = true;
+    blocks.forEach(block => {
+      const idx = block.id.replace('module-block-','');
+      const mKey    = document.getElementById(`mkey-${idx}`)?.value.trim();
+      const mName   = document.getElementById(`mname-${idx}`)?.value.trim();
+      const mCredit = parseFloat(document.getElementById(`mcredit-${idx}`)?.value) || 6;
+      if (!mKey||!mName) { valid=false; return; }
+
+      const rows = block.querySelectorAll('.subject-entry');
+      const subjects=[], subjectCredits={};
+      rows.forEach(row => {
+        const inputs = row.querySelectorAll('input');
+        const sel    = row.querySelector('select');
+        const sName  = inputs[0]?.value.trim();
+        const sCr    = parseFloat(inputs[1]?.value)||3;
+        const noTP   = sel?.value==='non';
+        if (!sName) return;
+        const sKey = toKey(sName);
+        subjects.push(sKey);
+        subjectCredits[sKey] = sCr;
+        newCredits[sKey] = sCr;
+        if (noTP && !noTPList.includes(sKey)) noTPList.push(sKey);
+      });
+      if (subjects.length===0) { valid=false; return; }
+      newMods[mKey] = { name:mName, credit:mCredit, subjects, subjectCredits };
+    });
+
+    if (!valid) { msgEl.textContent='Remplissez tous les champs.'; msgEl.className='message error'; msgEl.style.display='block'; return; }
+
+    // Update local structure
+    if (!MODULES_STRUCTURE[dept][sem]) MODULES_STRUCTURE[dept][sem]={};
+    if (!SUBJECT_CREDITS[dept][sem])   SUBJECT_CREDITS[dept][sem]={};
+    Object.assign(MODULES_STRUCTURE[dept][sem], newMods);
+    Object.assign(SUBJECT_CREDITS[dept][sem], newCredits);
+    noTPList.forEach(s=>{ if(!SUBJECTS_WITHOUT_TP.includes(s)) SUBJECTS_WITHOUT_TP.push(s); });
+
+    // Save to Firebase
+    try {
+      await set(ref(db, `structure/${dept}/${sem}`), newMods);
+      msgEl.textContent='Structure enregistrée avec succès !'; msgEl.className='message success'; msgEl.style.display='block';
+      updateSubjectList();
+    } catch(e) {
+      msgEl.textContent='Erreur Firebase: '+e.message; msgEl.className='message error'; msgEl.style.display='block';
+    }
+  };
+
+  // =====================================================================
+  // ANNONCE
+  // =====================================================================
+  window.publierAnnonce = async function() {
+    const t = document.getElementById('annonceTexte').value.trim();
+    if (!t) { alert('Texte requis'); return; }
     await set(ref(db,'annonces/active'),{texte:t,expiration:Date.now()+86400000});
     showMsg('Annonce publiée','success'); closeAnnonceModal();
   };
-
-  window.supprimerAnnonce=async function(){
-    if(!confirm('Supprimer l\'annonce active ?')) return;
+  window.supprimerAnnonce = async function() {
+    if (!confirm("Supprimer l'annonce active ?")) return;
     await remove(ref(db,'annonces/active'));
     showMsg('Annonce supprimée','success'); closeAnnonceModal();
   };
 
-  window.changePassword=async function(){
+  // =====================================================================
+  // CHANGE PASSWORD
+  // =====================================================================
+  window.changePassword = async function() {
     const curr=document.getElementById('currentPassword').value;
     const np=document.getElementById('newPassword').value;
     const conf=document.getElementById('confirmNewPassword').value;
-    if(!curr||!np||!conf){ showMsg('Tous les champs requis','error'); return; }
-    if(np!==conf){ showMsg('Mots de passe différents','error'); return; }
-    if(await hash(curr)!==ADMIN_CREDENTIALS.PPV.passwordHash){ showMsg('Mot de passe actuel incorrect','error'); return; }
-    ADMIN_CREDENTIALS.PPV.passwordHash=await hash(np);
+    const msgEl=document.getElementById('changePasswordMessage');
+    const show=(t,c)=>{ msgEl.textContent=t; msgEl.className=`message ${c}`; msgEl.style.display='block'; };
+    if(!curr||!np||!conf){ show('Tous les champs requis','error'); return; }
+    if(np!==conf){ show('Mots de passe différents','error'); return; }
+    if(await hash(curr)!==ADMIN_CREDENTIALS[currentDept].passwordHash){ show('Mot de passe actuel incorrect','error'); return; }
+    ADMIN_CREDENTIALS[currentDept].passwordHash=await hash(np);
     await saveCreds();
     showMsg('Mot de passe changé','success'); closeChangePasswordModal();
   };
 
-  window.resetAllData=async function(){
+  // =====================================================================
+  // RESET DATA
+  // =====================================================================
+  window.resetAllData = async function() {
     const sem=document.getElementById('resetSemesterSelect').value;
-    if(!confirm(`Supprimer TOUTES les données du ${sem} ?`)) return;
-    try{
-      const snap=await get(child(ref(db),`results/PPV/${sem}`));
-      if(!snap.exists()){ showMsg('Aucune donnée','info'); return; }
-      const students=snap.val();
-      for(let id in students) await remove(ref(db,`results/PPV/${sem}/${id}`));
-      showMsg(`Données ${sem} supprimées`,'success'); hideResetDataForm();
-    }catch(e){ showMsg('Erreur','error'); }
+    if(!confirm(`Supprimer TOUTES les données du ${sem} pour ${currentDept} ?`)) return;
+    try {
+      await remove(ref(db,`results/${currentDept}/${sem}`));
+      showMsg(`Données ${currentDept}/${sem} supprimées`,'success'); hideResetDataForm();
+    } catch(e) { showMsg('Erreur','error'); }
   };
 
-  function calculate(notes,dept,sem){
-    const mods=MODULES[dept]?.[sem];
-    if(!mods||Object.keys(mods).length===0) return null;
-    const req=[];
-    for(let m in mods) for(let s of mods[m].subjects) if(!req.includes(s)) req.push(s);
-    
+  // =====================================================================
+  // CALCULATION ENGINE — identical to index.html
+  // =====================================================================
+  function calculate(notes, dept, sem) {
+    const mods = MODULES_STRUCTURE[dept]?.[sem];
+    if (!mods||Object.keys(mods).length===0) return null;
+    const req = getSubjectsForSem(dept, sem);
     const subjAvg={}, subjStatus={}, subjSR={};
-    for(let s of req){
+    for (let s of req) {
       const n=notes[s]||{};
       const exam=n['Examen']||0, cc=n['Contrôle continu']||0, tp=n['TP']||0, ratt=n['Rattrapage'];
       const useSR=ratt!==undefined&&ratt>exam; subjSR[s]=useSR;
@@ -287,12 +702,11 @@
       subjAvg[s]=hasTP(s)?(tp+cc*2+final*3)/6:(cc*2+final*3)/5;
       subjStatus[s]=subjAvg[s]>=10?'C':'NC';
     }
-    
     const modAvg={}, modStatus={}, modCredits={};
-    for(let m in mods){
+    for (let m in mods) {
       let w=0,c=0,earned=0;
-      for(let s of mods[m].subjects){
-        const cr=CREDITS[dept][sem][s]||3;
+      for (let s of mods[m].subjects) {
+        const cr=SUBJECT_CREDITS[dept][sem][s]||3;
         w+=(subjAvg[s]||0)*cr; c+=cr;
         if(subjStatus[s]==='C') earned+=cr;
       }
@@ -300,308 +714,240 @@
       modStatus[m]=mods[m].subjects.every(s=>subjStatus[s]==='C')&&modAvg[m]>=10?'V':'NV';
       modCredits[m]=earned;
     }
-    
     let tw=0,tc=0;
-    for(let s of req){ const cr=CREDITS[dept][sem][s]||3; tw+=(subjAvg[s]||0)*cr; tc+=cr; }
+    for(let s of req){ const cr=SUBJECT_CREDITS[dept][sem][s]||3; tw+=(subjAvg[s]||0)*cr; tc+=cr; }
     const genMoy=tc>0?tw/tc:0;
     const hasNV=Object.values(modStatus).some(s=>s==='NV');
     const semStatus=hasNV?'Non Validé':(genMoy>=10?'Validé':'Non Validé');
     const hasSR=Object.values(subjSR).some(v=>v);
-    
-    return { genMoy, semStatus, modStatus, modCredits, modAvg, subjAvg, subjStatus, hasSR, modules:mods };
+    return{genMoy,semStatus,modStatus,modCredits,modAvg,subjAvg,subjStatus,hasSR,modules:mods};
   }
 
+  // =====================================================================
+  // LOAD STUDENTS TABLE
+  // =====================================================================
   window.loadAllStudents = async function() {
-    const sem = document.getElementById('viewSemester').value;
-    currentSem = sem;
-    const cont = document.getElementById('resultsContainer');
-    cont.innerHTML = '<p style="text-align:center;">Chargement...</p>';
-    
-    const snap = await get(child(ref(db), `results/PPV/${sem}`));
-    if (!snap.exists()) { 
-      cont.innerHTML = '<p>Aucun résultat</p>'; 
-      return; 
-    }
-    
-    const students = snap.val();
-    const results = [];
-    
-    for (let id in students) {
-      const data = students[id];
-      let name = '';
-      const notes = {};
-      
-      for (let k in data) { 
-        if (data[k].name) name = data[k].name; 
-        if (!notes[data[k].subject]) notes[data[k].subject] = {};
-        notes[data[k].subject][data[k].type] = data[k].grade; 
-      }
-      
-      const req = SUBJECTS.PPV[sem] || [];
-      if (req.length === 0) continue;
-      
-      let complete = true;
-      let missingSubjects = [];
-      
-      for (let s of req) {
-        const htp = hasTP(s);
-        const examExists = notes[s]?.['Examen'] !== undefined;
-        const ccExists = notes[s]?.['Contrôle continu'] !== undefined;
-        const tpExists = !htp || notes[s]?.['TP'] !== undefined;
-        
-        if (!examExists) missingSubjects.push(`${displaySubject(s)} (Examen)`);
-        if (!ccExists) missingSubjects.push(`${displaySubject(s)} (CC)`);
-        if (htp && !tpExists) missingSubjects.push(`${displaySubject(s)} (TP)`);
-        
-        if (!examExists || !ccExists || (htp && !tpExists)) {
-          complete = false;
+    const sem=document.getElementById('viewSemester').value;
+    const dept=currentDept;
+    currentSem=sem;
+    const cont=document.getElementById('resultsContainer');
+    cont.innerHTML='<p style="text-align:center;">Chargement...</p>';
+    try {
+      const snap=await get(child(ref(db),`results/${dept}/${sem}`));
+      if(!snap.exists()){ cont.innerHTML='<p>Aucun résultat</p>'; currentResults=[]; return; }
+      const students=snap.val(), results=[];
+      for (let id in students) {
+        const data=students[id]; let name=''; const notes={};
+        for(let k in data){ if(data[k].name) name=data[k].name; if(!notes[data[k].subject]) notes[data[k].subject]={}; notes[data[k].subject][data[k].type]=data[k].grade; }
+        const req=getSubjectsForSem(dept,sem);
+        if(req.length===0){ results.push({id,name,notes,complete:false,missingSubjects:['Structure non définie'],calc:null}); continue; }
+        let complete=true; const missing=[];
+        for(let s of req){
+          const htp=hasTP(s);
+          if(!notes[s]?.['Examen'])missing.push(`${displaySubject(s)} (Exam)`);
+          if(!notes[s]?.['Contrôle continu'])missing.push(`${displaySubject(s)} (CC)`);
+          if(htp&&!notes[s]?.['TP'])missing.push(`${displaySubject(s)} (TP)`);
+          if(!notes[s]?.['Examen']||!notes[s]?.['Contrôle continu']||(htp&&!notes[s]?.['TP'])) complete=false;
         }
+        if(complete){ const calc=calculate(notes,dept,sem); if(calc) results.push({id,name,notes,complete:true,missingSubjects:[],calc}); else results.push({id,name,notes,complete:false,missingSubjects:['Erreur calcul'],calc:null}); }
+        else results.push({id,name,notes,complete:false,missingSubjects:missing,calc:null});
       }
-      
-      if (complete) {
-        const calc = calculate(notes, 'PPV', sem);
-        if (calc) {
-          results.push({ id, name, notes, calc, complete: true, missingSubjects: [] });
-        }
-      } else {
-        results.push({ id, name, notes, complete: false, missingSubjects, calc: null });
+      results.sort((a,b)=>a.id.localeCompare(b.id));
+      currentResults=results;
+      let html='<table class="simple-table"><thead><tr><th>N°</th><th>Nom</th><th>Moyenne</th><th>Statut</th><th>Détails</th></tr></thead><tbody>';
+      for(let r of results){
+        if(r.complete) html+=`<tr><td>${escapeHtml(r.id)}</td><td style="text-align:left;">${escapeHtml(r.name||'Sans nom')}</td><td><strong>${r.calc.genMoy.toFixed(2)}</strong></td><td class="${r.calc.semStatus==='Validé'?'status-V':'status-NV'}">${r.calc.semStatus}</td><td>—</td></tr>`;
+        else html+=`<tr style="background:#fff3cd;"><td>${escapeHtml(r.id)}</td><td style="text-align:left;">${escapeHtml(r.name||'Sans nom')}</td><td style="color:#856404;font-weight:bold;">Incomplet</td><td style="color:#856404;">Non finalisé</td><td><span title="${escapeHtml(r.missingSubjects.join(', '))}" style="cursor:help;color:#856404;"><i class="fas fa-info-circle"></i> Données manquantes</span></td></tr>`;
       }
-    }
-    
-    results.sort((a, b) => a.id.localeCompare(b.id));
-    currentResults = results;
-    
-    let html = '<table class="simple-table"><thead><tr><th>N°</th><th>Nom</th><th>Moyenne</th><th>Statut</th><th>Détails</th></tr></thead><tbody>';
-    
-    for (let r of results) {
-      if (r.complete) {
-        html += `<tr>
-          <td>${r.id}</td>
-          <td style="text-align:left;">${r.name || 'Sans nom'}</td>
-          <td><strong>${r.calc.genMoy.toFixed(2)}</strong></td>
-          <td class="${r.calc.semStatus === 'Validé' ? 'status-V' : 'status-NV'}">${r.calc.semStatus}</td>
-          <td>-</td>
-        </tr>`;
-      } else {
-        html += `<tr style="background:#fff3cd;">
-          <td>${r.id}</td>
-          <td style="text-align:left;">${r.name || 'Sans nom'}</td>
-          <td style="color:#856404; font-weight:bold;">Incomplet</td>
-          <td style="color:#856404;">Non finalisé</td>
-          <td><span title="${r.missingSubjects.join(', ')}" style="cursor:help; color:#856404;"><i class="fas fa-info-circle"></i> Données manquantes</span></td>
-        </tr>`;
-      }
-    }
-    
-    html += '</tbody></table>';
-    cont.innerHTML = html;
+      html+='</tbody></table>'; cont.innerHTML=html;
+    } catch(e){ cont.innerHTML=`<p style="color:red;">Erreur: ${e.message}</p>`; }
   };
 
   // =====================================================================
-  // دالة PDF المعدّلة لتطابق تماماً نمط جدول الكود المدمج (index_merged)
+  // PDF — table identical to index.html on-screen table
   // =====================================================================
   window.downloadCompletePDF = async function() {
-    if (!currentResults || currentResults.length === 0) { 
-      alert('Affichez d\'abord les résultats'); 
-      return; 
-    }
-    
-    const completedResults = currentResults.filter(r => r.complete === true);
-    if (completedResults.length === 0) {
-      alert('Aucun étudiant avec des données complètes à exporter vers PDF.');
-      return;
-    }
-    
-    const sem = currentSem;
-    const currentYear = new Date().getFullYear();
-    const academicYear = `${currentYear - 1}-${currentYear}`;
-    const filiere = 'L2PPV-L2 Licence PPV';
+    if(!currentResults||currentResults.length===0){ alert("Affichez d'abord les résultats"); return; }
+    const completed=currentResults.filter(r=>r.complete);
+    if(completed.length===0){ alert('Aucun étudiant avec données complètes.'); return; }
+    const sem=currentSem, dept=currentDept;
+    const currentYear=new Date().getFullYear();
+    const academicYear=`${currentYear-1}-${currentYear}`;
 
-    // ---- رأس الصفحة الأول ----
-    let content = `
-      <div style="padding: 15mm 10mm 5mm 10mm; font-family: Arial, Helvetica, sans-serif; font-size: 11pt;">
-        <div style="font-weight: bold; font-size: 12pt; margin-bottom: 5px;">Institut Supérieur d'Enseignement Technologique de Rosso</div>
-        <div style="display: flex; justify-content: space-between; margin-top: 8px;">
-          <span style="font-weight: bold; font-size: 14pt;">Résultats du ${escapeHtml(sem)}</span>
-          <span style="font-weight: normal;">Année Universitaire : ${academicYear}</span>
+    let content=`
+      <div style="padding:15mm 10mm 5mm 10mm; font-family:Arial,Helvetica,sans-serif; font-size:11pt;">
+        <div style="font-weight:bold; font-size:12pt; margin-bottom:5px;">Institut Supérieur d'Enseignement Technologique de Rosso</div>
+        <div style="display:flex; justify-content:space-between; margin-top:8px;">
+          <span style="font-weight:bold; font-size:14pt;">Résultats du ${escapeHtml(sem)} — ${escapeHtml(dept)}</span>
+          <span>Année Universitaire : ${academicYear}</span>
         </div>
-        <div style="margin-top: 5px;"><span style="font-weight: bold;">Filière :</span> ${filiere}</div>
-        <div style="margin-top: 5px; color: green;"><span style="font-weight: bold;">Nombre d'étudiants :</span> ${completedResults.length}</div>
-      </div>
-    `;
+        <div style="margin-top:5px; color:green;"><strong>Nombre d'étudiants :</strong> ${completed.length}</div>
+      </div>`;
 
-    for (let i = 0; i < completedResults.length; i++) {
-      const r = completedResults[i];
-      const calc = r.calc;
-      const showSRColumn = calc.hasSR;
-      const colspanValue = showSRColumn ? 6 : 5;
-      const isLastOnPage = ((i + 1) % 2 === 0) && (i < completedResults.length - 1);
+    for(let i=0; i<completed.length; i++){
+      const r=completed[i], calc=r.calc;
+      const showSR=calc.hasSR, colspanVal=showSR?6:5;
+      const pageBreak=(i+1)%2===0&&i<completed.length-1 ? 'page-break-after:always;' : '';
 
-      // ---- جدول كل طالب بنفس نمط الكود المدمج ----
-      content += `
-        <div style="padding: 0 10mm 5mm 10mm; font-family: Arial, Helvetica, sans-serif; font-size: 11pt; ${isLastOnPage ? 'page-break-after: always;' : ''}">
+      content+=`
+        <div style="padding:0 10mm 5mm 10mm; font-family:Arial,Helvetica,sans-serif; font-size:11pt; ${pageBreak}">
           <table style="width:100%; border-collapse:collapse; border:1px solid #000; font-size:10pt; margin-top:8px;">
             <thead>
               <tr style="background:#e8f4e8;">
-                <th style="border:1px solid #000; padding:3px;">Numéro</th>
-                <th style="border:1px solid #000; padding:3px;">Nom et Prénom</th>
-                <th style="border:1px solid #000; padding:3px;">TP</th>
-                <th style="border:1px solid #000; padding:3px;">CC</th>
-                <th style="border:1px solid #000; padding:3px;">Examen</th>
-                ${showSRColumn ? '<th style="border:1px solid #000; padding:3px;">SR</th>' : ''}
-                <th style="border:1px solid #000; padding:3px;">NF°</th>
-                <th style="border:1px solid #000; padding:3px;">Crédit</th>
-                <th style="border:1px solid #000; padding:3px;">Obs</th>
+                <th style="border:1px solid #000;padding:3px;text-align:center;">Numéro</th>
+                <th style="border:1px solid #000;padding:3px;text-align:center;">Nom et Prénom</th>
+                <th style="border:1px solid #000;padding:3px;text-align:center;">TP</th>
+                <th style="border:1px solid #000;padding:3px;text-align:center;">CC</th>
+                <th style="border:1px solid #000;padding:3px;text-align:center;">Examen</th>
+                ${showSR?'<th style="border:1px solid #000;padding:3px;text-align:center;">SR</th>':''}
+                <th style="border:1px solid #000;padding:3px;text-align:center;">NF°</th>
+                <th style="border:1px solid #000;padding:3px;text-align:center;">Crédit</th>
+                <th style="border:1px solid #000;padding:3px;text-align:center;">Obs</th>
               </tr>
             </thead>
             <tbody>
-              <!-- صف معلومات الطالب -->
               <tr style="background:#f0f8ff; font-weight:bold;">
-                <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; border-left:1px solid #000; border-right:1px solid #000; padding:2px;">${escapeHtml(r.id)}</td>
-                <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px; text-align:left;">${escapeHtml(r.name)}</td>
-                <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
-                <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
-                <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
-                ${showSRColumn ? '<td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>' : ''}
-                <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
-                <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
-                <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; border-right:1px solid #000; padding:2px;"></td>
-              </tr>
-      `;
+                <td style="border:1px solid #000;padding:2px;text-align:center;">${escapeHtml(r.id)}</td>
+                <td style="border:1px solid #000;padding:2px;text-align:left;">${escapeHtml(r.name)}</td>
+                <td style="border:1px solid #000;padding:2px;"></td>
+                <td style="border:1px solid #000;padding:2px;"></td>
+                <td style="border:1px solid #000;padding:2px;"></td>
+                ${showSR?'<td style="border:1px solid #000;padding:2px;"></td>':''}
+                <td style="border:1px solid #000;padding:2px;"></td>
+                <td style="border:1px solid #000;padding:2px;"></td>
+                <td style="border:1px solid #000;padding:2px;"></td>
+              </tr>`;
 
-      for (let m in calc.modules) {
-        const mod = calc.modules[m];
-
-        // ---- صف الوحدة (module) - نمط border-top/bottom فقط كالكود المدمج ----
-        content += `
+      for(let m in calc.modules){
+        const mod=calc.modules[m];
+        const mLabel=m.replace(/_[A-Z]+$/,'');
+        content+=`
               <tr style="background:#d4edda; font-weight:bold;">
-                <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; border-left:1px solid #000; padding:2px;">${escapeHtml(m)}</td>
-                <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px; text-align:left;">${escapeHtml(mod.name)}</td>
-                <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
-                <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
-                <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
-                ${showSRColumn ? '<td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>' : ''}
-                <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px; font-weight:bold;">${calc.modAvg[m].toFixed(2)}</td>
-                <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;">${calc.modCredits[m].toFixed(1)}</td>
-                <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; border-right:1px solid #000; padding:2px;">${calc.modStatus[m]}</td>
-              </tr>
-        `;
-
-        // ---- صفوف المواد ----
-        for (let s of mod.subjects) {
-          const notes = r.notes[s] || {};
-          const tpDisplay = hasTP(s) ? (notes['TP'] !== undefined ? notes['TP'].toFixed(2) : '') : '';
-          const ccDisplay = notes['Contrôle continu'] !== undefined ? notes['Contrôle continu'].toFixed(2) : '';
-          const examDisplay = notes['Examen'] !== undefined ? notes['Examen'].toFixed(2) : '';
-          const ratt = notes['Rattrapage'];
-          const srDisplay = (ratt !== undefined) ? ratt.toFixed(2) : '';
-          const credit = CREDITS.PPV[sem][s] || 3;
-
-          content += `
+                <td style="border:none;border-top:1px solid #000;border-bottom:1px solid #000;border-left:1px solid #000;padding:2px;text-align:center;">${escapeHtml(mLabel)}</td>
+                <td style="border:none;border-top:1px solid #000;border-bottom:1px solid #000;padding:2px;text-align:left;">${escapeHtml(mod.name)}</td>
+                <td style="border:none;border-top:1px solid #000;border-bottom:1px solid #000;padding:2px;"></td>
+                <td style="border:none;border-top:1px solid #000;border-bottom:1px solid #000;padding:2px;"></td>
+                <td style="border:none;border-top:1px solid #000;border-bottom:1px solid #000;padding:2px;"></td>
+                ${showSR?'<td style="border:none;border-top:1px solid #000;border-bottom:1px solid #000;padding:2px;"></td>':''}
+                <td style="border:none;border-top:1px solid #000;border-bottom:1px solid #000;padding:2px;font-weight:bold;text-align:center;">${calc.modAvg[m].toFixed(2)}</td>
+                <td style="border:none;border-top:1px solid #000;border-bottom:1px solid #000;padding:2px;text-align:center;">${calc.modCredits[m].toFixed(1)}</td>
+                <td style="border:none;border-top:1px solid #000;border-bottom:1px solid #000;border-right:1px solid #000;padding:2px;text-align:center;">${calc.modStatus[m]}</td>
+              </tr>`;
+        for(let s of mod.subjects){
+          const n=r.notes[s]||{};
+          const tp  =hasTP(s)?(n['TP']!==undefined?n['TP'].toFixed(2):''):'';
+          const cc  =n['Contrôle continu']!==undefined?n['Contrôle continu'].toFixed(2):'';
+          const exam=n['Examen']!==undefined?n['Examen'].toFixed(2):'';
+          const ratt=n['Rattrapage'];
+          const sr  =ratt!==undefined?ratt.toFixed(2):'';
+          const cr  =SUBJECT_CREDITS[dept][sem][s]||3;
+          content+=`
               <tr>
-                <td style="border:1px solid #000; padding:1px;"></td>
-                <td style="border:1px solid #000; padding:1px; text-align:left; padding-left:20px;">${escapeHtml(displaySubject(s))}</td>
-                <td style="border:1px solid #000; padding:1px;">${tpDisplay}</td>
-                <td style="border:1px solid #000; padding:1px;">${ccDisplay}</td>
-                <td style="border:1px solid #000; padding:1px;">${examDisplay}</td>
-                ${showSRColumn ? `<td style="border:1px solid #000; padding:1px;">${srDisplay}</td>` : ''}
-                <td style="border:1px solid #000; padding:1px; font-weight:bold;">${calc.subjAvg[s].toFixed(2)}</td>
-                <td style="border:1px solid #000; padding:1px;">${credit.toFixed(1)}</td>
-                <td style="border:1px solid #000; padding:1px;">${calc.subjStatus[s]}</td>
-              </tr>
-          `;
+                <td style="border:1px solid #000;padding:1px;text-align:center;"></td>
+                <td style="border:1px solid #000;padding:1px;text-align:left;padding-left:20px;">${escapeHtml(displaySubject(s))}</td>
+                <td style="border:1px solid #000;padding:1px;text-align:center;">${tp}</td>
+                <td style="border:1px solid #000;padding:1px;text-align:center;">${cc}</td>
+                <td style="border:1px solid #000;padding:1px;text-align:center;">${exam}</td>
+                ${showSR?`<td style="border:1px solid #000;padding:1px;text-align:center;">${sr}</td>`:''}
+                <td style="border:1px solid #000;padding:1px;text-align:center;font-weight:bold;">${calc.subjAvg[s].toFixed(2)}</td>
+                <td style="border:1px solid #000;padding:1px;text-align:center;">${cr.toFixed(1)}</td>
+                <td style="border:1px solid #000;padding:1px;text-align:center;">${calc.subjStatus[s]}</td>
+              </tr>`;
         }
       }
-
-      // ---- صف المعدل ----
-      content += `
+      content+=`
               <tr>
-                <td colspan="${colspanValue}" style="border:none; padding:6px 4px 2px 4px; text-align:right; font-weight:bold;">Moyenne Semestre :</td>
-                <td style="border:none; padding:6px 4px 2px 4px; font-weight:bold;">${calc.genMoy.toFixed(2)}</td>
-                <td style="border:none; padding:6px 4px 2px 4px;"></td>
-                <td style="border:none; padding:6px 4px 2px 4px; font-weight:bold;">${calc.semStatus}</td>
+                <td colspan="${colspanVal}" style="border:none;padding:6px 4px 2px 4px;text-align:right;font-weight:bold;">Moyenne Semestre :</td>
+                <td style="border:none;padding:6px 4px 2px 4px;font-weight:bold;text-align:center;">${calc.genMoy.toFixed(2)}</td>
+                <td style="border:none;padding:6px 4px 2px 4px;"></td>
+                <td style="border:none;padding:6px 4px 2px 4px;font-weight:bold;text-align:center;">${calc.semStatus}</td>
               </tr>
             </tbody>
           </table>
-        </div>
-      `;
+        </div>`;
     }
 
-    const element = document.createElement('div');
-    element.innerHTML = content;
-    document.body.appendChild(element);
-
-    const opt = {
-      margin: [0, 5, 5, 5],
-      filename: `Resultats_PPV_${sem}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, letterRendering: true, scrollY: 0 },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-
-    html2pdf().set(opt).from(element).save()
-      .then(() => document.body.removeChild(element))
-      .catch(err => {
-        console.error('Erreur PDF:', err);
-        alert('Erreur lors de la génération du PDF.');
-        document.body.removeChild(element);
-      });
+    const el=document.createElement('div');
+    el.innerHTML=content; document.body.appendChild(el);
+    html2pdf().set({
+      margin:[0,5,5,5],
+      filename:`Resultats_${dept}_${sem}.pdf`,
+      image:{type:'jpeg',quality:0.98},
+      html2canvas:{scale:2,letterRendering:true,scrollY:0},
+      jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
+    }).from(el).save()
+      .then(()=>document.body.removeChild(el))
+      .catch(err=>{ console.error(err); alert('Erreur PDF.'); document.body.removeChild(el); });
   };
 
-  // Import functions
+  // =====================================================================
+  // IMPORT
+  // =====================================================================
   async function extractPDF(f){ const b=await f.arrayBuffer(); const p=await pdfjsLib.getDocument({data:b}).promise; let t=''; for(let i=1;i<=p.numPages;i++){ const pg=await p.getPage(i); const c=await pg.getTextContent(); t+=c.items.map(it=>it.str).join(' ')+'\n'; } return t; }
   async function extractWord(f){ const b=await f.arrayBuffer(); const r=await mammoth.extractRawText({arrayBuffer:b}); return r.value; }
   function parseText(t){ const lines=t.split('\n').filter(l=>l.trim()&&!l.match(/num|nom|note/i)); const d=[]; for(let l of lines){ const m=l.match(/(\d+)\s+([A-Za-zÀ-ÿ\s\-]+?)\s+(\d{1,2}(?:[.,]\d{1,2})?)/); if(m){ const g=parseFloat(m[3].replace(',','.')); if(g>=0&&g<=20) d.push({NUMERO:m[1].trim(),NOM:m[2].trim(),NOTE:g}); } } return d; }
-  async function readODS(f){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=e=>{ const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'}); const sh=wb.Sheets[wb.SheetNames[0]]; const json=XLSX.utils.sheet_to_json(sh,{header:1}); const h=json[0]||[]; let nc=0,na=1,gc=2; h.forEach((v,i)=>{ const s=String(v).toLowerCase(); if(s.includes('num')) nc=i; if(s.includes('nom')) na=i; if(s.includes('note')) gc=i; }); const d=[]; for(let i=1;i<json.length;i++){ const row=json[i]; if(!row?.length) continue; const g=parseFloat(String(row[gc]).replace(',','.')); if(row[nc]&&!isNaN(g)&&g>=0&&g<=20) d.push({NUMERO:String(row[nc]).trim(),NOM:String(row[na]||'').trim(),NOTE:g}); } res(d); }; r.onerror=rej; r.readAsArrayBuffer(f); }); }
-  async function parseFile(f){ const n=f.name.toLowerCase(); if(n.endsWith('.pdf')) return parseText(await extractPDF(f)); if(n.endsWith('.docx')) return parseText(await extractWord(f)); if(n.endsWith('.xlsx')||n.endsWith('.xls')){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=e=>{ const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'}); const json=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]); const d=json.map(row=>{ const k=Object.keys(row); const nk=k.find(x=>x.toLowerCase().includes('num'))||k[0]; const nak=k.find(x=>x.toLowerCase().includes('nom'))||k[1]; const gk=k.find(x=>x.toLowerCase().includes('note'))||k[2]; return {NUMERO:String(row[nk]).trim(),NOM:String(row[nak]||'').trim(),NOTE:parseFloat(String(row[gk]).replace(',','.'))}; }).filter(r=>r.NUMERO&&!isNaN(r.NOTE)&&r.NOTE>=0&&r.NOTE<=20); res(d); }; r.onerror=rej; r.readAsArrayBuffer(f); }); } if(n.endsWith('.ods')) return readODS(f); throw new Error('Format non supporté'); }
+  async function readODS(f){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=e=>{ try{ const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'}); const sh=wb.Sheets[wb.SheetNames[0]]; const json=XLSX.utils.sheet_to_json(sh,{header:1}); const h=json[0]||[]; let nc=0,na=1,gc=2; h.forEach((v,i)=>{ const s=String(v).toLowerCase(); if(s.includes('num'))nc=i; if(s.includes('nom'))na=i; if(s.includes('note'))gc=i; }); const d=[]; for(let i=1;i<json.length;i++){ const row=json[i]; if(!row?.length) continue; const g=parseFloat(String(row[gc]).replace(',','.')); if(row[nc]&&!isNaN(g)&&g>=0&&g<=20) d.push({NUMERO:String(row[nc]).trim(),NOM:String(row[na]||'').trim(),NOTE:g}); } res(d); }catch(e){rej(e);} }; r.onerror=rej; r.readAsArrayBuffer(f); }); }
+  async function parseFile(f){ const n=f.name.toLowerCase(); if(n.endsWith('.pdf')) return parseText(await extractPDF(f)); if(n.endsWith('.docx')) return parseText(await extractWord(f)); if(n.endsWith('.ods')) return readODS(f); return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=e=>{ try{ const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'}); const json=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]); const d=json.map(row=>{ const k=Object.keys(row); const nk=k.find(x=>x.toLowerCase().includes('num'))||k[0]; const nak=k.find(x=>x.toLowerCase().includes('nom'))||k[1]; const gk=k.find(x=>x.toLowerCase().includes('note'))||k[2]; return{NUMERO:String(row[nk]).trim(),NOM:String(row[nak]||'').trim(),NOTE:parseFloat(String(row[gk]).replace(',','.'))}; }).filter(r=>r.NUMERO&&!isNaN(r.NOTE)&&r.NOTE>=0&&r.NOTE<=20); res(d); }catch(e){rej(e);} }; r.onerror=rej; r.readAsArrayBuffer(f); }); }
 
-  window.processImport=async function(){
-    const sem=document.getElementById('importSemester').value, type=document.getElementById('importType').value;
-    const subj=document.getElementById('importSubject').value, file=document.getElementById('importFile').files[0];
+  window.processImport = async function(){
+    const sem=document.getElementById('importSemester').value;
+    const type=document.getElementById('importType').value;
+    const subj=document.getElementById('importSubject').value;
+    const file=document.getElementById('importFile').files[0];
+    const dept=currentDept;
     if(!sem||!subj||!file){ alert('Tous les champs requis'); return; }
-    if(type==='TP'&&!hasTP(subj)){ alert('Pas de TP'); return; }
-    
-    const prog=document.getElementById('importProgress'), fill=document.getElementById('progressFill'), txt=document.getElementById('progressText');
+    if(type==='TP'&&!hasTP(subj)){ alert('Cette matière n\'a pas de TP'); return; }
+    const prog=document.getElementById('importProgress'),fill=document.getElementById('progressFill'),txt=document.getElementById('progressText');
     prog.style.display='block'; fill.style.width='0%'; txt.textContent='Analyse...';
-    
     try{
-      const snap=await get(child(ref(db),`results/PPV/${sem}`)); const exist=new Set();
-      if(snap.exists()){ const st=snap.val(); for(let id in st) if(st[id][`${cleanSubject(subj)}_${type}`]) exist.add(id); }
+      const snap=await get(child(ref(db),`results/${dept}/${sem}`)); const exist=new Set();
+      const subjKey=subj.replace(/\./g,'_').replace(/\s+/g,'_');
+      if(snap.exists()){ const st=snap.val(); for(let id in st) if(st[id][`${subjKey}_${type}`]) exist.add(id); }
       fill.style.width='30%'; txt.textContent='Lecture du fichier...';
       const data=await parseFile(file);
       fill.style.width='60%'; txt.textContent='Importation...';
-      const updates={}; let imp=0, dup=0, err=0;
-      for(let r of data){ const id=r.NUMERO; if(!id){ err++; continue; } if(exist.has(id)){ dup++; continue; }
-        updates[`results/PPV/${sem}/${id}/${cleanSubject(subj)}_${type}`]={grade:r.NOTE,name:r.NOM,subject:subj,type,dateAdded:Date.now()}; imp++; exist.add(id); }
+      const updates={}; let imp=0,dup=0,err=0;
+      for(let r of data){ const id=r.NUMERO; if(!id){err++;continue;} if(exist.has(id)){dup++;continue;} updates[`results/${dept}/${sem}/${id}/${subjKey}_${type}`]={grade:r.NOTE,name:r.NOM,subject:subj,type,dateAdded:Date.now()}; imp++; exist.add(id); }
       if(Object.keys(updates).length) await update(ref(db),updates);
       fill.style.width='100%'; txt.textContent='Terminé !';
       let msg=`${imp} ajoutés`; if(dup) msg+=`, ${dup} ignorés`; if(err) msg+=`, ${err} erreurs`; showMsg(msg,'success');
       document.getElementById('importFile').value='';
-    }catch(e){ showMsg('Erreur import','error'); }
-    setTimeout(()=>prog.style.display='none',1000);
+    }catch(e){ showMsg('Erreur import: '+e.message,'error'); }
+    setTimeout(()=>prog.style.display='none',1500);
   };
 
-  window.loadSubjectsList=async function(){
-    const sem=document.getElementById('manageSemester').value, cont=document.getElementById('subjectsListContainer');
-    cont.innerHTML='<p>Chargement...</p>'; const snap=await get(child(ref(db),`results/PPV/${sem}`));
-    if(!snap.exists()){ cont.innerHTML='<p>Aucune matière</p>'; return; }
-    const st=snap.val(), map=new Map();
-    for(let id in st) for(let k in st[id]){ const d=st[id][k], key=`${d.subject}_${d.type}`; if(!map.has(key)) map.set(key,{subject:d.subject,type:d.type,count:0}); map.get(key).count++; }
-    if(map.size===0){ cont.innerHTML='<p>Aucune matière</p>'; return; }
-    let h='<table class="simple-table"><thead><tr><th>Matière</th><th>Type</th><th>Étudiants</th><th>Action</th></tr></thead><tbody>';
-    for(let [k,d] of map) h+=`<tr><td><strong>${displaySubject(d.subject)}</strong></td><td>${d.type}</td><td>${d.count}</td><td><button class="admin-btn danger" style="padding:0.2rem 0.6rem;" onclick="deleteSubject('${sem}','${d.subject}','${d.type}')">Supprimer</button></td></tr>`;
-    h+='</tbody></table>'; cont.innerHTML=h;
+  // =====================================================================
+  // MANAGE SUBJECTS
+  // =====================================================================
+  window.loadSubjectsList = async function(){
+    const sem=document.getElementById('manageSemester').value, dept=currentDept;
+    const cont=document.getElementById('subjectsListContainer');
+    cont.innerHTML='<p>Chargement...</p>';
+    try{
+      const snap=await get(child(ref(db),`results/${dept}/${sem}`));
+      if(!snap.exists()){ cont.innerHTML='<p>Aucune donnée</p>'; return; }
+      const st=snap.val(), map=new Map();
+      for(let id in st) for(let k in st[id]){ const d=st[id][k],key=`${d.subject}_${d.type}`; if(!map.has(key)) map.set(key,{subject:d.subject,type:d.type,count:0}); map.get(key).count++; }
+      if(map.size===0){ cont.innerHTML='<p>Aucune matière</p>'; return; }
+      let h='<table class="simple-table"><thead><tr><th>Matière</th><th>Type</th><th>Étudiants</th><th>Action</th></tr></thead><tbody>';
+      for(let [k,d] of map) h+=`<tr><td><strong>${escapeHtml(displaySubject(d.subject))}</strong></td><td>${d.type}</td><td>${d.count}</td><td><button class="admin-btn danger" style="padding:0.2rem 0.6rem;" onclick="deleteSubject('${escapeHtml(sem)}','${escapeHtml(d.subject)}','${escapeHtml(d.type)}')">Supprimer</button></td></tr>`;
+      h+='</tbody></table>'; cont.innerHTML=h;
+    }catch(e){ cont.innerHTML=`<p style="color:red;">Erreur: ${e.message}</p>`; }
   };
 
-  window.deleteSubject=async function(sem,subj,type){
+  window.deleteSubject = async function(sem,subj,type){
     if(!confirm(`Supprimer ${displaySubject(subj)} (${type}) ?`)) return;
-    const snap=await get(child(ref(db),`results/PPV/${sem}`)); if(!snap.exists()) return;
-    const st=snap.val(), cs=cleanSubject(subj), key=`${cs}_${type}`;
-    for(let id in st) if(st[id][key]) await remove(ref(db,`results/PPV/${sem}/${id}/${key}`));
-    showMsg('Matière supprimée','success'); loadSubjectsList();
+    const dept=currentDept;
+    try{
+      const snap=await get(child(ref(db),`results/${dept}/${sem}`)); if(!snap.exists()) return;
+      const st=snap.val(), key=`${subj.replace(/\./g,'_').replace(/\s+/g,'_')}_${type}`;
+      for(let id in st) if(st[id][key]) await remove(ref(db,`results/${dept}/${sem}/${id}/${key}`));
+      showMsg('Matière supprimée','success'); loadSubjectsList();
+    }catch(e){ showMsg('Erreur: '+e.message,'error'); }
   };
 
-  loadCreds(); updateSubjectList();
+  // Init
+  loadCreds();
 </script>
 </body>
 </html>
