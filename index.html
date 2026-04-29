@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Résultats PPV - Consultation des notes</title>
+<title>Résultats ISET - Consultation des notes</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
@@ -22,31 +22,29 @@
   }
   * { margin:0; padding:0; box-sizing:border-box; }
   html, body { height: 100%; }
-  body { 
-    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-    background:var(--light); 
-    color:var(--text); 
+  body {
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background:var(--light);
+    color:var(--text);
     line-height:1.2;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
   }
-  
-  header { 
-    background:linear-gradient(135deg,var(--primary),var(--secondary)); 
-    color:var(--white); 
-    padding:1.5rem 1rem; 
-    text-align:center; 
+
+  header {
+    background:linear-gradient(135deg,var(--primary),var(--secondary));
+    color:var(--white);
+    padding:1.5rem 1rem;
+    text-align:center;
   }
   header h1 { font-size:2rem; margin-bottom:0.3rem; }
   header p { font-size:1rem; opacity:0.9; }
-  
+
   .main-content { flex: 1 0 auto; }
   .container { max-width:1000px; margin:0 auto; padding:0 1rem; }
-  
-  .annonce-container {
-    margin-bottom: 0.8rem; padding: 0; border-radius: var(--radius); overflow: hidden;
-  }
+
+  .annonce-container { margin-bottom: 0.8rem; padding: 0; border-radius: var(--radius); overflow: hidden; }
   .annonce-bloc {
     background: linear-gradient(135deg, #fff3cd, #ffeaa7); border-left: 6px solid #ffc107;
     padding: 0.8rem 1rem; display: flex; justify-content: space-between; align-items: center;
@@ -55,111 +53,125 @@
   .annonce-texte { flex: 1; font-size: 0.9rem; color: #856404; }
   .annonce-icone { font-size: 1.3rem; margin-right: 0.5rem; vertical-align: middle; }
   .annonce-date { font-size: 0.7rem; color: #856404; margin-top: 0.2rem; }
-  
+
   .section-title { padding:1rem 0 0.8rem; font-size:1.3rem; color:var(--primary); text-align:center; }
-  
+
+  .dept-selector {
+    display: flex; flex-wrap: wrap; gap: 0.5rem;
+    justify-content: center; margin: 0.5rem 0 1rem 0;
+  }
+  .dept-btn {
+    padding: 0.5rem 1.2rem; border: 2px solid var(--primary-light);
+    border-radius: 20px; background: white; color: var(--primary);
+    cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: var(--transition);
+  }
+  .dept-btn:hover, .dept-btn.active {
+    background: var(--primary); color: white; border-color: var(--primary);
+  }
+
   .search-box { display:flex; max-width:500px; margin:0 auto; }
-  .search-box input { 
-    flex:1; padding:0.8rem 1rem; border:2px solid var(--primary-light); 
-    border-radius:var(--radius) 0 0 var(--radius); font-size:0.9rem; outline:none; 
+  .search-box input {
+    flex:1; padding:0.8rem 1rem; border:2px solid var(--primary-light);
+    border-radius:var(--radius) 0 0 var(--radius); font-size:0.9rem; outline:none;
   }
   .search-box input:focus { border-color:var(--primary); }
-  .search-box button { 
+  .search-box button {
     background:var(--primary); color:var(--white); border:none; padding:0 1.2rem;
     border-radius:0 var(--radius) var(--radius) 0; cursor:pointer; font-size:1rem; min-width:50px;
   }
   .search-box button:hover { background:var(--primary-dark); }
-  
+
   .result-card {
     background:var(--white); border-radius:var(--radius); padding:1.2rem;
     margin:1.5rem 0; box-shadow:var(--shadow);
   }
-  
+
   .student-header {
     text-align:center; margin-bottom:1rem; padding-bottom:0.8rem;
     border-bottom:2px solid var(--primary-light);
   }
   .student-header h3 { font-size:1.2rem; color:var(--text); }
   .student-header p { color:var(--text-light); font-size:0.85rem; }
-  
+
   .empty-state { text-align:center; padding:2rem 1rem; color:var(--text-light); }
   .loading { text-align:center; padding:2rem; color:var(--text-light); }
-  .loading i { font-size:2rem; animation:spin 1s linear infinite; margin-bottom:0.8rem; }
+  .loading i { font-size:2rem; animation:spin 1s linear infinite; margin-bottom:0.8rem; display:block; }
   @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-  
+
   .error-state { text-align:center; padding:2rem 1rem; color:#dc3545; }
-  .error-state i { font-size:2rem; margin-bottom:0.8rem; }
-  .error-state button { 
-    margin-top:1rem; padding:0.5rem 1rem; background:var(--primary); 
+  .error-state i { font-size:2rem; margin-bottom:0.8rem; display:block; }
+  .error-state button {
+    margin-top:1rem; padding:0.5rem 1rem; background:var(--primary);
     color:white; border:none; border-radius:var(--radius); cursor:pointer;
   }
-  
+
   .pdf-link {
     display: inline-block; padding: 0.6rem 1.2rem; background: #28a745; color: white;
     text-decoration: none; border-radius: var(--radius); font-weight: bold; margin-top: 0.8rem;
     border: none; cursor: pointer; font-size: 1rem;
   }
   .pdf-link:hover { background: #218838; }
-  
+
   .neutral-message {
     text-align: center; margin-top: 0.8rem; padding: 0.6rem; background: #e9ecef;
     color: #6c757d; border-radius: var(--radius);
   }
-  
-  .simple-table { width: 100%; border-collapse: collapse; margin: 0.8rem 0; font-size: 13px; }
-  .simple-table th, .simple-table td { border: 1px solid #ddd; padding: 5px; text-align: center; }
-  .simple-table th { background: var(--primary-light); font-weight: bold; }
-  .simple-table td:first-child { text-align: left; }
-  
-  .releve-table { width: 100%; border-collapse: collapse; margin: 0.5rem 0; font-size: 12px; }
+
+  /* ===== RELEVE TABLE - identical to PDF output ===== */
+  .releve-table { width:100%; border-collapse:collapse; margin:0.5rem 0; font-size:12px; }
   .releve-table th {
-    border: 1px solid #aaa; padding: 3px 4px; text-align: center;
-    background: var(--primary-light); font-weight: bold;
+    border:1px solid #000; padding:3px 4px; text-align:center;
+    background:#e8f4e8; font-weight:bold;
   }
-  .releve-table td { padding: 2px 4px; text-align: center; }
-  .releve-table tbody tr:not(.module-row):not(.student-info-row):not(.moyenne-row) td { border: 1px solid #aaa; }
-  
-  .releve-table .student-info-row { background: #f0f8ff; font-weight: bold; }
-  .releve-table .student-info-row td {
-    border-top: 1px solid #aaa; border-bottom: 1px solid #aaa;
-    border-left: none; border-right: none; padding: 2px 4px;
-  }
-  .releve-table .student-info-row td:first-child { border-left: 1px solid #aaa; }
-  .releve-table .student-info-row td:last-child { border-right: 1px solid #aaa; }
-  
-  .releve-table .module-row { background: #d4edda; font-weight: bold; }
+  .releve-table td { padding:2px 4px; text-align:center; }
+
+  /* Student info row */
+  .releve-table .student-info-row { background:#f0f8ff; font-weight:bold; }
+  .releve-table .student-info-row td { border:1px solid #000; padding:2px 4px; }
+
+  /* Module row */
+  .releve-table .module-row { background:#d4edda; font-weight:bold; }
   .releve-table .module-row td {
-    border-top: 1px solid #aaa; border-bottom: 1px solid #aaa;
-    border-left: none; border-right: none; padding: 2px 4px;
+    border:none;
+    border-top:1px solid #000; border-bottom:1px solid #000;
+    padding:2px 4px;
   }
-  .releve-table .module-row td:first-child { border-left: 1px solid #aaa; }
-  .releve-table .module-row td:last-child { border-right: 1px solid #aaa; }
-  
-  .releve-table .subject-row td:first-child { text-align: left; padding-left: 20px; }
-  .releve-table .subject-row td { padding: 1px 4px; }
-  
-  .status-C, .status-V { color: #27ae60; font-weight: bold; }
-  .status-NC, .status-NV { color: #e74c3c; font-weight: bold; }
-  
-  .moyenne-row td { border: none !important; padding: 6px 4px 2px 4px; background: transparent; }
-  
+  .releve-table .module-row td:first-child { border-left:1px solid #000; }
+  .releve-table .module-row td:last-child { border-right:1px solid #000; }
+
+  /* Subject row */
+  .releve-table .subject-row td { border:1px solid #000; padding:1px 4px; }
+  .releve-table .subject-row td:first-child { text-align:left; padding-left:20px; }
+
+  /* Average row */
+  .releve-table .moyenne-row td { border:none !important; padding:6px 4px 2px 4px; background:transparent; }
+
+  .status-C, .status-V { color:#27ae60; font-weight:bold; }
+  .status-NC, .status-NV { color:#e74c3c; font-weight:bold; }
+
+  .simple-table { width:100%; border-collapse:collapse; margin:0.8rem 0; font-size:13px; }
+  .simple-table th, .simple-table td { border:1px solid #ddd; padding:5px; text-align:center; }
+  .simple-table th { background:var(--primary-light); font-weight:bold; }
+  .simple-table td:first-child { text-align:left; }
+
   .section-subtitle {
-    font-size: 1rem; color: var(--primary); margin: 0.8rem 0 0.3rem 0;
-    padding-bottom: 0.2rem; border-bottom: 2px solid var(--primary-light);
+    font-size:1rem; color:var(--primary); margin:0.8rem 0 0.3rem 0;
+    padding-bottom:0.2rem; border-bottom:2px solid var(--primary-light);
   }
-  
+
   .footer {
-    flex-shrink: 0; text-align:center; padding:1.5rem; color:var(--text-light);
+    flex-shrink:0; text-align:center; padding:1.5rem; color:var(--text-light);
     font-size:0.85rem; background:var(--light); border-top:1px solid #ddd; margin-top:2rem;
   }
-  .footer a { color: var(--primary); text-decoration: none; margin: 0 0.5rem; }
-  .footer a:hover { text-decoration: underline; }
-  
+  .footer a { color:var(--primary); text-decoration:none; margin:0 0.5rem; }
+  .footer a:hover { text-decoration:underline; }
+
   @media (max-width:600px) {
     header h1 { font-size:1.6rem; }
-    .releve-table { font-size: 10px; }
-    .simple-table { font-size: 11px; }
+    .releve-table { font-size:9px; }
+    .simple-table { font-size:11px; }
     .search-box button { padding:0 1rem; }
+    .dept-btn { font-size:0.8rem; padding:0.4rem 0.8rem; }
   }
 </style>
 </head>
@@ -167,34 +179,44 @@
 
 <header>
   <div class="container">
-    <h1>Résultats PPV</h1>
-    <p>Département de Production et Protection Végétales</p>
+    <h1>ISET Rosso</h1>
+    <p>Institut Supérieur d'Enseignement Technologique</p>
   </div>
 </header>
 
 <div class="main-content">
   <div class="container">
     <div id="annonceContainer" class="annonce-container"></div>
-    
+
     <div class="result-card">
-      <h2 class="section-title"> Consulter votre résultat</h2>
-      
+      <h2 class="section-title">Consulter votre résultat</h2>
+
+      <!-- Department selector -->
+      <div class="dept-selector">
+        <button class="dept-btn active" onclick="selectDept('PPV')">PPV</button>
+        <button class="dept-btn" onclick="selectDept('TC')">TC</button>
+        <button class="dept-btn" onclick="selectDept('GAB')">GAB</button>
+        <button class="dept-btn" onclick="selectDept('GEM')">GEM</button>
+        <button class="dept-btn" onclick="selectDept('PSA')">PSA</button>
+        <button class="dept-btn" onclick="selectDept('STA')">STA</button>
+      </div>
+
       <div class="search-box">
         <input type="text" id="studentIdInput" placeholder="Entrez votre numéro d'étudiant...">
         <button onclick="searchStudentResult()" title="Rechercher"><i class="fas fa-search"></i></button>
       </div>
-      
+
       <div id="studentResultContainer" style="display:none;"></div>
       <div id="noResultMessage" style="display:none;" class="empty-state">
         <h3>Aucun résultat trouvé</h3>
-        <p>Vérifiez votre numéro d'étudiant</p>
+        <p>Vérifiez votre numéro d'étudiant et le département sélectionné</p>
       </div>
     </div>
   </div>
 </div>
 
 <footer class="footer">
-  <p>© 2026 Département de Production et Protection Végétales</p>
+  <p>© 2026 Institut Supérieur d'Enseignement Technologique de Rosso</p>
   <p style="margin-top:0.3rem; font-size:0.75rem;">
     <a href="Reco.html"><i class="fas fa-lock"></i> Accès Coordinateur</a>
   </p>
@@ -217,270 +239,408 @@
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
-  const SUBJECTS_BY_DEPT = {
-    PPV: {
-      S3: ["Français_s3", "Economie", "I_Agronomie", "I_Horticulture", "Pesticides_agricoles", "Entomologie_et_Nemato", "Science_des_sols", "Science_des_plantes"],
-      S4: ["Vulgarisation", "Technique_de_propagation", "Technique_d_irrigation_et_BEC", "Ecophysiologie_et_Biochimie", "Fertilite_du_sol", "Methodes_de_diagnostic", "Malherbologie"],
-      S5: [], S6: []
-    }
+  // =====================================================================
+  // DATA STRUCTURES - Modules, Subjects, Credits per Department/Semester
+  // Key format: dept_semester to avoid any collision
+  // =====================================================================
+
+  const DEPT_SEMESTERS = {
+    PPV: ['S3','S4','S5','S6'],
+    TC:  ['S1','S2'],
+    GAB: ['S3','S4','S5','S6'],
+    GEM: ['S3','S4','S5','S6'],
+    PSA: ['S3','S4','S5','S6'],
+    STA: ['S3','S4','S5','S6'],
   };
 
+  // Subjects without TP (no TP grade needed)
   const SUBJECTS_WITHOUT_TP = [
-    "Anglais", "Anglais_2", "Français", "Français_2", "Français_s3",
-    "Math_et_Statistique", "Economie", "Vulgarisation"
+    "Anglais","Anglais_2","Français","Français_2","Français_s3","Français_GAB_S3",
+    "Math_et_Statistique","Economie","Economie_GAB","Vulgarisation"
   ];
 
+  // MODULES per dept+sem — keys like M31_PPV avoid collision
   const MODULES_STRUCTURE = {
     PPV: {
-      S3: { M31: { name: "Module 31", credit: 6.0, subjects: ["Français_s3", "Economie"] }, M32: { name: "Module 32", credit: 8.0, subjects: ["I_Agronomie", "I_Horticulture"] }, M33: { name: "Module 33", credit: 8.0, subjects: ["Pesticides_agricoles", "Entomologie_et_Nemato"] }, M34: { name: "Module 34", credit: 8.0, subjects: ["Science_des_sols", "Science_des_plantes"] } },
-      S4: { M41: { name: "Module 41", credit: 3.0, subjects: ["Vulgarisation"] }, M42: { name: "Module 42", credit: 7.0, subjects: ["Technique_de_propagation", "Technique_d_irrigation_et_BEC"] }, M43: { name: "Module 43", credit: 7.0, subjects: ["Ecophysiologie_et_Biochimie", "Fertilite_du_sol"] }, M44: { name: "Module 44", credit: 6.0, subjects: ["Methodes_de_diagnostic", "Malherbologie"] } }
+      S3: {
+        M31_PPV: { name:"Module 31", credit:6.0,  subjects:["Français_s3","Economie"] },
+        M32_PPV: { name:"Module 32", credit:8.0,  subjects:["I_Agronomie","I_Horticulture"] },
+        M33_PPV: { name:"Module 33", credit:8.0,  subjects:["Pesticides_agricoles","Entomologie_et_Nemato"] },
+        M34_PPV: { name:"Module 34", credit:8.0,  subjects:["Science_des_sols","Science_des_plantes"] }
+      },
+      S4: {
+        M41_PPV: { name:"Module 41", credit:3.0,  subjects:["Vulgarisation"] },
+        M42_PPV: { name:"Module 42", credit:7.0,  subjects:["Technique_de_propagation","Technique_d_irrigation_et_BEC"] },
+        M43_PPV: { name:"Module 43", credit:7.0,  subjects:["Ecophysiologie_et_Biochimie","Fertilite_du_sol"] },
+        M44_PPV: { name:"Module 44", credit:6.0,  subjects:["Methodes_de_diagnostic","Malherbologie"] }
+      },
+      S5: {},
+      S6: {}
+    },
+    TC: {
+      S1: {}, // à compléter
+      S2: {}  // à compléter
+    },
+    GAB: {
+      S3: {
+        M31_GAB: { name:"Module 31", credit:6.0,  subjects:["Français_GAB_S3","Economie_GAB"] },
+        M32_GAB: { name:"Module 32", credit:9.0,  subjects:["Resistance_de_materiaux","Energie_renouvelable","Environnement"] },
+        M33_GAB: { name:"Module 33", credit:7.0,  subjects:["Topographie","Dessin_assiste_par_ordinateur"] },
+        M34_GAB: { name:"Module 34", credit:8.0,  subjects:["Mecanique_de_fluides","Chimie_de_leau"] }
+      },
+      S4: {},
+      S5: {},
+      S6: {}
+    },
+    GEM: {
+      S3:{}, S4:{}, S5:{}, S6:{}
+    },
+    PSA: {
+      S3:{}, S4:{}, S5:{}, S6:{}
+    },
+    STA: {
+      S3:{}, S4:{}, S5:{}, S6:{}
     }
   };
 
+  // Credits per subject
   const SUBJECT_CREDITS = {
-    PPV: { S3: { "Français_s3": 3.0, "Economie": 3.0, "I_Agronomie": 4.0, "I_Horticulture": 4.0, "Pesticides_agricoles": 4.0, "Entomologie_et_Nemato": 4.0, "Science_des_sols": 4.0, "Science_des_plantes": 4.0 }, S4: { "Vulgarisation": 3.0, "Technique_de_propagation": 4.0, "Technique_d_irrigation_et_BEC": 3.0, "Ecophysiologie_et_Biochimie": 4.0, "Fertilite_du_sol": 3.0, "Methodes_de_diagnostic": 3.0, "Malherbologie": 3.0 } }
+    PPV: {
+      S3: { "Français_s3":3.0,"Economie":3.0,"I_Agronomie":4.0,"I_Horticulture":4.0,"Pesticides_agricoles":4.0,"Entomologie_et_Nemato":4.0,"Science_des_sols":4.0,"Science_des_plantes":4.0 },
+      S4: { "Vulgarisation":3.0,"Technique_de_propagation":4.0,"Technique_d_irrigation_et_BEC":3.0,"Ecophysiologie_et_Biochimie":4.0,"Fertilite_du_sol":3.0,"Methodes_de_diagnostic":3.0,"Malherbologie":3.0 },
+      S5: {}, S6: {}
+    },
+    TC: {
+      S1:{}, S2:{}
+    },
+    GAB: {
+      S3: { "Français_GAB_S3":3.0,"Economie_GAB":3.0,"Resistance_de_materiaux":3.0,"Energie_renouvelable":3.0,"Environnement":3.0,"Topographie":4.0,"Dessin_assiste_par_ordinateur":3.0,"Mecanique_de_fluides":4.0,"Chimie_de_leau":4.0 },
+      S4:{}, S5:{}, S6:{}
+    },
+    GEM: { S3:{}, S4:{}, S5:{}, S6:{} },
+    PSA: { S3:{}, S4:{}, S5:{}, S6:{} },
+    STA: { S3:{}, S4:{}, S5:{}, S6:{} }
   };
 
-  // --- حالة مشتركة لتوليد PDF ---
-  let pdfState = null;
-
+  // =====================================================================
+  // HELPERS
+  // =====================================================================
   function hasTP(s) { return !SUBJECTS_WITHOUT_TP.includes(s); }
-  function displaySubjectName(s) { return s.replace(/_/g, ' ').replace(/I_/g, 'I.').replace(/et_/g, 'et '); }
-  function escapeHtml(str) { if (!str) return ''; return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
 
-  async function loadAnnonce() {
-    try {
-      const snap = await get(child(ref(db), 'annonces/active'));
-      if (snap.exists()) {
-        const a = snap.val();
-        if (a.expiration && Date.now() < a.expiration) return a;
-      }
-      return null;
-    } catch (e) { return null; }
+  function displaySubjectName(s) {
+    return s
+      .replace(/_GAB_S\d/g,'')
+      .replace(/_PPV/g,'').replace(/_GAB/g,'').replace(/_GEM/g,'').replace(/_PSA/g,'').replace(/_STA/g,'').replace(/_TC/g,'')
+      .replace(/_/g,' ')
+      .replace(/I\s/g,'I.')
+      .replace(/et\s/g,'et ')
+      .replace(/l eau/g,"l'eau");
   }
 
-  async function afficherAnnonce() {
-    const a = await loadAnnonce();
-    const c = document.getElementById('annonceContainer');
-    if (!a || !a.texte) { c.innerHTML = ''; return; }
-    const d = new Date(a.expiration).toLocaleString('fr-FR');
-    c.innerHTML = `<div class="annonce-bloc"><div style="flex:1"><span class="annonce-icone"><i class="fas fa-bullhorn"></i></span><span class="annonce-texte"><strong>Annonce :</strong> ${a.texte.replace(/</g,'&lt;')}</span><div class="annonce-date">Visible jusqu'au ${d}</div></div></div>`;
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
   }
 
+  function getSubjectsForDeptSem(dept, sem) {
+    const mods = MODULES_STRUCTURE[dept]?.[sem] || {};
+    const list = [];
+    for (let m in mods) for (let s of mods[m].subjects) if (!list.includes(s)) list.push(s);
+    return list;
+  }
+
+  // =====================================================================
+  // CALCULATION ENGINE
+  // =====================================================================
   function calculateResults(notes, dept, sem) {
     const mods = MODULES_STRUCTURE[dept]?.[sem];
-    if (!mods) return null;
-    const req = [];
-    for (let m in mods) for (let s of mods[m].subjects) if (!req.includes(s)) req.push(s);
-    
+    if (!mods || Object.keys(mods).length === 0) return null;
+
+    const req = getSubjectsForDeptSem(dept, sem);
     const subjAvg = {}, subjStatus = {}, subjSR = {};
+
     for (let s of req) {
       const n = notes[s] || {};
       const exam = n['Examen'] ?? 0;
-      const cc = n['Contrôle continu'] ?? 0;
-      const tp = n['TP'] ?? 0;
+      const cc   = n['Contrôle continu'] ?? 0;
+      const tp   = n['TP'] ?? 0;
       const ratt = n['Rattrapage'];
       const useSR = ratt !== undefined && ratt > exam;
       subjSR[s] = useSR;
       const final = useSR ? ratt : exam;
-      subjAvg[s] = hasTP(s) ? (tp + cc * 2 + final * 3) / 6 : (cc * 2 + final * 3) / 5;
+      subjAvg[s] = hasTP(s) ? (tp + cc*2 + final*3)/6 : (cc*2 + final*3)/5;
       subjStatus[s] = subjAvg[s] >= 10 ? 'C' : 'NC';
     }
-    
+
     const modAvg = {}, modStatus = {}, modCredits = {};
     for (let m in mods) {
-      let w = 0, c = 0, earned = 0;
+      let w=0, c=0, earned=0;
       for (let s of mods[m].subjects) {
         const cr = SUBJECT_CREDITS[dept][sem][s] || 3;
-        w += (subjAvg[s] || 0) * cr; c += cr;
-        if (subjStatus[s] === 'C') earned += cr;
+        w += (subjAvg[s]||0)*cr; c += cr;
+        if (subjStatus[s]==='C') earned += cr;
       }
-      modAvg[m] = c > 0 ? w / c : 0;
-      modStatus[m] = mods[m].subjects.every(s => subjStatus[s] === 'C') && modAvg[m] >= 10 ? 'V' : 'NV';
+      modAvg[m] = c>0 ? w/c : 0;
+      modStatus[m] = mods[m].subjects.every(s=>subjStatus[s]==='C') && modAvg[m]>=10 ? 'V' : 'NV';
       modCredits[m] = earned;
     }
-    
-    let tw = 0, tc = 0;
-    for (let s of req) { const cr = SUBJECT_CREDITS[dept][sem][s] || 3; tw += (subjAvg[s] || 0) * cr; tc += cr; }
-    const genMoy = tc > 0 ? tw / tc : 0;
-    const hasNV = Object.values(modStatus).some(s => s === 'NV');
-    const semStatus = hasNV ? 'Non Validé' : (genMoy >= 10 ? 'Validé' : 'Non Validé');
-    const hasSR = Object.values(subjSR).some(v => v);
-    
-    return { genMoy, semStatus, modStatus, modCredits, modAvg, subjAvg, subjStatus, hasSR, modules: mods };
+
+    let tw=0, tc=0;
+    for (let s of req) { const cr=SUBJECT_CREDITS[dept][sem][s]||3; tw+=(subjAvg[s]||0)*cr; tc+=cr; }
+    const genMoy = tc>0 ? tw/tc : 0;
+    const hasNV = Object.values(modStatus).some(s=>s==='NV');
+    const semStatus = hasNV ? 'Non Validé' : (genMoy>=10 ? 'Validé' : 'Non Validé');
+    const hasSR = Object.values(subjSR).some(v=>v);
+
+    return { genMoy, semStatus, modStatus, modCredits, modAvg, subjAvg, subjStatus, hasSR, modules:mods };
   }
 
-  // --- دالة توليد PDF (مدمجة من result.html) ---
+  // =====================================================================
+  // PDF GENERATION — matches exactly the on-screen table
+  // =====================================================================
+  let pdfState = null;
+
   window.generatePDF = function() {
-    if (!pdfState) { alert("Les résultats complets ne sont pas encore disponibles pour générer le PDF."); return; }
-    
+    if (!pdfState) { alert("Données non disponibles."); return; }
     const { notes, res, studentId, studentName, dept, sem } = pdfState;
-    const showSRColumn = res.hasSR;
-    const colspanValue = showSRColumn ? 6 : 5;
+    const showSR = res.hasSR;
+    const colspanVal = showSR ? 6 : 5;
     const currentYear = new Date().getFullYear();
-    const academicYear = `${currentYear - 1}-${currentYear}`;
-    const filiere = dept === 'TC' ? 'L1TC-L1 Licence TC' : 'L2PPV-L2 Licence PPV';
+    const academicYear = `${currentYear-1}-${currentYear}`;
 
     let content = `
-      <div style="padding: 15mm 10mm 10mm 10mm; font-family: Arial, Helvetica, sans-serif; font-size: 11pt;">
-        <div style="margin-bottom: 20px;">
-          <div style="font-weight: bold; font-size: 12pt; margin-bottom: 5px;">Institut Supérieur d'Enseignement Technologique de Rosso</div>
-          <div style="display: flex; justify-content: space-between; margin-top: 8px;">
-            <span style="font-weight: bold; font-size: 14pt;">Résultats du ${escapeHtml(sem)}</span>
-            <span style="font-weight: normal;">Année Universitaire : ${academicYear}</span>
-          </div>
-          <div style="margin-top: 5px;"><span style="font-weight: bold;">Filière :</span> ${filiere}</div>
+      <div style="padding:15mm 10mm 10mm 10mm; font-family:Arial,Helvetica,sans-serif; font-size:11pt;">
+        <div style="font-weight:bold; font-size:12pt; margin-bottom:5px;">Institut Supérieur d'Enseignement Technologique de Rosso</div>
+        <div style="display:flex; justify-content:space-between; margin-top:8px;">
+          <span style="font-weight:bold; font-size:14pt;">Résultats du ${escapeHtml(sem)} — ${escapeHtml(dept)}</span>
+          <span>Année Universitaire : ${academicYear}</span>
         </div>
         <table style="width:100%; border-collapse:collapse; border:1px solid #000; font-size:10pt; margin-top:10px;">
           <thead>
             <tr style="background:#e8f4e8;">
-              <th style="border:1px solid #000; padding:3px;">Numéro</th>
-              <th style="border:1px solid #000; padding:3px;">Nom et Prénom</th>
-              <th style="border:1px solid #000; padding:3px;">TP</th>
-              <th style="border:1px solid #000; padding:3px;">CC</th>
-              <th style="border:1px solid #000; padding:3px;">Examen</th>
-              ${showSRColumn ? '<th style="border:1px solid #000; padding:3px;">SR</th>' : ''}
-              <th style="border:1px solid #000; padding:3px;">NF°</th>
-              <th style="border:1px solid #000; padding:3px;">Crédit</th>
-              <th style="border:1px solid #000; padding:3px;">Obs</th>
+              <th style="border:1px solid #000; padding:3px; text-align:center;">Numéro</th>
+              <th style="border:1px solid #000; padding:3px; text-align:center;">Nom et Prénom</th>
+              <th style="border:1px solid #000; padding:3px; text-align:center;">TP</th>
+              <th style="border:1px solid #000; padding:3px; text-align:center;">CC</th>
+              <th style="border:1px solid #000; padding:3px; text-align:center;">Examen</th>
+              ${showSR ? '<th style="border:1px solid #000; padding:3px; text-align:center;">SR</th>' : ''}
+              <th style="border:1px solid #000; padding:3px; text-align:center;">NF°</th>
+              <th style="border:1px solid #000; padding:3px; text-align:center;">Crédit</th>
+              <th style="border:1px solid #000; padding:3px; text-align:center;">Obs</th>
             </tr>
           </thead>
           <tbody>
-            <tr style="background:#f0f8ff;">
-              <td style="border:1px solid #000; padding:2px;">${escapeHtml(studentId)}</td>
+            <tr style="background:#f0f8ff; font-weight:bold;">
+              <td style="border:1px solid #000; padding:2px; text-align:center;">${escapeHtml(studentId)}</td>
               <td style="border:1px solid #000; padding:2px; text-align:left;">${escapeHtml(studentName)}</td>
               <td style="border:1px solid #000; padding:2px;"></td>
               <td style="border:1px solid #000; padding:2px;"></td>
               <td style="border:1px solid #000; padding:2px;"></td>
-              ${showSRColumn ? '<td style="border:1px solid #000; padding:2px;"></td>' : ''}
+              ${showSR ? '<td style="border:1px solid #000; padding:2px;"></td>' : ''}
               <td style="border:1px solid #000; padding:2px;"></td>
               <td style="border:1px solid #000; padding:2px;"></td>
               <td style="border:1px solid #000; padding:2px;"></td>
-            </tr>
-    `;
+            </tr>`;
 
     for (let m in res.modules) {
       const mod = res.modules[m];
       content += `
-        <tr style="background:#d4edda;">
-          <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; border-left:1px solid #000; padding:2px;">${escapeHtml(m)}</td>
-          <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px; text-align:left;">${escapeHtml(mod.name)}</td>
-          <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
-          <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
-          <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
-          ${showSRColumn ? '<td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>' : ''}
-          <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px; font-weight:bold;">${res.modAvg[m].toFixed(2)}</td>
-          <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;">${res.modCredits[m].toFixed(1)}</td>
-          <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; border-right:1px solid #000; padding:2px;">${res.modStatus[m]}</td>
-        </tr>
-      `;
-
+            <tr style="background:#d4edda; font-weight:bold;">
+              <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; border-left:1px solid #000; padding:2px; text-align:center;">${escapeHtml(m.replace(/_[A-Z]+$/,''))}</td>
+              <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px; text-align:left;">${escapeHtml(mod.name)}</td>
+              <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
+              <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
+              <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>
+              ${showSR ? '<td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px;"></td>' : ''}
+              <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px; font-weight:bold; text-align:center;">${res.modAvg[m].toFixed(2)}</td>
+              <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; padding:2px; text-align:center;">${res.modCredits[m].toFixed(1)}</td>
+              <td style="border:none; border-top:1px solid #000; border-bottom:1px solid #000; border-right:1px solid #000; padding:2px; text-align:center;">${res.modStatus[m]}</td>
+            </tr>`;
       for (let s of mod.subjects) {
         const n = notes[s] || {};
-        const tp = hasTP(s) ? (n['TP'] !== undefined ? n['TP'].toFixed(2) : '') : '';
-        const cc = n['Contrôle continu'] !== undefined ? n['Contrôle continu'].toFixed(2) : '';
-        const exam = n['Examen'] !== undefined ? n['Examen'].toFixed(2) : '';
+        const tp   = hasTP(s) ? (n['TP']   !== undefined ? n['TP'].toFixed(2)   : '') : '';
+        const cc   = n['Contrôle continu'] !== undefined ? n['Contrôle continu'].toFixed(2) : '';
+        const exam = n['Examen']           !== undefined ? n['Examen'].toFixed(2)           : '';
         const ratt = n['Rattrapage'];
-        const sr = (ratt !== undefined) ? ratt.toFixed(2) : '';
-        const cr = SUBJECT_CREDITS[dept]?.[sem]?.[s] || 3;
-
+        const sr   = ratt !== undefined ? ratt.toFixed(2) : '';
+        const cr   = SUBJECT_CREDITS[dept][sem][s] || 3;
         content += `
-          <tr>
-            <td style="border:1px solid #000; padding:1px;"></td>
-            <td style="border:1px solid #000; padding:1px; text-align:left; padding-left:20px;">${escapeHtml(displaySubjectName(s))}</td>
-            <td style="border:1px solid #000; padding:1px;">${tp}</td>
-            <td style="border:1px solid #000; padding:1px;">${cc}</td>
-            <td style="border:1px solid #000; padding:1px;">${exam}</td>
-            ${showSRColumn ? `<td style="border:1px solid #000; padding:1px;">${sr}</td>` : ''}
-            <td style="border:1px solid #000; padding:1px; font-weight:bold;">${res.subjAvg[s].toFixed(2)}</td>
-            <td style="border:1px solid #000; padding:1px;">${cr.toFixed(1)}</td>
-            <td style="border:1px solid #000; padding:1px;">${res.subjStatus[s]}</td>
-          </tr>
-        `;
+            <tr>
+              <td style="border:1px solid #000; padding:1px; text-align:center;"></td>
+              <td style="border:1px solid #000; padding:1px; text-align:left; padding-left:20px;">${escapeHtml(displaySubjectName(s))}</td>
+              <td style="border:1px solid #000; padding:1px; text-align:center;">${tp}</td>
+              <td style="border:1px solid #000; padding:1px; text-align:center;">${cc}</td>
+              <td style="border:1px solid #000; padding:1px; text-align:center;">${exam}</td>
+              ${showSR ? `<td style="border:1px solid #000; padding:1px; text-align:center;">${sr}</td>` : ''}
+              <td style="border:1px solid #000; padding:1px; text-align:center; font-weight:bold;">${res.subjAvg[s].toFixed(2)}</td>
+              <td style="border:1px solid #000; padding:1px; text-align:center;">${cr.toFixed(1)}</td>
+              <td style="border:1px solid #000; padding:1px; text-align:center;">${res.subjStatus[s]}</td>
+            </tr>`;
       }
     }
 
     content += `
-          <tr>
-            <td colspan="${colspanValue}" style="border:none; padding:6px 4px 2px 4px; text-align:right; font-weight:bold;">Moyenne Semestre :</td>
-            <td style="border:none; padding:6px 4px 2px 4px; font-weight:bold;">${res.genMoy.toFixed(2)}</td>
-            <td style="border:none; padding:6px 4px 2px 4px;"></td>
-            <td style="border:none; padding:6px 4px 2px 4px; font-weight:bold;">${res.semStatus}</td>
-          </tr>
-        </tbody>
+            <tr>
+              <td colspan="${colspanVal}" style="border:none; padding:6px 4px 2px 4px; text-align:right; font-weight:bold;">Moyenne Semestre :</td>
+              <td style="border:none; padding:6px 4px 2px 4px; font-weight:bold; text-align:center;">${res.genMoy.toFixed(2)}</td>
+              <td style="border:none; padding:6px 4px 2px 4px;"></td>
+              <td style="border:none; padding:6px 4px 2px 4px; font-weight:bold; text-align:center;">${res.semStatus}</td>
+            </tr>
+          </tbody>
         </table>
-      </div>
-    `;
+      </div>`;
 
-    const element = document.createElement('div');
-    element.innerHTML = content;
-    document.body.appendChild(element);
-
-    const opt = {
-      margin: [0, 5, 5, 5],
-      filename: `Releve_${studentId}_${sem}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, letterRendering: true, scrollY: 0 },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-
-    html2pdf().set(opt).from(element).save()
-      .then(() => document.body.removeChild(element))
-      .catch(err => { console.error('Erreur PDF:', err); alert('Erreur lors de la génération du PDF.'); document.body.removeChild(element); });
+    const el = document.createElement('div');
+    el.innerHTML = content;
+    document.body.appendChild(el);
+    html2pdf().set({
+      margin:[0,5,5,5],
+      filename:`Releve_${studentId}_${dept}_${sem}.pdf`,
+      image:{type:'jpeg',quality:0.98},
+      html2canvas:{scale:2,letterRendering:true,scrollY:0},
+      jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
+    }).from(el).save()
+      .then(()=>document.body.removeChild(el))
+      .catch(err=>{ console.error(err); alert('Erreur PDF.'); document.body.removeChild(el); });
   };
 
+  // =====================================================================
+  // BUILD ON-SCREEN TABLE (identical structure to PDF)
+  // =====================================================================
+  function buildReleveHTML(id, name, notes, res, dept, sem) {
+    const showSR = res.hasSR;
+    const colspanVal = showSR ? 6 : 5;
+
+    let html = `
+      <div style="overflow-x:auto;">
+      <table class="releve-table">
+        <thead>
+          <tr>
+            <th>Numéro</th>
+            <th>Nom et Prénom</th>
+            <th>TP</th>
+            <th>CC</th>
+            <th>Examen</th>
+            ${showSR ? '<th>SR</th>' : ''}
+            <th>NF°</th>
+            <th>Crédit</th>
+            <th>Obs</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="student-info-row">
+            <td>${escapeHtml(id)}</td>
+            <td style="text-align:left; padding-left:15px;">${escapeHtml(name)}</td>
+            <td></td><td></td><td></td>
+            ${showSR ? '<td></td>' : ''}
+            <td></td><td></td><td></td>
+          </tr>`;
+
+    for (let m in res.modules) {
+      const mod = res.modules[m];
+      const mLabel = m.replace(/_[A-Z]+$/, ''); // strip dept suffix for display
+      html += `
+          <tr class="module-row">
+            <td>${escapeHtml(mLabel)}</td>
+            <td style="text-align:left; padding-left:15px;">${escapeHtml(mod.name)}</td>
+            <td></td><td></td><td></td>
+            ${showSR ? '<td></td>' : ''}
+            <td style="font-weight:bold;">${res.modAvg[m].toFixed(2)}</td>
+            <td>${res.modCredits[m].toFixed(1)}</td>
+            <td class="${res.modStatus[m]==='V'?'status-V':'status-NV'}">${res.modStatus[m]}</td>
+          </tr>`;
+      for (let s of mod.subjects) {
+        const n = notes[s] || {};
+        const tp   = hasTP(s) ? (n['TP']   !== undefined ? n['TP'].toFixed(2)   : '') : '';
+        const cc   = n['Contrôle continu'] !== undefined ? n['Contrôle continu'].toFixed(2) : '';
+        const exam = n['Examen']           !== undefined ? n['Examen'].toFixed(2)           : '';
+        const ratt = n['Rattrapage'];
+        const sr   = ratt !== undefined ? ratt.toFixed(2) : '';
+        const cr   = SUBJECT_CREDITS[dept][sem][s] || 3;
+        html += `
+          <tr class="subject-row">
+            <td></td>
+            <td style="text-align:left; padding-left:30px;">${escapeHtml(displaySubjectName(s))}</td>
+            <td>${tp}</td>
+            <td>${cc}</td>
+            <td>${exam}</td>
+            ${showSR ? `<td>${sr}</td>` : ''}
+            <td style="font-weight:bold;">${res.subjAvg[s].toFixed(2)}</td>
+            <td>${cr.toFixed(1)}</td>
+            <td class="${res.subjStatus[s]==='C'?'status-C':'status-NC'}">${res.subjStatus[s]}</td>
+          </tr>`;
+      }
+    }
+
+    html += `
+          <tr class="moyenne-row">
+            <td colspan="${colspanVal}" style="text-align:right; font-weight:bold;">Moyenne Semestre :</td>
+            <td style="font-weight:bold;">${res.genMoy.toFixed(2)}</td>
+            <td></td>
+            <td class="${res.semStatus==='Validé'?'status-V':'status-NV'}" style="font-weight:bold;">${res.semStatus}</td>
+          </tr>
+        </tbody>
+      </table>
+      </div>`;
+    return html;
+  }
+
+  // =====================================================================
+  // DEPARTMENT SELECTION
+  // =====================================================================
+  let selectedDept = 'PPV';
+  window.selectDept = function(dept) {
+    selectedDept = dept;
+    document.querySelectorAll('.dept-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    // Clear previous results
+    document.getElementById('studentResultContainer').style.display='none';
+    document.getElementById('studentResultContainer').innerHTML='';
+    document.getElementById('noResultMessage').style.display='none';
+    document.getElementById('studentIdInput').value='';
+  };
+
+  // =====================================================================
+  // SEARCH
+  // =====================================================================
   window.searchStudentResult = async () => {
     const id = document.getElementById('studentIdInput').value.trim();
     const cont = document.getElementById('studentResultContainer');
     const noRes = document.getElementById('noResultMessage');
-    
-    if (!id) { 
-      alert('Veuillez entrer votre numéro d\'étudiant'); 
-      return; 
-    }
-    
+    const dept = selectedDept;
+
+    if (!id) { alert("Veuillez entrer votre numéro d'étudiant"); return; }
+
     pdfState = null;
     cont.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><p>Chargement...</p></div>';
-    cont.style.display = 'block'; 
+    cont.style.display = 'block';
     noRes.style.display = 'none';
-    
+
     let timeoutId;
-    const timeoutPromise = new Promise((_, reject) => {
-      timeoutId = setTimeout(() => reject(new Error('TIMEOUT')), 15000);
-    });
-    
-    const sems = ['S3', 'S4', 'S5', 'S6'];
+    const timeoutPromise = new Promise((_,reject) => { timeoutId = setTimeout(()=>reject(new Error('TIMEOUT')),15000); });
+
+    const sems = DEPT_SEMESTERS[dept] || [];
     let data = null, sem = null;
-    
+
     try {
       for (let s of sems) {
         try {
           const snap = await Promise.race([
-            get(child(ref(db), `results/PPV/${s}/${id}`)),
+            get(child(ref(db), `results/${dept}/${s}/${id}`)),
             timeoutPromise
           ]);
           clearTimeout(timeoutId);
-          if (snap.exists()) { 
-            data = snap.val(); 
-            sem = s; 
-            break; 
-          }
-        } catch (err) {
+          if (snap.exists()) { data = snap.val(); sem = s; break; }
+        } catch(err) {
           clearTimeout(timeoutId);
-          if (err.message === 'TIMEOUT') throw err;
-          console.warn(`Erreur pour ${s}:`, err);
+          if (err.message==='TIMEOUT') throw err;
           continue;
         }
       }
-      
       clearTimeout(timeoutId);
-      
-      if (!data) { 
-        cont.style.display = 'none'; 
-        noRes.style.display = 'block'; 
-        return; 
-      }
-      
+
+      if (!data) { cont.style.display='none'; noRes.style.display='block'; return; }
+
       let name = '';
       const notes = {};
       for (let k in data) {
@@ -488,102 +648,97 @@
         if (!notes[data[k].subject]) notes[data[k].subject] = {};
         notes[data[k].subject][data[k].type] = data[k].grade;
       }
-      
-      const req = SUBJECTS_BY_DEPT.PPV[sem] || [];
-      let complete = req.length > 0;
-      for (let s of req) {
-        const htp = hasTP(s);
-        const examExists = notes[s]?.['Examen'] !== undefined;
-        const ccExists = notes[s]?.['Contrôle continu'] !== undefined;
-        const tpExists = !htp || notes[s]?.['TP'] !== undefined;
-        
-        if (!examExists || !ccExists || !tpExists) {
-          complete = false;
-          break;
-        }
-      }
-      
-      let html = `<div class="student-header"><h3>${name || 'Étudiant'}</h3><p>N° ${id} | PPV | ${sem}</p></div>`;
-      
-      if (complete) {
-        const res = calculateResults(notes, 'PPV', sem);
-        const showSR = res.hasSR;
 
-        // حفظ البيانات لاستخدامها في توليد PDF
-        pdfState = { notes, res, studentId: id, studentName: name, dept: 'PPV', sem };
-        
-        html += '<div style="overflow-x:auto;"><table class="releve-table"><thead><tr><th>Numéro</th><th>Nom et Prénom</th><th>TP</th><th>CC</th><th>Examen</th>' + (showSR ? '<th>SR</th>' : '') + '<th>NFe</th><th>Crédit</th><th>Obs</th></tr></thead><tbody>';
-        html += `<tr class="student-info-row"><td>${id}</td><td style="text-align:left; padding-left:15px;">${name}</td><td></td><td style="text-align:center;"></td><td style="text-align:center;"></td>${showSR ? '<td style="text-align:center;"></td>' : ''}<td style="text-align:center;"></td><td style="text-align:center;"></td><td style="text-align:center;"></td></tr>`;
-        
-        for (let m in res.modules) {
-          const mod = res.modules[m];
-          html += `<tr class="module-row"><td>${m}</td><td style="text-align:left; padding-left:15px;">${mod.name}</td><td style="text-align:center;"></td><td style="text-align:center;"></td><td style="text-align:center;"></td>${showSR ? '<td style="text-align:center;"></td>' : ''}<td style="font-weight:bold; text-align:center;">${res.modAvg[m].toFixed(2)}</td><td style="text-align:center;">${res.modCredits[m].toFixed(1)}</td><td class="${res.modStatus[m]==='V'?'status-V':'status-NV'}" style="text-align:center;">${res.modStatus[m]}</td></tr>`;
-          for (let s of mod.subjects) {
-            const n = notes[s] || {};
-            const tp = hasTP(s) ? (n['TP']?.toFixed(2) || '') : '';
-            const cc = n['Contrôle continu']?.toFixed(2) || '';
-            const exam = n['Examen']?.toFixed(2) || '';
-            const ratt = n['Rattrapage'];
-            const sr = (ratt !== undefined) ? ratt.toFixed(2) : '';
-            const cr = SUBJECT_CREDITS.PPV[sem][s] || 3;
-            
-            html += `<tr class="subject-row"><td><td style="text-align:left; padding-left:30px;">${displaySubjectName(s)}</td><td style="text-align:center;">${tp}</td><td style="text-align:center;">${cc}</td><td style="text-align:center;">${exam}</td>${showSR?`<td style="text-align:center;">${sr}</td>`:''}<td style="font-weight:bold; text-align:center;">${res.subjAvg[s].toFixed(2)}</td><td style="text-align:center;">${cr.toFixed(1)}</td><td class="${res.subjStatus[s]==='C'?'status-C':'status-NC'}" style="text-align:center;">${res.subjStatus[s]}</td></tr>`;
+      const req = getSubjectsForDeptSem(dept, sem);
+      let complete = req.length > 0;
+      if (complete) {
+        for (let s of req) {
+          const htp = hasTP(s);
+          if (!notes[s]?.['Examen'] || !notes[s]?.['Contrôle continu'] || (htp && !notes[s]?.['TP'])) {
+            complete = false; break;
           }
         }
-        
-        const colspan = showSR ? 6 : 5;
-        html += `<tr class="moyenne-row"><td colspan="${colspan}" style="text-align:right; font-weight:bold;">Moyenne Semestre :</td><td style="font-weight:bold; text-align:center;">${res.genMoy.toFixed(2)}</td><td style="text-align:center;"></td><td class="${res.semStatus==='Validé'?'status-V':'status-NV'}" style="font-weight:bold; text-align:center;">${res.semStatus}</td></tr>`;
-        html += '</tbody></table></div>';
-        html += `<div style="text-align:center;"><button class="pdf-link" onclick="generatePDF()"><i class="fas fa-file-pdf"></i> Télécharger mon relevé PDF</button></div>`;
+      }
+
+      let html = `<div class="student-header">
+        <h3>${escapeHtml(name) || 'Étudiant'}</h3>
+        <p>N° ${escapeHtml(id)} | ${dept} | ${sem}</p>
+      </div>`;
+
+      if (complete) {
+        const res = calculateResults(notes, dept, sem);
+        if (res) {
+          pdfState = { notes, res, studentId:id, studentName:name, dept, sem };
+          html += buildReleveHTML(id, name, notes, res, dept, sem);
+          html += `<div style="text-align:center; margin-top:0.5rem;">
+            <button class="pdf-link" onclick="generatePDF()"><i class="fas fa-file-pdf"></i> Télécharger mon relevé PDF</button>
+          </div>`;
+        }
       } else {
-        let hasTPdata = false, hasCC = false, hasExam = false;
+        // Partial results display
+        let hasTPdata=false, hasCC=false, hasExam=false;
         for (let s of req) {
-          if (notes[s]?.['TP'] !== undefined) hasTPdata = true;
-          if (notes[s]?.['Contrôle continu'] !== undefined) hasCC = true;
-          if (notes[s]?.['Examen'] !== undefined) hasExam = true;
+          if (notes[s]?.['TP']!==undefined) hasTPdata=true;
+          if (notes[s]?.['Contrôle continu']!==undefined) hasCC=true;
+          if (notes[s]?.['Examen']!==undefined) hasExam=true;
         }
         if (hasTPdata) {
-          html += `<h4 class="section-subtitle">Résultats TP</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note TP</th></tr></thead><tbody>`;
-          for (let s of req) if (hasTP(s)) { const n = notes[s]?.['TP']; html += `<tr><td style="text-align:left;">${displaySubjectName(s)}</td><td style="text-align:center;">${n!==undefined?n.toFixed(2):''}</td></tr>`; }
+          html += `<h4 class="section-subtitle">Résultats TP</h4>
+            <table class="simple-table"><thead><tr><th>Matière</th><th>Note TP</th></tr></thead><tbody>`;
+          for (let s of req) if (hasTP(s)) {
+            const n = notes[s]?.['TP'];
+            html += `<tr><td>${escapeHtml(displaySubjectName(s))}</td><td>${n!==undefined?n.toFixed(2):''}</td></tr>`;
+          }
           html += `</tbody></table>`;
         }
         if (hasCC) {
-          html += `<h4 class="section-subtitle">Résultats Contrôle continu</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note CC</th></tr></thead><tbody>`;
-          for (let s of req) { const n = notes[s]?.['Contrôle continu']; html += `<tr><td style="text-align:left;">${displaySubjectName(s)}</td><td style="text-align:center;">${n!==undefined?n.toFixed(2):''}</td></tr>`; }
+          html += `<h4 class="section-subtitle">Résultats Contrôle continu</h4>
+            <table class="simple-table"><thead><tr><th>Matière</th><th>Note CC</th></tr></thead><tbody>`;
+          for (let s of req) {
+            const n = notes[s]?.['Contrôle continu'];
+            html += `<tr><td>${escapeHtml(displaySubjectName(s))}</td><td>${n!==undefined?n.toFixed(2):''}</td></tr>`;
+          }
           html += `</tbody></table>`;
         }
         if (hasExam) {
-          html += `<h4 class="section-subtitle">Résultats Examen</h4><table class="simple-table"><thead><tr><th>Matière</th><th>Note Examen</th></tr></thead><tbody>`;
-          for (let s of req) { const n = notes[s]?.['Examen']; html += `<tr><td style="text-align:left;">${displaySubjectName(s)}</td><td style="text-align:center;">${n!==undefined?n.toFixed(2):''}</td></tr>`; }
+          html += `<h4 class="section-subtitle">Résultats Examen</h4>
+            <table class="simple-table"><thead><tr><th>Matière</th><th>Note Examen</th></tr></thead><tbody>`;
+          for (let s of req) {
+            const n = notes[s]?.['Examen'];
+            html += `<tr><td>${escapeHtml(displaySubjectName(s))}</td><td>${n!==undefined?n.toFixed(2):''}</td></tr>`;
+          }
           html += `</tbody></table>`;
         }
-        html += `<div class="neutral-message"> Les résultats ne sont pas encore finalisés.</div>`;
+        html += `<div class="neutral-message">Les résultats ne sont pas encore finalisés.</div>`;
       }
+
       cont.innerHTML = html;
-      
-    } catch (error) {
+
+    } catch(error) {
       clearTimeout(timeoutId);
-      console.error('Erreur:', error);
-      
-      if (error.message === 'TIMEOUT') {
-        cont.innerHTML = `<div class="error-state">
-          <h3>Délai d'attente dépassé</h3>
-          <p>Vérifiez votre connexion internet et réessayez.</p>
-          <button onclick="searchStudentResult()">Réessayer</button>
-        </div>`;
+      if (error.message==='TIMEOUT') {
+        cont.innerHTML=`<div class="error-state"><i class="fas fa-clock"></i><h3>Délai dépassé</h3><p>Vérifiez votre connexion.</p><button onclick="searchStudentResult()">Réessayer</button></div>`;
       } else {
-        cont.innerHTML = `<div class="error-state">
-          <h3>Erreur de connexion</h3>
-          <p>Impossible de contacter le serveur. Veuillez réessayer.</p>
-          <button onclick="searchStudentResult()">Réessayer</button>
-        </div>`;
+        cont.innerHTML=`<div class="error-state"><i class="fas fa-exclamation-circle"></i><h3>Erreur de connexion</h3><p>Veuillez réessayer.</p><button onclick="searchStudentResult()">Réessayer</button></div>`;
       }
-      cont.style.display = 'block';
-      noRes.style.display = 'none';
+      cont.style.display='block'; noRes.style.display='none';
     }
   };
 
-  document.getElementById('studentIdInput').addEventListener('keyup', e => { if (e.key === 'Enter') searchStudentResult(); });
+  // Annonce
+  async function afficherAnnonce() {
+    try {
+      const snap = await get(child(ref(db),'annonces/active'));
+      const c = document.getElementById('annonceContainer');
+      if (!snap.exists()) { c.innerHTML=''; return; }
+      const a = snap.val();
+      if (!a.texte || (a.expiration && Date.now()>=a.expiration)) { c.innerHTML=''; return; }
+      const d = new Date(a.expiration).toLocaleString('fr-FR');
+      c.innerHTML=`<div class="annonce-bloc"><div style="flex:1"><span class="annonce-icone"><i class="fas fa-bullhorn"></i></span><span class="annonce-texte"><strong>Annonce :</strong> ${escapeHtml(a.texte)}</span><div class="annonce-date">Visible jusqu'au ${d}</div></div></div>`;
+    } catch(e) {}
+  }
+
+  document.getElementById('studentIdInput').addEventListener('keyup', e => { if(e.key==='Enter') searchStudentResult(); });
   afficherAnnonce();
 </script>
 </body>
