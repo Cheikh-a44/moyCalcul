@@ -67,7 +67,6 @@
   .status-V  { color:#27ae60; font-weight:bold; }
   .status-NV { color:#e74c3c; font-weight:bold; }
 
-  /* Module builder */
   .module-block { background:#f8f9fa; border:1px solid #dee2e6; border-radius:8px; padding:1rem; margin-bottom:1rem; }
   .module-block h5 { color:var(--primary); margin-bottom:0.5rem; }
   .subject-entry { display:grid; grid-template-columns:1fr 80px 80px auto; gap:0.5rem; align-items:center; margin-bottom:0.4rem; }
@@ -105,7 +104,7 @@
         <option value="STA">STA</option>
       </select>
     </div>
-    <div class="form-group"><label>Mot de passe</label><input type="password" id="adminPassword" placeholder="••••••••"></div>
+    <div class="form-group"><label>Mot de passe</label><input type="password" id="adminPassword" placeholder="Mot de passe"></div>
     <button class="admin-btn primary" onclick="login()" style="width:100%;">Se connecter</button>
     <p style="text-align:center; margin-top:1rem;"><a href="index.html">← Retour au site</a></p>
   </div>
@@ -251,21 +250,17 @@
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
   // =====================================================================
-  // DEFAULT CREDENTIALS — one per department
+  // PASSWORD - hidden hash (default password: iset2025)
   // =====================================================================
-  const DEFAULT_HASHES = {
-    PPV: "13b34364b6022a2cd99414b5a0f9e5c3d86036b2e248b000c0f001e10928a26a",
-    TC:  "13b34364b6022a2cd99414b5a0f9e5c3d86036b2e248b000c0f001e10928a26a",
-    GAB: "13b34364b6022a2cd99414b5a0f9e5c3d86036b2e248b000c0f001e10928a26a",
-    GEM: "13b34364b6022a2cd99414b5a0f9e5c3d86036b2e248b000c0f001e10928a26a",
-    PSA: "13b34364b6022a2cd99414b5a0f9e5c3d86036b2e248b000c0f001e10928a26a",
-    STA: "13b34364b6022a2cd99414b5a0f9e5c3d86036b2e248b000c0f001e10928a26a",
-  };
+  // The hash below is SHA-256 of "iset2025"
+  const DEFAULT_PASSWORD_HASH = "13b34364b6022a2cd99414b5a0f9e5c3d86036b2e248b000c0f001e10928a26a";
+  
   let ADMIN_CREDENTIALS = {};
-  Object.keys(DEFAULT_HASHES).forEach(d => ADMIN_CREDENTIALS[d]={ passwordHash: DEFAULT_HASHES[d] });
+  const DEPARTMENTS = ['PPV','TC','GAB','GEM','PSA','STA'];
+  DEPARTMENTS.forEach(d => { ADMIN_CREDENTIALS[d] = { passwordHash: DEFAULT_PASSWORD_HASH }; });
 
   // =====================================================================
-  // STATIC DATA — same logic as index.html
+  // STATIC DATA STRUCTURES
   // =====================================================================
   const DEPT_SEMESTERS = {
     PPV: ['S3','S4','S5','S6'],
@@ -276,58 +271,64 @@
     STA: ['S3','S4','S5','S6'],
   };
 
-  const SUBJECTS_WITHOUT_TP = [
+  let SUBJECTS_WITHOUT_TP = [
     "Anglais","Anglais_2","Français","Français_2","Français_s3","Français_GAB_S3",
     "Math_et_Statistique","Economie","Economie_GAB","Vulgarisation"
   ];
 
-  // Modules (static — can be extended via Firebase dynamic structure)
   let MODULES_STRUCTURE = {
-    PPV: {
-      S3: {
-        M31_PPV:{name:"Module 31",credit:6.0, subjects:["Français_s3","Economie"]},
-        M32_PPV:{name:"Module 32",credit:8.0, subjects:["I_Agronomie","I_Horticulture"]},
-        M33_PPV:{name:"Module 33",credit:8.0, subjects:["Pesticides_agricoles","Entomologie_et_Nemato"]},
-        M34_PPV:{name:"Module 34",credit:8.0, subjects:["Science_des_sols","Science_des_plantes"]}
-      },
-      S4: {
-        M41_PPV:{name:"Module 41",credit:3.0, subjects:["Vulgarisation"]},
-        M42_PPV:{name:"Module 42",credit:7.0, subjects:["Technique_de_propagation","Technique_d_irrigation_et_BEC"]},
-        M43_PPV:{name:"Module 43",credit:7.0, subjects:["Ecophysiologie_et_Biochimie","Fertilite_du_sol"]},
-        M44_PPV:{name:"Module 44",credit:6.0, subjects:["Methodes_de_diagnostic","Malherbologie"]}
-      },
-      S5:{}, S6:{}
-    },
+    PPV: { S3:{}, S4:{}, S5:{}, S6:{} },
     TC:  { S1:{}, S2:{} },
-    GAB: {
-      S3: {
-        M31_GAB:{name:"Module 31",credit:6.0, subjects:["Français_GAB_S3","Economie_GAB"]},
-        M32_GAB:{name:"Module 32",credit:9.0, subjects:["Resistance_de_materiaux","Energie_renouvelable","Environnement"]},
-        M33_GAB:{name:"Module 33",credit:7.0, subjects:["Topographie","Dessin_assiste_par_ordinateur"]},
-        M34_GAB:{name:"Module 34",credit:8.0, subjects:["Mecanique_de_fluides","Chimie_de_leau"]}
-      },
-      S4:{}, S5:{}, S6:{}
-    },
+    GAB: { S3:{}, S4:{}, S5:{}, S6:{} },
     GEM: { S3:{}, S4:{}, S5:{}, S6:{} },
     PSA: { S3:{}, S4:{}, S5:{}, S6:{} },
     STA: { S3:{}, S4:{}, S5:{}, S6:{} }
   };
 
   let SUBJECT_CREDITS = {
-    PPV: {
-      S3:{"Français_s3":3,"Economie":3,"I_Agronomie":4,"I_Horticulture":4,"Pesticides_agricoles":4,"Entomologie_et_Nemato":4,"Science_des_sols":4,"Science_des_plantes":4},
-      S4:{"Vulgarisation":3,"Technique_de_propagation":4,"Technique_d_irrigation_et_BEC":3,"Ecophysiologie_et_Biochimie":4,"Fertilite_du_sol":3,"Methodes_de_diagnostic":3,"Malherbologie":3},
-      S5:{}, S6:{}
-    },
+    PPV: { S3:{}, S4:{}, S5:{}, S6:{} },
     TC:  { S1:{}, S2:{} },
-    GAB: {
-      S3:{"Français_GAB_S3":3,"Economie_GAB":3,"Resistance_de_materiaux":3,"Energie_renouvelable":3,"Environnement":3,"Topographie":4,"Dessin_assiste_par_ordinateur":3,"Mecanique_de_fluides":4,"Chimie_de_leau":4},
-      S4:{}, S5:{}, S6:{}
-    },
+    GAB: { S3:{}, S4:{}, S5:{}, S6:{} },
     GEM: { S3:{}, S4:{}, S5:{}, S6:{} },
     PSA: { S3:{}, S4:{}, S5:{}, S6:{} },
     STA: { S3:{}, S4:{}, S5:{}, S6:{} }
   };
+
+  // Load default structures
+  function loadDefaultStructures() {
+    MODULES_STRUCTURE.PPV.S3 = {
+      M31_PPV: { name:"Module 31", credit:6.0, subjects:["Français_s3","Economie"] },
+      M32_PPV: { name:"Module 32", credit:8.0, subjects:["I_Agronomie","I_Horticulture"] },
+      M33_PPV: { name:"Module 33", credit:8.0, subjects:["Pesticides_agricoles","Entomologie_et_Nemato"] },
+      M34_PPV: { name:"Module 34", credit:8.0, subjects:["Science_des_sols","Science_des_plantes"] }
+    };
+    MODULES_STRUCTURE.PPV.S4 = {
+      M41_PPV: { name:"Module 41", credit:3.0, subjects:["Vulgarisation"] },
+      M42_PPV: { name:"Module 42", credit:7.0, subjects:["Technique_de_propagation","Technique_d_irrigation_et_BEC"] },
+      M43_PPV: { name:"Module 43", credit:7.0, subjects:["Ecophysiologie_et_Biochimie","Fertilite_du_sol"] },
+      M44_PPV: { name:"Module 44", credit:6.0, subjects:["Methodes_de_diagnostic","Malherbologie"] }
+    };
+    SUBJECT_CREDITS.PPV.S3 = {
+      "Français_s3":3,"Economie":3,"I_Agronomie":4,"I_Horticulture":4,
+      "Pesticides_agricoles":4,"Entomologie_et_Nemato":4,"Science_des_sols":4,"Science_des_plantes":4
+    };
+    SUBJECT_CREDITS.PPV.S4 = {
+      "Vulgarisation":3,"Technique_de_propagation":4,"Technique_d_irrigation_et_BEC":3,
+      "Ecophysiologie_et_Biochimie":4,"Fertilite_du_sol":3,"Methodes_de_diagnostic":3,"Malherbologie":3
+    };
+    
+    MODULES_STRUCTURE.GAB.S3 = {
+      M31_GAB: { name:"Module 31", credit:6.0, subjects:["Français_GAB_S3","Economie_GAB"] },
+      M32_GAB: { name:"Module 32", credit:9.0, subjects:["Resistance_de_materiaux","Energie_renouvelable","Environnement"] },
+      M33_GAB: { name:"Module 33", credit:7.0, subjects:["Topographie","Dessin_assiste_par_ordinateur"] },
+      M34_GAB: { name:"Module 34", credit:8.0, subjects:["Mecanique_de_fluides","Chimie_de_leau"] }
+    };
+    SUBJECT_CREDITS.GAB.S3 = {
+      "Français_GAB_S3":3,"Economie_GAB":3,"Resistance_de_materiaux":3,"Energie_renouvelable":3,
+      "Environnement":3,"Topographie":4,"Dessin_assiste_par_ordinateur":3,"Mecanique_de_fluides":4,"Chimie_de_leau":4
+    };
+  }
+  loadDefaultStructures();
 
   // =====================================================================
   // HELPERS
@@ -347,7 +348,9 @@
   function getSubjectsForSem(dept, sem) {
     const mods = MODULES_STRUCTURE[dept]?.[sem] || {};
     const list = [];
-    for (let m in mods) for (let s of mods[m].subjects) if (!list.includes(s)) list.push(s);
+    for (let m in mods) if (mods[m] && mods[m].subjects) {
+      for (let s of mods[m].subjects) if (!list.includes(s)) list.push(s);
+    }
     return list;
   }
 
@@ -357,9 +360,6 @@
     setTimeout(()=>e.style.display='none',4000);
   }
 
-  // =====================================================================
-  // SEMESTER SELECTORS — fill based on current dept
-  // =====================================================================
   function fillSemSelectors() {
     const sems = DEPT_SEMESTERS[currentDept] || [];
     ['importSemester','manageSemester','resetSemesterSelect','viewSemester','builderSemester'].forEach(id => {
@@ -385,24 +385,24 @@
   document.getElementById('importType')?.addEventListener('change', updateSubjectList);
 
   // =====================================================================
-  // CREDENTIALS
+  // CREDENTIALS - load from Firebase or use default
   // =====================================================================
   async function loadCreds() {
     try {
       const snap = await get(child(ref(db),'admin_credentials'));
       if (snap.exists()) {
         const c = snap.val();
-        Object.keys(DEFAULT_HASHES).forEach(d => {
+        DEPARTMENTS.forEach(d => {
           if (c[d]?.passwordHash) ADMIN_CREDENTIALS[d].passwordHash = c[d].passwordHash;
         });
       }
-    } catch(e) {}
+    } catch(e) { console.warn(e); }
   }
 
   async function saveCreds() {
     try {
       const data = {};
-      Object.keys(ADMIN_CREDENTIALS).forEach(d => { data[d]={ passwordHash: ADMIN_CREDENTIALS[d].passwordHash }; });
+      DEPARTMENTS.forEach(d => { data[d] = { passwordHash: ADMIN_CREDENTIALS[d].passwordHash }; });
       await set(ref(db,'admin_credentials'), data);
       return true;
     } catch(e) { return false; }
@@ -423,7 +423,7 @@
       document.getElementById('dashboard').classList.add('active');
       document.getElementById('dashboardTitle').textContent=`Panneau de coordination — ${dept}`;
       fillSemSelectors();
-      loadDynamicStructure();
+      await loadDynamicStructure();
     } else {
       msgEl.textContent='Mot de passe incorrect'; msgEl.style.display='block';
     }
@@ -437,7 +437,7 @@
   };
 
   // =====================================================================
-  // DYNAMIC STRUCTURE — load extra modules saved in Firebase
+  // DYNAMIC STRUCTURE
   // =====================================================================
   async function loadDynamicStructure() {
     try {
@@ -450,10 +450,17 @@
         for (let mKey in dynData[sem]) {
           const m = dynData[sem][mKey];
           MODULES_STRUCTURE[currentDept][sem][mKey] = { name: m.name, credit: m.credit, subjects: m.subjects };
-          for (let s of m.subjects) {
-            SUBJECT_CREDITS[currentDept][sem][s] = m.subjectCredits?.[s] || 3;
+          if (m.subjectCredits) {
+            for (let s in m.subjectCredits) {
+              SUBJECT_CREDITS[currentDept][sem][s] = m.subjectCredits[s];
+            }
           }
         }
+      }
+      // Load no-TP subjects
+      const noTPSnap = await get(child(ref(db), 'no_tp_subjects'));
+      if (noTPSnap.exists()) {
+        SUBJECTS_WITHOUT_TP = [...new Set([...SUBJECTS_WITHOUT_TP, ...noTPSnap.val()])];
       }
       updateSubjectList();
     } catch(e) { console.warn('loadDynamicStructure:', e); }
@@ -463,7 +470,10 @@
   // PANEL VISIBILITY
   // =====================================================================
   function hideAll() {
-    ['importForm','manageSubjects','resetDataForm','viewResultsForm'].forEach(id=>{ document.getElementById(id).style.display='none'; });
+    ['importForm','manageSubjects','resetDataForm','viewResultsForm'].forEach(id=>{ 
+      const el = document.getElementById(id);
+      if (el) el.style.display='none';
+    });
   }
   window.showImportForm       = ()=>{ hideAll(); document.getElementById('importForm').style.display='block'; updateSubjectList(); };
   window.hideImportForm       = ()=>{ document.getElementById('importForm').style.display='none'; document.getElementById('importProgress').style.display='none'; };
@@ -489,8 +499,6 @@
     document.getElementById('modulesBuilder').innerHTML='';
     document.getElementById('builderMessage').style.display='none';
     document.getElementById('subjectBuilderModal').style.display='flex';
-
-    // Pre-fill from existing structure
     const sem = document.getElementById('builderSemester').value;
     const mods = MODULES_STRUCTURE[currentDept]?.[sem] || {};
     if (Object.keys(mods).length > 0) {
@@ -550,10 +558,9 @@
     `;
     document.getElementById('modulesBuilder').appendChild(div);
 
-    // Add existing subjects
     if (existingSubjects && existingSubjects.length>0) {
       existingSubjects.forEach(s => {
-        const cr = sem ? (SUBJECT_CREDITS[dept]?.[sem]?.[s]||3) : 3;
+        const cr = sem ? (SUBJECT_CREDITS[currentDept]?.[sem]?.[s]||3) : 3;
         const noTp = !hasTP(s);
         addSubjectRow(idx, s, cr, noTp);
       });
@@ -625,16 +632,15 @@
 
     if (!valid) { msgEl.textContent='Remplissez tous les champs.'; msgEl.className='message error'; msgEl.style.display='block'; return; }
 
-    // Update local structure
     if (!MODULES_STRUCTURE[dept][sem]) MODULES_STRUCTURE[dept][sem]={};
     if (!SUBJECT_CREDITS[dept][sem])   SUBJECT_CREDITS[dept][sem]={};
     Object.assign(MODULES_STRUCTURE[dept][sem], newMods);
     Object.assign(SUBJECT_CREDITS[dept][sem], newCredits);
-    noTPList.forEach(s=>{ if(!SUBJECTS_WITHOUT_TP.includes(s)) SUBJECTS_WITHOUT_TP.push(s); });
+    SUBJECTS_WITHOUT_TP = noTPList;
 
-    // Save to Firebase
     try {
       await set(ref(db, `structure/${dept}/${sem}`), newMods);
+      await set(ref(db, 'no_tp_subjects'), noTPList);
       msgEl.textContent='Structure enregistrée avec succès !'; msgEl.className='message success'; msgEl.style.display='block';
       updateSubjectList();
     } catch(e) {
@@ -672,6 +678,9 @@
     ADMIN_CREDENTIALS[currentDept].passwordHash=await hash(np);
     await saveCreds();
     showMsg('Mot de passe changé','success'); closeChangePasswordModal();
+    document.getElementById('currentPassword').value='';
+    document.getElementById('newPassword').value='';
+    document.getElementById('confirmNewPassword').value='';
   };
 
   // =====================================================================
@@ -687,7 +696,7 @@
   };
 
   // =====================================================================
-  // CALCULATION ENGINE — identical to index.html
+  // CALCULATION ENGINE
   // =====================================================================
   function calculate(notes, dept, sem) {
     const mods = MODULES_STRUCTURE[dept]?.[sem];
@@ -726,13 +735,12 @@
   // =====================================================================
   // LOAD STUDENTS TABLE
   // =====================================================================
-  window.loadAllStudents = async function() {
-    const sem=document.getElementById('viewSemester').value;
-    const dept=currentDept;
+  window.loadAllStudents = async function(){
+    const sem=document.getElementById('viewSemester').value, dept=currentDept;
     currentSem=sem;
     const cont=document.getElementById('resultsContainer');
     cont.innerHTML='<p style="text-align:center;">Chargement...</p>';
-    try {
+    try{
       const snap=await get(child(ref(db),`results/${dept}/${sem}`));
       if(!snap.exists()){ cont.innerHTML='<p>Aucun résultat</p>'; currentResults=[]; return; }
       const students=snap.val(), results=[];
@@ -764,7 +772,7 @@
   };
 
   // =====================================================================
-  // PDF — table identical to index.html on-screen table
+  // PDF — corrected student row (no TP/CC/Exam columns on name row)
   // =====================================================================
   window.downloadCompletePDF = async function() {
     if(!currentResults||currentResults.length===0){ alert("Affichez d'abord les résultats"); return; }
@@ -807,15 +815,15 @@
             </thead>
             <tbody>
               <tr style="background:#f0f8ff; font-weight:bold;">
-                <td style="border:1px solid #000;padding:2px;text-align:center;">${escapeHtml(r.id)}</td>
-                <td style="border:1px solid #000;padding:2px;text-align:left;">${escapeHtml(r.name)}</td>
-                <td style="border:1px solid #000;padding:2px;"></td>
-                <td style="border:1px solid #000;padding:2px;"></td>
-                <td style="border:1px solid #000;padding:2px;"></td>
-                ${showSR?'<td style="border:1px solid #000;padding:2px;"></td>':''}
-                <td style="border:1px solid #000;padding:2px;"></td>
-                <td style="border:1px solid #000;padding:2px;"></td>
-                <td style="border:1px solid #000;padding:2px;"></td>
+                <td style="border:1px solid #000;padding:4px;text-align:center;">${escapeHtml(r.id)}</td>
+                <td style="border:1px solid #000;padding:4px;text-align:left;">${escapeHtml(r.name)}</td>
+                <td style="border:1px solid #000;padding:4px;"></td>
+                <td style="border:1px solid #000;padding:4px;"></td>
+                <td style="border:1px solid #000;padding:4px;"></td>
+                ${showSR?'<td style="border:1px solid #000;padding:4px;"></td>':''}
+                <td style="border:1px solid #000;padding:4px;"></td>
+                <td style="border:1px solid #000;padding:4px;"></td>
+                <td style="border:1px solid #000;padding:4px;"></td>
               </tr>`;
 
       for(let m in calc.modules){
@@ -881,7 +889,7 @@
   };
 
   // =====================================================================
-  // IMPORT
+  // IMPORT FUNCTIONS
   // =====================================================================
   async function extractPDF(f){ const b=await f.arrayBuffer(); const p=await pdfjsLib.getDocument({data:b}).promise; let t=''; for(let i=1;i<=p.numPages;i++){ const pg=await p.getPage(i); const c=await pg.getTextContent(); t+=c.items.map(it=>it.str).join(' ')+'\n'; } return t; }
   async function extractWord(f){ const b=await f.arrayBuffer(); const r=await mammoth.extractRawText({arrayBuffer:b}); return r.value; }
