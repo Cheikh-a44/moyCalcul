@@ -117,7 +117,7 @@
     color: #6c757d; border-radius: var(--radius);
   }
 
-  /* ===== RELEVE TABLE - identical to PDF output ===== */
+  /* ===== RELEVE TABLE - corrected student name row ===== */
   .releve-table { width:100%; border-collapse:collapse; margin:0.5rem 0; font-size:12px; }
   .releve-table th {
     border:1px solid #000; padding:3px 4px; text-align:center;
@@ -125,9 +125,10 @@
   }
   .releve-table td { padding:2px 4px; text-align:center; }
 
-  /* Student info row */
-  .releve-table .student-info-row { background:#f0f8ff; font-weight:bold; }
-  .releve-table .student-info-row td { border:1px solid #000; padding:2px 4px; }
+  /* Student info row - name spans across without extra columns */
+  .releve-table .student-info-row td { border:1px solid #000; padding:4px 4px; }
+  .releve-table .student-info-row td:first-child { text-align:center; font-weight:bold; }
+  .releve-table .student-info-row td:nth-child(2) { text-align:left; font-weight:bold; }
 
   /* Module row */
   .releve-table .module-row { background:#d4edda; font-weight:bold; }
@@ -191,7 +192,6 @@
     <div class="result-card">
       <h2 class="section-title">Consulter votre résultat</h2>
 
-      <!-- Department selector -->
       <div class="dept-selector">
         <button class="dept-btn active" onclick="selectDept('PPV')">PPV</button>
         <button class="dept-btn" onclick="selectDept('TC')">TC</button>
@@ -240,8 +240,7 @@
   const db = getDatabase(app);
 
   // =====================================================================
-  // DATA STRUCTURES - Modules, Subjects, Credits per Department/Semester
-  // Key format: dept_semester to avoid any collision
+  // DATA STRUCTURES - now loaded dynamically from Firebase!
   // =====================================================================
 
   const DEPT_SEMESTERS = {
@@ -253,74 +252,121 @@
     STA: ['S3','S4','S5','S6'],
   };
 
-  // Subjects without TP (no TP grade needed)
-  const SUBJECTS_WITHOUT_TP = [
+  // Default subjects without TP (will be extended from Firebase)
+  let SUBJECTS_WITHOUT_TP = [
     "Anglais","Anglais_2","Français","Français_2","Français_s3","Français_GAB_S3",
     "Math_et_Statistique","Economie","Economie_GAB","Vulgarisation"
   ];
 
-  // MODULES per dept+sem — keys like M31_PPV avoid collision
-  const MODULES_STRUCTURE = {
-    PPV: {
-      S3: {
-        M31_PPV: { name:"Module 31", credit:6.0,  subjects:["Français_s3","Economie"] },
-        M32_PPV: { name:"Module 32", credit:8.0,  subjects:["I_Agronomie","I_Horticulture"] },
-        M33_PPV: { name:"Module 33", credit:8.0,  subjects:["Pesticides_agricoles","Entomologie_et_Nemato"] },
-        M34_PPV: { name:"Module 34", credit:8.0,  subjects:["Science_des_sols","Science_des_plantes"] }
-      },
-      S4: {
-        M41_PPV: { name:"Module 41", credit:3.0,  subjects:["Vulgarisation"] },
-        M42_PPV: { name:"Module 42", credit:7.0,  subjects:["Technique_de_propagation","Technique_d_irrigation_et_BEC"] },
-        M43_PPV: { name:"Module 43", credit:7.0,  subjects:["Ecophysiologie_et_Biochimie","Fertilite_du_sol"] },
-        M44_PPV: { name:"Module 44", credit:6.0,  subjects:["Methodes_de_diagnostic","Malherbologie"] }
-      },
-      S5: {},
-      S6: {}
-    },
-    TC: {
-      S1: {}, // à compléter
-      S2: {}  // à compléter
-    },
-    GAB: {
-      S3: {
-        M31_GAB: { name:"Module 31", credit:6.0,  subjects:["Français_GAB_S3","Economie_GAB"] },
-        M32_GAB: { name:"Module 32", credit:9.0,  subjects:["Resistance_de_materiaux","Energie_renouvelable","Environnement"] },
-        M33_GAB: { name:"Module 33", credit:7.0,  subjects:["Topographie","Dessin_assiste_par_ordinateur"] },
-        M34_GAB: { name:"Module 34", credit:8.0,  subjects:["Mecanique_de_fluides","Chimie_de_leau"] }
-      },
-      S4: {},
-      S5: {},
-      S6: {}
-    },
-    GEM: {
-      S3:{}, S4:{}, S5:{}, S6:{}
-    },
-    PSA: {
-      S3:{}, S4:{}, S5:{}, S6:{}
-    },
-    STA: {
-      S3:{}, S4:{}, S5:{}, S6:{}
-    }
-  };
-
-  // Credits per subject
-  const SUBJECT_CREDITS = {
-    PPV: {
-      S3: { "Français_s3":3.0,"Economie":3.0,"I_Agronomie":4.0,"I_Horticulture":4.0,"Pesticides_agricoles":4.0,"Entomologie_et_Nemato":4.0,"Science_des_sols":4.0,"Science_des_plantes":4.0 },
-      S4: { "Vulgarisation":3.0,"Technique_de_propagation":4.0,"Technique_d_irrigation_et_BEC":3.0,"Ecophysiologie_et_Biochimie":4.0,"Fertilite_du_sol":3.0,"Methodes_de_diagnostic":3.0,"Malherbologie":3.0 },
-      S5: {}, S6: {}
-    },
-    TC: {
-      S1:{}, S2:{}
-    },
-    GAB: {
-      S3: { "Français_GAB_S3":3.0,"Economie_GAB":3.0,"Resistance_de_materiaux":3.0,"Energie_renouvelable":3.0,"Environnement":3.0,"Topographie":4.0,"Dessin_assiste_par_ordinateur":3.0,"Mecanique_de_fluides":4.0,"Chimie_de_leau":4.0 },
-      S4:{}, S5:{}, S6:{}
-    },
+  // Dynamic structures loaded from Firebase
+  let MODULES_STRUCTURE = {
+    PPV: { S3:{}, S4:{}, S5:{}, S6:{} },
+    TC:  { S1:{}, S2:{} },
+    GAB: { S3:{}, S4:{}, S5:{}, S6:{} },
     GEM: { S3:{}, S4:{}, S5:{}, S6:{} },
     PSA: { S3:{}, S4:{}, S5:{}, S6:{} },
     STA: { S3:{}, S4:{}, S5:{}, S6:{} }
   };
+
+  let SUBJECT_CREDITS = {
+    PPV: { S3:{}, S4:{}, S5:{}, S6:{} },
+    TC:  { S1:{}, S2:{} },
+    GAB: { S3:{}, S4:{}, S5:{}, S6:{} },
+    GEM: { S3:{}, S4:{}, S5:{}, S6:{} },
+    PSA: { S3:{}, S4:{}, S5:{}, S6:{} },
+    STA: { S3:{}, S4:{}, S5:{}, S6:{} }
+  };
+
+  // Load dynamic structures from Firebase
+  async function loadDynamicStructures() {
+    try {
+      // Load modules structure
+      const structSnap = await get(child(ref(db), 'structure'));
+      if (structSnap.exists()) {
+        const structData = structSnap.val();
+        for (let dept in structData) {
+          if (MODULES_STRUCTURE[dept]) {
+            for (let sem in structData[dept]) {
+              if (!MODULES_STRUCTURE[dept][sem]) MODULES_STRUCTURE[dept][sem] = {};
+              Object.assign(MODULES_STRUCTURE[dept][sem], structData[dept][sem]);
+              
+              // Also update subject credits
+              for (let mKey in structData[dept][sem]) {
+                const module = structData[dept][sem][mKey];
+                if (module.subjectCredits) {
+                  if (!SUBJECT_CREDITS[dept][sem]) SUBJECT_CREDITS[dept][sem] = {};
+                  Object.assign(SUBJECT_CREDITS[dept][sem], module.subjectCredits);
+                }
+                // Update subjects without TP list
+                if (module.subjects) {
+                  for (let s of module.subjects) {
+                    if (module.subjectCredits?.[s] === undefined) {
+                      if (!SUBJECT_CREDITS[dept][sem]) SUBJECT_CREDITS[dept][sem] = {};
+                      SUBJECT_CREDITS[dept][sem][s] = 3;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      // Load no-TP list from Firebase
+      const noTPSnap = await get(child(ref(db), 'no_tp_subjects'));
+      if (noTPSnap.exists()) {
+        SUBJECTS_WITHOUT_TP = [...new Set([...SUBJECTS_WITHOUT_TP, ...noTPSnap.val()])];
+      }
+
+      // Load default static data as fallback
+      await loadDefaultStructures();
+      
+    } catch(e) {
+      console.warn('Error loading dynamic structures:', e);
+      await loadDefaultStructures();
+    }
+  }
+
+  // Fallback default structures (same as before)
+  async function loadDefaultStructures() {
+    // Only set if empty
+    if (Object.keys(MODULES_STRUCTURE.PPV.S3).length === 0) {
+      MODULES_STRUCTURE.PPV.S3 = {
+        M31_PPV: { name:"Module 31", credit:6.0, subjects:["Français_s3","Economie"] },
+        M32_PPV: { name:"Module 32", credit:8.0, subjects:["I_Agronomie","I_Horticulture"] },
+        M33_PPV: { name:"Module 33", credit:8.0, subjects:["Pesticides_agricoles","Entomologie_et_Nemato"] },
+        M34_PPV: { name:"Module 34", credit:8.0, subjects:["Science_des_sols","Science_des_plantes"] }
+      };
+      MODULES_STRUCTURE.PPV.S4 = {
+        M41_PPV: { name:"Module 41", credit:3.0, subjects:["Vulgarisation"] },
+        M42_PPV: { name:"Module 42", credit:7.0, subjects:["Technique_de_propagation","Technique_d_irrigation_et_BEC"] },
+        M43_PPV: { name:"Module 43", credit:7.0, subjects:["Ecophysiologie_et_Biochimie","Fertilite_du_sol"] },
+        M44_PPV: { name:"Module 44", credit:6.0, subjects:["Methodes_de_diagnostic","Malherbologie"] }
+      };
+      
+      SUBJECT_CREDITS.PPV.S3 = {
+        "Français_s3":3,"Economie":3,"I_Agronomie":4,"I_Horticulture":4,
+        "Pesticides_agricoles":4,"Entomologie_et_Nemato":4,"Science_des_sols":4,"Science_des_plantes":4
+      };
+      SUBJECT_CREDITS.PPV.S4 = {
+        "Vulgarisation":3,"Technique_de_propagation":4,"Technique_d_irrigation_et_BEC":3,
+        "Ecophysiologie_et_Biochimie":4,"Fertilite_du_sol":3,"Methodes_de_diagnostic":3,"Malherbologie":3
+      };
+    }
+    
+    if (Object.keys(MODULES_STRUCTURE.GAB.S3).length === 0) {
+      MODULES_STRUCTURE.GAB.S3 = {
+        M31_GAB: { name:"Module 31", credit:6.0, subjects:["Français_GAB_S3","Economie_GAB"] },
+        M32_GAB: { name:"Module 32", credit:9.0, subjects:["Resistance_de_materiaux","Energie_renouvelable","Environnement"] },
+        M33_GAB: { name:"Module 33", credit:7.0, subjects:["Topographie","Dessin_assiste_par_ordinateur"] },
+        M34_GAB: { name:"Module 34", credit:8.0, subjects:["Mecanique_de_fluides","Chimie_de_leau"] }
+      };
+      SUBJECT_CREDITS.GAB.S3 = {
+        "Français_GAB_S3":3,"Economie_GAB":3,"Resistance_de_materiaux":3,"Energie_renouvelable":3,
+        "Environnement":3,"Topographie":4,"Dessin_assiste_par_ordinateur":3,"Mecanique_de_fluides":4,"Chimie_de_leau":4
+      };
+    }
+  }
 
   // =====================================================================
   // HELPERS
@@ -330,7 +376,8 @@
   function displaySubjectName(s) {
     return s
       .replace(/_GAB_S\d/g,'')
-      .replace(/_PPV/g,'').replace(/_GAB/g,'').replace(/_GEM/g,'').replace(/_PSA/g,'').replace(/_STA/g,'').replace(/_TC/g,'')
+      .replace(/_PPV/g,'').replace(/_GAB/g,'').replace(/_GEM/g,'')
+      .replace(/_PSA/g,'').replace(/_STA/g,'').replace(/_TC/g,'')
       .replace(/_/g,' ')
       .replace(/I\s/g,'I.')
       .replace(/et\s/g,'et ')
@@ -339,13 +386,20 @@
 
   function escapeHtml(str) {
     if (!str) return '';
-    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
   }
 
   function getSubjectsForDeptSem(dept, sem) {
     const mods = MODULES_STRUCTURE[dept]?.[sem] || {};
     const list = [];
-    for (let m in mods) for (let s of mods[m].subjects) if (!list.includes(s)) list.push(s);
+    for (let m in mods) {
+      if (mods[m] && mods[m].subjects) {
+        for (let s of mods[m].subjects) {
+          if (!list.includes(s)) list.push(s);
+        }
+      }
+    }
     return list;
   }
 
@@ -376,8 +430,9 @@
     for (let m in mods) {
       let w=0, c=0, earned=0;
       for (let s of mods[m].subjects) {
-        const cr = SUBJECT_CREDITS[dept][sem][s] || 3;
-        w += (subjAvg[s]||0)*cr; c += cr;
+        const cr = SUBJECT_CREDITS[dept]?.[sem]?.[s] || 3;
+        w += (subjAvg[s]||0)*cr;
+        c += cr;
         if (subjStatus[s]==='C') earned += cr;
       }
       modAvg[m] = c>0 ? w/c : 0;
@@ -386,7 +441,11 @@
     }
 
     let tw=0, tc=0;
-    for (let s of req) { const cr=SUBJECT_CREDITS[dept][sem][s]||3; tw+=(subjAvg[s]||0)*cr; tc+=cr; }
+    for (let s of req) {
+      const cr = SUBJECT_CREDITS[dept]?.[sem]?.[s] || 3;
+      tw += (subjAvg[s]||0)*cr;
+      tc += cr;
+    }
     const genMoy = tc>0 ? tw/tc : 0;
     const hasNV = Object.values(modStatus).some(s=>s==='NV');
     const semStatus = hasNV ? 'Non Validé' : (genMoy>=10 ? 'Validé' : 'Non Validé');
@@ -396,7 +455,7 @@
   }
 
   // =====================================================================
-  // PDF GENERATION — matches exactly the on-screen table
+  // PDF GENERATION — corrected student row (no TP/CC/Exam columns on name row)
   // =====================================================================
   let pdfState = null;
 
@@ -431,15 +490,15 @@
           </thead>
           <tbody>
             <tr style="background:#f0f8ff; font-weight:bold;">
-              <td style="border:1px solid #000; padding:2px; text-align:center;">${escapeHtml(studentId)}</td>
-              <td style="border:1px solid #000; padding:2px; text-align:left;">${escapeHtml(studentName)}</td>
-              <td style="border:1px solid #000; padding:2px;"></td>
-              <td style="border:1px solid #000; padding:2px;"></td>
-              <td style="border:1px solid #000; padding:2px;"></td>
-              ${showSR ? '<td style="border:1px solid #000; padding:2px;"></td>' : ''}
-              <td style="border:1px solid #000; padding:2px;"></td>
-              <td style="border:1px solid #000; padding:2px;"></td>
-              <td style="border:1px solid #000; padding:2px;"></td>
+              <td style="border:1px solid #000; padding:4px; text-align:center;">${escapeHtml(studentId)}</td>
+              <td style="border:1px solid #000; padding:4px; text-align:left;">${escapeHtml(studentName)}</td>
+              <td style="border:1px solid #000; padding:4px;"></td>
+              <td style="border:1px solid #000; padding:4px;"></td>
+              <td style="border:1px solid #000; padding:4px;"></td>
+              ${showSR ? '<td style="border:1px solid #000; padding:4px;"></td>' : ''}
+              <td style="border:1px solid #000; padding:4px;"></td>
+              <td style="border:1px solid #000; padding:4px;"></td>
+              <td style="border:1px solid #000; padding:4px;"></td>
             </tr>`;
 
     for (let m in res.modules) {
@@ -463,7 +522,7 @@
         const exam = n['Examen']           !== undefined ? n['Examen'].toFixed(2)           : '';
         const ratt = n['Rattrapage'];
         const sr   = ratt !== undefined ? ratt.toFixed(2) : '';
-        const cr   = SUBJECT_CREDITS[dept][sem][s] || 3;
+        const cr   = SUBJECT_CREDITS[dept]?.[sem]?.[s] || 3;
         content += `
             <tr>
               <td style="border:1px solid #000; padding:1px; text-align:center;"></td>
@@ -505,7 +564,7 @@
   };
 
   // =====================================================================
-  // BUILD ON-SCREEN TABLE (identical structure to PDF)
+  // BUILD ON-SCREEN HTML — corrected student row
   // =====================================================================
   function buildReleveHTML(id, name, notes, res, dept, sem) {
     const showSR = res.hasSR;
@@ -530,7 +589,7 @@
         <tbody>
           <tr class="student-info-row">
             <td>${escapeHtml(id)}</td>
-            <td style="text-align:left; padding-left:15px;">${escapeHtml(name)}</td>
+            <td style="text-align:left;">${escapeHtml(name)}</td>
             <td></td><td></td><td></td>
             ${showSR ? '<td></td>' : ''}
             <td></td><td></td><td></td>
@@ -538,11 +597,11 @@
 
     for (let m in res.modules) {
       const mod = res.modules[m];
-      const mLabel = m.replace(/_[A-Z]+$/, ''); // strip dept suffix for display
+      const mLabel = m.replace(/_[A-Z]+$/, '');
       html += `
           <tr class="module-row">
             <td>${escapeHtml(mLabel)}</td>
-            <td style="text-align:left; padding-left:15px;">${escapeHtml(mod.name)}</td>
+            <td style="text-align:left;">${escapeHtml(mod.name)}</td>
             <td></td><td></td><td></td>
             ${showSR ? '<td></td>' : ''}
             <td style="font-weight:bold;">${res.modAvg[m].toFixed(2)}</td>
@@ -556,7 +615,7 @@
         const exam = n['Examen']           !== undefined ? n['Examen'].toFixed(2)           : '';
         const ratt = n['Rattrapage'];
         const sr   = ratt !== undefined ? ratt.toFixed(2) : '';
-        const cr   = SUBJECT_CREDITS[dept][sem][s] || 3;
+        const cr   = SUBJECT_CREDITS[dept]?.[sem]?.[s] || 3;
         html += `
           <tr class="subject-row">
             <td></td>
@@ -593,7 +652,6 @@
     selectedDept = dept;
     document.querySelectorAll('.dept-btn').forEach(b => b.classList.remove('active'));
     event.target.classList.add('active');
-    // Clear previous results
     document.getElementById('studentResultContainer').style.display='none';
     document.getElementById('studentResultContainer').innerHTML='';
     document.getElementById('noResultMessage').style.display='none';
@@ -675,7 +733,6 @@
           </div>`;
         }
       } else {
-        // Partial results display
         let hasTPdata=false, hasCC=false, hasExam=false;
         for (let s of req) {
           if (notes[s]?.['TP']!==undefined) hasTPdata=true;
@@ -689,7 +746,7 @@
             const n = notes[s]?.['TP'];
             html += `<tr><td>${escapeHtml(displaySubjectName(s))}</td><td>${n!==undefined?n.toFixed(2):''}</td></tr>`;
           }
-          html += `</tbody></table>`;
+          html += `</tbody>}</div>`;
         }
         if (hasCC) {
           html += `<h4 class="section-subtitle">Résultats Contrôle continu</h4>
@@ -698,7 +755,7 @@
             const n = notes[s]?.['Contrôle continu'];
             html += `<tr><td>${escapeHtml(displaySubjectName(s))}</td><td>${n!==undefined?n.toFixed(2):''}</td></tr>`;
           }
-          html += `</tbody></table>`;
+          html += `</tbody>}</div>`;
         }
         if (hasExam) {
           html += `<h4 class="section-subtitle">Résultats Examen</h4>
@@ -707,7 +764,7 @@
             const n = notes[s]?.['Examen'];
             html += `<tr><td>${escapeHtml(displaySubjectName(s))}</td><td>${n!==undefined?n.toFixed(2):''}</td></tr>`;
           }
-          html += `</tbody></table>`;
+          html += `</tbody>}</div>`;
         }
         html += `<div class="neutral-message">Les résultats ne sont pas encore finalisés.</div>`;
       }
@@ -738,8 +795,14 @@
     } catch(e) {}
   }
 
-  document.getElementById('studentIdInput').addEventListener('keyup', e => { if(e.key==='Enter') searchStudentResult(); });
-  afficherAnnonce();
+  // Initialize — load dynamic structures first
+  async function init() {
+    await loadDynamicStructures();
+    document.getElementById('studentIdInput').addEventListener('keyup', e => { if(e.key==='Enter') searchStudentResult(); });
+    afficherAnnonce();
+  }
+  
+  init();
 </script>
 </body>
 </html>
